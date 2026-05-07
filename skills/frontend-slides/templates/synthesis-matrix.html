@@ -1,0 +1,32 @@
+<!--
+  Synthesis Matrix Layout Template
+
+  Layout: 2-column grid showing cross-dimensional insights
+  Left column: Vertical (temporal) evidence
+  Right column: Horizontal (cross-domain) evidence
+  Bottom: Cross-dimensional conclusion
+
+  Used for: Synthesis insight slides
+-->
+<div>
+  <h2 style="font-size: var(--h3-size); margin-bottom: var(--content-gap);">{insight_title}</h2>
+  <p style="font-size: var(--body-size); margin-bottom: var(--content-gap);">{insight_description}</p>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--content-gap); margin-bottom: var(--content-gap);">
+    <!-- Vertical Evidence -->
+    <div style="background: var(--accent_light); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
+      <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Vertical Evidence</p>
+      <p style="font-size: var(--small-size);">{vertical_evidence}</p>
+    </div>
+    <!-- Horizontal Evidence -->
+    <div style="background: var(--accent_light); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
+      <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Horizontal Evidence</p>
+      <p style="font-size: var(--small-size);">{horizontal_evidence}</p>
+    </div>
+  </div>
+
+  <div style="border-left: 4px solid var(--accent); padding-left: clamp(0.5rem, 1.5vw, 1rem);">
+    <p style="font-size: var(--body-size); font-weight: 600;">Cross-dimensional Implication</p>
+    <p style="font-size: var(--small-size); opacity: 0.8;">{implication}</p>
+  </div>
+</div>

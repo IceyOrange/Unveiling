@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatio-Temporal Analogy Analysis</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <h1>Spatio-Temporal Analogy Analysis</h1>
+      <p class="subtitle">时空类比分析</p>
+    </header>
+
+    <!-- Input Section -->
+    <section id="input-section">
+      <div class="input-group">
+        <label for="topic-input">Topic</label>
+        <input type="text" id="topic-input" placeholder='输入分析主题，如 "AI"、"短视频"、"电动车市场"...' autocomplete="off">
+      </div>
+      <div class="input-group">
+        <label for="style-select">Slide Style</label>
+        <select id="style-select">
+          <option value="swiss-modern">Swiss Modern — Bauhaus, clean analytical</option>
+          <option value="bold-signal">Bold Signal — Dark, vibrant accent</option>
+          <option value="neon-cyber">Neon Cyber — Deep navy, neon glow</option>
+        </select>
+      </div>
+      <button id="start-btn" onclick="startAnalysis()">Start Analysis</button>
+    </section>
+
+    <!-- Progress Section -->
+    <section id="progress-section" style="display:none;">
+      <div class="progress-header">
+        <h2 id="progress-topic"></h2>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="agent-timeline" id="agent-timeline"></div>
+      <div class="status-msg" id="status-msg">Initializing...</div>
+    </section>
+
+    <!-- Result Section -->
+    <section id="result-section" style="display:none;">
+      <div class="result-header">
+        <h2>Analysis Complete</h2>
+        <div class="result-actions">
+          <button onclick="viewSlides()" class="btn-primary">View Presentation</button>
+          <a id="download-link" href="#" download class="btn-secondary">Download HTML</a>
+          <button onclick="resetUI()" class="btn-secondary">New Analysis</button>
+        </div>
+      </div>
+      <div class="slide-frame-container">
+        <iframe id="slide-frame" src="" frameborder="0"></iframe>
+      </div>
+    </section>
+
+    <!-- Error Section -->
+    <section id="error-section" style="display:none;">
+      <h2>Error</h2>
+      <p id="error-msg" class="error-text"></p>
+      <button onclick="resetUI()" class="btn-secondary">Try Again</button>
+    </section>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

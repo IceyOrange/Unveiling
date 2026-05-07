@@ -1,0 +1,187 @@
+abstraction_task:
+  description: >
+    Analyze the topic "{topic}" and generate 2-3 high-level abstract concepts
+    (called "lenses") that capture its essential nature from different angles.
+
+    For each lens:
+    - Give it a precise, evocative name (e.g., "特定时代的前卫工具",
+      "人类认知能力的延伸", "知识劳动的自动化")
+    - Explain why this lens reveals something deep about the topic
+    - Generate 2-5 horizontal search queries (for finding cross-domain instances)
+    - Generate 2-5 vertical search queries (for finding historical instances)
+
+    Each lens must be a UNIVERSAL category — not specific to the topic itself,
+    but applicable across many domains and time periods. The quality of these
+    lenses determines the quality of the entire analysis.
+
+    Output a JSON object matching the AbstractionResult schema.
+  expected_output: >
+    An AbstractionResult with 2-3 lenses, each containing its name, rationale,
+    and concrete search queries for both horizontal and vertical discovery.
+  agent: abstracter
+
+vertical_discovery_task:
+  description: >
+    Using the abstract lenses from the abstraction task, search for concrete
+    historical instances that belong to each lens's universal category.
+
+    For EACH lens:
+    1. Use the lens's vertical_queries to search for historical examples
+    2. For each discovered instance, identify its era and write a brief description
+    3. Explain why this instance is analogous to "{topic}" under this lens
+
+    Organize findings chronologically (earliest to latest).
+    Write 2-3 key anchor points to the shared blackboard using the blackboard tool.
+    Also read the blackboard to see if any horizontal findings can inform your search.
+
+    Aim for 3-8 total instances spanning multiple eras and multiple lenses.
+
+    Output a JSON object matching the VerticalDiscoveryResult schema.
+  expected_output: >
+    A VerticalDiscoveryResult with 3-8 chronological instances,
+    a chronological pattern summary, and blackboard anchor points.
+  agent: vertical_discovery
+  context:
+    - abstraction_task
+
+horizontal_discovery_task:
+  description: >
+    Using the abstract lenses from the abstraction task, search for concrete
+    cross-domain instances that belong to each lens's universal category.
+
+    For EACH lens:
+    1. Use the lens's horizontal_queries to search for examples in other fields
+    2. For each discovered instance, identify its domain and write a brief description
+    3. Explain why this instance is analogous to "{topic}" under this lens
+
+    Organize findings by domain/industry.
+    Write 2-3 key anchor points to the shared blackboard using the blackboard tool.
+    Read the blackboard to check for any vertical findings that could inspire
+    cross-domain connections.
+
+    Aim for 3-8 total instances spanning multiple domains and multiple lenses.
+
+    Output a JSON object matching the HorizontalDiscoveryResult schema.
+  expected_output: >
+    A HorizontalDiscoveryResult with 3-8 cross-domain instances,
+    a cross-domain pattern summary, and blackboard anchor points.
+  agent: horizontal_discovery
+  context:
+    - abstraction_task
+
+comparison_task:
+  description: >
+    Compare "{topic}" directly with EVERY discovered instance from both
+    the vertical and horizontal discovery tasks.
+
+    For each comparison:
+    - VERTICAL: Compare "{topic}" with each historical instance. Extract
+      commonalities (shared patterns, mechanisms, trajectories) and
+      distinctive characteristics (what makes "{topic}" unique vs. its
+      historical predecessors).
+    - HORIZONTAL: Compare "{topic}" with each cross-domain instance. Extract
+      commonalities (shared patterns across domains) and distinctive
+      characteristics (what makes "{topic}" unique vs. its cross-domain peers).
+
+    After all pairwise comparisons, summarize:
+    - What overarching pattern does the VERTICAL comparison reveal? (historical trajectory)
+    - What overarching pattern does the HORIZONTAL comparison reveal? (contemporary landscape)
+
+    Output a JSON object matching the ComparisonResult schema.
+  expected_output: >
+    A ComparisonResult with all vertical and horizontal pairwise comparisons,
+    each containing commonalities, distinctions, and insights, plus overall
+    pattern summaries for both dimensions.
+  agent: comparator
+  context:
+    - abstraction_task
+    - vertical_discovery_task
+    - horizontal_discovery_task
+
+causal_review_task:
+  description: >
+    Review ALL commonalities found in the comparison task. For each commonality,
+    apply three rigorous tests:
+
+    1. CAUSAL CHAIN TEST: Is there a traceable causal mechanism connecting
+       the two phenomena, or is the similarity merely descriptive?
+    2. CONFOUNDING VARIABLE TEST: Could a third factor (e.g., economic cycle,
+       technological maturity, human psychology) independently explain both
+       phenomena, making the "commonality" spurious?
+    3. COUNTERFACTUAL TEST: If we remove a key condition, does the
+       commonality still hold?
+
+    For each commonality, assign a confidence score (0-1) and either:
+    - VALIDATE it with a clear causal chain explanation
+    - REJECT it with a clear reason and identified confounding variable
+
+    Be ruthless. It is better to have fewer validated commonalities than to
+    include plausible but unsupported ones.
+
+    Output a JSON object matching the CausalReviewResult schema.
+  expected_output: >
+    A CausalReviewResult with validated commonalities (with causal chains and
+    confidence scores), rejected commonalities (with reasons), and an overall
+    confidence score for the analysis.
+  agent: causal_reviewer
+  context:
+    - comparison_task
+
+synthesis_task:
+  description: >
+    Synthesize the causally-validated findings into a unified analysis that
+    cross-references vertical (temporal) and horizontal (cross-domain) evidence.
+
+    Your synthesis must:
+    1. State a CORE THESIS that emerges from the intersection of vertical and
+       horizontal patterns (e.g., "AI is simultaneously a continuation of
+       historical patterns AND a rupture from them")
+    2. Write concise summaries of the vertical and horizontal findings
+    3. Generate 3-6 SYNTHESIS INSIGHTS, each combining evidence from BOTH
+       dimensions (not just one)
+    4. Make a forward-looking PREDICTION based on the combined patterns
+    5. Provide 1-4 actionable RECOMMENDATIONS
+
+    Each synthesis insight must explicitly cite BOTH vertical and horizontal
+    evidence. Insights that only draw from one dimension are incomplete.
+
+    Output a JSON object matching the AnalysisSynthesis schema.
+  expected_output: >
+    An AnalysisSynthesis with a core thesis, vertical and horizontal summaries,
+    3-6 cross-dimensional insights, a prediction, and recommendations.
+  agent: synthesizer
+  context:
+    - abstraction_task
+    - vertical_discovery_task
+    - horizontal_discovery_task
+    - comparison_task
+    - causal_review_task
+
+visualization_task:
+  description: >
+    Transform the complete spatio-temporal analysis into an HTML slide presentation.
+
+    Using the slide_generator tool, create a presentation with these slides:
+    1. Title slide — topic name, abstract lenses as subtitle
+    2. Lenses Overview — the 2-3 abstract lenses and their rationale
+    3. Vertical Timeline — historical instances arranged chronologically
+    4. Vertical Comparisons — key commonalities and distinctions with historical instances
+    5. Horizontal Map — cross-domain instances arranged by field
+    6. Horizontal Comparisons — key commonalities and distinctions across domains
+    7. Causal Validation — validated vs rejected commonalities
+    8. Synthesis Insights — 3-6 cross-dimensional insights
+    9. Core Thesis & Prediction — the unified conclusion
+    10. Recommendations — actionable takeaways
+    11. Closing — summary
+
+    Call the slide_generator tool with the complete analysis data.
+  expected_output: >
+    A confirmation message with the file path of the generated HTML presentation.
+  agent: visualization_agent
+  context:
+    - abstraction_task
+    - vertical_discovery_task
+    - horizontal_discovery_task
+    - comparison_task
+    - causal_review_task
+    - synthesis_task

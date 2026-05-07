@@ -1,0 +1,26 @@
+<!--
+  Vertical Timeline Layout Template
+
+  Layout: Chronological timeline with nodes
+  Each node: era label + instance name + brief description
+  Nodes connected by vertical line
+  Alternate left/right alignment for visual interest
+
+  Used for: Vertical discovery results
+-->
+<div style="position: relative; padding-left: clamp(60px, 10vw, 120px);">
+  <!-- Vertical connecting line -->
+  <div style="position: absolute; left: clamp(50px, 9vw, 110px); top: 0; bottom: 0; width: 2px; background: var(--accent); opacity: 0.3;"></div>
+
+  <!-- Timeline nodes -->
+  <div style="display: flex; gap: clamp(0.5rem, 1.5vw, 1rem); align-items: flex-start; margin-bottom: var(--content-gap); position: relative;">
+    <!-- Era dot -->
+    <div style="position: absolute; left: calc(-1 * clamp(50px, 9vw, 110px) + clamp(44px, 8vw, 104px)); top: 0.3em; width: 12px; height: 12px; border-radius: 50%; background: var(--accent);"></div>
+    <!-- Content -->
+    <div>
+      <p style="font-size: var(--small-size); font-weight: 700; opacity: 0.6;">{era_label}</p>
+      <p style="font-size: var(--body-size); font-weight: 600;">{instance_name}</p>
+      <p style="font-size: var(--small-size); opacity: 0.7;">{brief_description}</p>
+    </div>
+  </div>
+</div>
