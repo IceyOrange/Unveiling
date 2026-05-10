@@ -148,6 +148,10 @@ Input: **"AI"**
 | **Bold Signal** | Dark theme, vibrant accent, Archivo Black + Space Grotesk |
 | **Neon Cyber** | Deep blue base, neon glow, Clash Display + Satoshi |
 
+## Acknowledgments
+
+The interactive HTML slide presentation is inspired by [frontend-slides](https://github.com/zarazhangrui/frontend-slides).
+
 ---
 
 <a name="chinese"></a>
@@ -299,6 +303,10 @@ python app.py
 | **Swiss Modern** | 包豪斯风格，黑/白/红，Archivo + Nunito |
 | **Bold Signal** | 深色主题，鲜艳强调色，Archivo Black + Space Grotesk |
 | **Neon Cyber** | 深海蓝底色，霓虹辉光，Clash Display + Satoshi |
+
+## 致谢
+
+交互式 HTML 幻灯片演示的设计灵感来源于 [frontend-slides](https://github.com/zarazhangrui/frontend-slides)。
 
 ## 项目结构
 
