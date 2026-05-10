@@ -14,9 +14,20 @@ abstraction_task:
     but applicable across many domains and time periods. The quality of these
     lenses determines the quality of the entire analysis.
 
-    Output a JSON object matching the AbstractionResult schema.
+    You must output ONLY a valid JSON object matching this exact structure:
+    {
+      "topic": "{topic}",
+      "lenses": [
+        {
+          "lens_name": "透镜名称",
+          "rationale": "为什么这个透镜能揭示本质",
+          "horizontal_queries": ["query1", "query2", "query3"],
+          "vertical_queries": ["query1", "query2", "query3"]
+        }
+      ]
+    }
   expected_output: >
-    An AbstractionResult with 2-3 lenses, each containing its name, rationale,
+    A valid JSON object with 2-3 lenses, each containing its name, rationale,
     and concrete search queries for both horizontal and vertical discovery.
   agent: abstracter
 
@@ -36,9 +47,22 @@ vertical_discovery_task:
 
     Aim for 3-8 total instances spanning multiple eras and multiple lenses.
 
-    Output a JSON object matching the VerticalDiscoveryResult schema.
+    You must output ONLY a valid JSON object matching this exact structure:
+    {
+      "instances": [
+        {
+          "name": "实例名称",
+          "era_or_domain": "所属时期",
+          "brief": "简要描述",
+          "source_lens": "来源透镜",
+          "relevance": "类比价值说明"
+        }
+      ],
+      "chronological_pattern": "时间规律总结",
+      "blackboard_anchors": ["锚点1", "锚点2"]
+    }
   expected_output: >
-    A VerticalDiscoveryResult with 3-8 chronological instances,
+    A valid JSON object with 3-8 chronological instances,
     a chronological pattern summary, and blackboard anchor points.
   agent: vertical_discovery
   context:
@@ -61,9 +85,22 @@ horizontal_discovery_task:
 
     Aim for 3-8 total instances spanning multiple domains and multiple lenses.
 
-    Output a JSON object matching the HorizontalDiscoveryResult schema.
+    You must output ONLY a valid JSON object matching this exact structure:
+    {
+      "instances": [
+        {
+          "name": "实例名称",
+          "era_or_domain": "所属领域",
+          "brief": "简要描述",
+          "source_lens": "来源透镜",
+          "relevance": "类比价值说明"
+        }
+      ],
+      "cross_domain_pattern": "跨领域规律总结",
+      "blackboard_anchors": ["锚点1", "锚点2"]
+    }
   expected_output: >
-    A HorizontalDiscoveryResult with 3-8 cross-domain instances,
+    A valid JSON object with 3-8 cross-domain instances,
     a cross-domain pattern summary, and blackboard anchor points.
   agent: horizontal_discovery
   context:
@@ -87,9 +124,32 @@ comparison_task:
     - What overarching pattern does the VERTICAL comparison reveal? (historical trajectory)
     - What overarching pattern does the HORIZONTAL comparison reveal? (contemporary landscape)
 
-    Output a JSON object matching the ComparisonResult schema.
+    You must output ONLY a valid JSON object matching this exact structure:
+    {
+      "topic": "{topic}",
+      "vertical_comparisons": [
+        {
+          "instance_name": "实例名称",
+          "instance_era_or_domain": "时期",
+          "commonalities": ["共性1", "共性2"],
+          "distinctions": ["特性1", "特性2"],
+          "insight": "对比揭示的洞察"
+        }
+      ],
+      "horizontal_comparisons": [
+        {
+          "instance_name": "实例名称",
+          "instance_era_or_domain": "领域",
+          "commonalities": ["共性1", "共性2"],
+          "distinctions": ["特性1", "特性2"],
+          "insight": "对比揭示的洞察"
+        }
+      ],
+      "vertical_pattern": "纵向规律总结",
+      "horizontal_pattern": "横向规律总结"
+    }
   expected_output: >
-    A ComparisonResult with all vertical and horizontal pairwise comparisons,
+    A valid JSON object with all vertical and horizontal pairwise comparisons,
     each containing commonalities, distinctions, and insights, plus overall
     pattern summaries for both dimensions.
   agent: comparator
@@ -118,9 +178,27 @@ causal_review_task:
     Be ruthless. It is better to have fewer validated commonalities than to
     include plausible but unsupported ones.
 
-    Output a JSON object matching the CausalReviewResult schema.
+    You must output ONLY a valid JSON object matching this exact structure:
+    {
+      "validated": [
+        {
+          "commonality": "共性内容",
+          "causal_chain": "因果链条说明",
+          "confidence": 0.85,
+          "supporting_comparisons": ["对比实例1", "对比实例2"]
+        }
+      ],
+      "rejected": [
+        {
+          "commonality": "被剔除的共性",
+          "rejection_reason": "剔除原因",
+          "confounding_variable": "混淆变量"
+        }
+      ],
+      "overall_confidence": 0.75
+    }
   expected_output: >
-    A CausalReviewResult with validated commonalities (with causal chains and
+    A valid JSON object with validated commonalities (with causal chains and
     confidence scores), rejected commonalities (with reasons), and an overall
     confidence score for the analysis.
   agent: causal_reviewer
@@ -145,9 +223,26 @@ synthesis_task:
     Each synthesis insight must explicitly cite BOTH vertical and horizontal
     evidence. Insights that only draw from one dimension are incomplete.
 
-    Output a JSON object matching the AnalysisSynthesis schema.
+    You must output ONLY a valid JSON object matching this exact structure:
+    {
+      "topic": "{topic}",
+      "core_thesis": "核心论点",
+      "vertical_summary": "纵向分析摘要",
+      "horizontal_summary": "横向分析摘要",
+      "insights": [
+        {
+          "title": "洞察标题",
+          "description": "完整说明",
+          "vertical_evidence": "纵向证据",
+          "horizontal_evidence": "横向证据",
+          "implication": "对原始topic的启示"
+        }
+      ],
+      "prediction": "前瞻性预测",
+      "recommendations": ["建议1", "建议2"]
+    }
   expected_output: >
-    An AnalysisSynthesis with a core thesis, vertical and horizontal summaries,
+    A valid JSON object with a core thesis, vertical and horizontal summaries,
     3-6 cross-dimensional insights, a prediction, and recommendations.
   agent: synthesizer
   context:
@@ -159,7 +254,7 @@ synthesis_task:
 
 visualization_task:
   description: >
-    Transform the complete spatio-temporal analysis into an HTML slide presentation.
+    Transform the complete analogy analysis into an HTML slide presentation.
 
     Using the slide_generator tool, create a presentation with these slides:
     1. Title slide — topic name, abstract lenses as subtitle

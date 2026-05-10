@@ -16,7 +16,7 @@ def run():
     topic = sys.argv[1]
 
     print(f"\n{'='*60}")
-    print(f"  Spatio-Temporal Analogy Analysis")
+    print(f"  Unveiling — Multi-Agent Analogy Analysis")
     print(f"  Topic: {topic}")
     print(f"{'='*60}\n")
 

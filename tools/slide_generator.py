@@ -63,24 +63,24 @@ class SlideGeneratorTool(BaseTool):
     name: str = "slide_generator"
     description: str = (
         "Generates a complete HTML slide presentation from structured "
-        "spatio-temporal analysis data. Produces a self-contained HTML file "
+        "analogy analysis data. Produces a self-contained HTML file "
         "with inline CSS/JS following the frontend-slides framework patterns."
     )
     args_schema: Type[BaseModel] = SlideGeneratorInput
 
     def _run(self, **kwargs) -> str:
         topic = kwargs["topic"]
-        lenses = json.loads(kwargs["lenses_json"])
-        v_instances = json.loads(kwargs["vertical_instances_json"])
-        h_instances = json.loads(kwargs["horizontal_instances_json"])
-        v_comparisons = json.loads(kwargs["vertical_comparisons_json"])
-        h_comparisons = json.loads(kwargs["horizontal_comparisons_json"])
-        validated = json.loads(kwargs["validated_commonalities_json"])
-        rejected = json.loads(kwargs["rejected_commonalities_json"])
-        insights = json.loads(kwargs["insights_json"])
-        core_thesis = kwargs["core_thesis"]
-        prediction = kwargs["prediction"]
-        recommendations = json.loads(kwargs["recommendations_json"])
+        lenses = self._parse_json_list(kwargs.get("lenses_json", "[]"))
+        v_instances = self._parse_json_list(kwargs.get("vertical_instances_json", "[]"))
+        h_instances = self._parse_json_list(kwargs.get("horizontal_instances_json", "[]"))
+        v_comparisons = self._parse_json_list(kwargs.get("vertical_comparisons_json", "[]"))
+        h_comparisons = self._parse_json_list(kwargs.get("horizontal_comparisons_json", "[]"))
+        validated = self._parse_json_list(kwargs.get("validated_commonalities_json", "[]"))
+        rejected = self._parse_json_list(kwargs.get("rejected_commonalities_json", "[]"))
+        insights = self._parse_json_list(kwargs.get("insights_json", "[]"))
+        core_thesis = kwargs.get("core_thesis", "")
+        prediction = kwargs.get("prediction", "")
+        recommendations = self._parse_json_list(kwargs.get("recommendations_json", "[]"))
         preset_name = kwargs.get("style_preset", "swiss-modern")
 
         style = STYLE_PRESETS.get(preset_name, STYLE_PRESETS["swiss-modern"])
@@ -108,12 +108,38 @@ class SlideGeneratorTool(BaseTool):
             return css_path.read_text()
         return ""
 
+    def _parse_json_list(self, raw: str) -> list:
+        if not raw or raw == "null":
+            return []
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return parsed
+            if isinstance(parsed, dict):
+                return [parsed]
+            return []
+        except Exception:
+            return []
+
+    def _safe_str(self, val) -> str:
+        if val is None:
+            return ""
+        return str(val)
+
+    def _safe_list(self, val) -> list:
+        if isinstance(val, list):
+            return [str(v) for v in val if v is not None and str(v).strip()]
+        if isinstance(val, str) and val.strip():
+            return [val]
+        return []
+
     def _build_all_slides(self, topic, lenses, v_inst, h_inst,
                           v_comp, h_comp, validated, rejected,
                           insights, thesis, prediction, recs) -> str:
         slides = []
         slides.append(self._title_slide(topic, lenses))
-        slides.append(self._lenses_overview_slide(lenses))
+        if lenses:
+            slides.append(self._lenses_overview_slide(lenses))
         if v_inst:
             slides.append(self._vertical_timeline_slide(v_inst))
         if v_comp:
@@ -124,35 +150,40 @@ class SlideGeneratorTool(BaseTool):
             slides.append(self._horizontal_comparison_slide(h_comp))
         if validated or rejected:
             slides.append(self._causal_validation_slide(validated, rejected))
-        slides.append(self._thesis_slide(thesis))
+        if thesis:
+            slides.append(self._thesis_slide(thesis))
         if insights:
-            for i, insight in enumerate(insights[:4]):
-                slides.append(self._insight_slide(insight, i + 1))
-        slides.append(self._prediction_slide(prediction, recs))
+            for i, insight in enumerate(insights[:6]):
+                slide = self._insight_slide(insight, i + 1)
+                if slide:
+                    slides.append(slide)
+        if prediction or recs:
+            slides.append(self._prediction_slide(prediction, recs))
         slides.append(self._closing_slide(topic))
         return "\n".join(slides)
 
     # ── Individual slide builders ──
 
     def _title_slide(self, topic: str, lenses: list) -> str:
-        lens_text = " / ".join(lenses[:3])
+        lens_text = " / ".join(lenses[:3]) if lenses else "Analogy Analysis"
         return f'''
     <section class="slide title-slide">
       <div class="slide-content" style="justify-content: center; align-items: center; text-align: center;">
-        <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6;">Spatio-Temporal Analogy Analysis</p>
+        <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6;">Unveiling</p>
         <h1 class="reveal" style="font-size: var(--title-size); margin-top: var(--element-gap); max-width: 80%;">{self._esc(topic)}</h1>
         <p class="reveal" style="font-size: var(--h3-size); margin-top: var(--content-gap); opacity: 0.7;">{self._esc(lens_text)}</p>
-        <div class="reveal" style="width: 60px; height: 3px; margin-top: var(--content-gap);"></div>
+        <div class="reveal" style="width: 60px; height: 3px; background: var(--accent); margin-top: var(--content-gap);"></div>
       </div>
     </section>'''
 
     def _lenses_overview_slide(self, lenses: list) -> str:
         items = ""
         for i, lens in enumerate(lenses):
+            lens_str = self._safe_str(lens)
             items += f'''
-        <div class="reveal lens-card" style="background: var(--accent_light, rgba(255,51,0,0.1)); border-left: 4px solid var(--accent); padding: clamp(0.5rem, 1.5vw, 1rem) clamp(0.75rem, 2vw, 1.5rem); margin-bottom: var(--element-gap);">
+        <div class="reveal lens-card" style="background: var(--accent-light); border-left: 4px solid var(--accent); padding: clamp(0.5rem, 1.5vw, 1rem) clamp(0.75rem, 2vw, 1.5rem); margin-bottom: var(--element-gap);">
           <p style="font-size: var(--small-size); opacity: 0.6;">Lens {i+1}</p>
-          <p style="font-size: var(--h3-size); font-weight: 700;">{self._esc(lens)}</p>
+          <p style="font-size: var(--h3-size); font-weight: 700;">{self._esc(lens_str)}</p>
         </div>'''
         return f'''
     <section class="slide">
@@ -167,19 +198,25 @@ class SlideGeneratorTool(BaseTool):
 
     def _vertical_timeline_slide(self, instances: list) -> str:
         nodes = ""
-        for inst in instances[:6]:
-            era = inst.get("era_or_domain", "")
-            name = inst.get("name", "")
-            brief = inst.get("brief", "")
+        for inst in instances[:8]:
+            if not isinstance(inst, dict):
+                continue
+            era = self._safe_str(inst.get("era_or_domain", ""))
+            name = self._safe_str(inst.get("name", ""))
+            brief = self._safe_str(inst.get("brief", ""))
+            if not name:
+                continue
             nodes += f'''
         <div class="reveal timeline-node" style="display: flex; gap: clamp(0.5rem, 1.5vw, 1rem); align-items: flex-start; margin-bottom: var(--element-gap);">
           <div style="min-width: clamp(60px, 10vw, 100px); font-size: var(--small-size); font-weight: 700; opacity: 0.6; text-align: right;">{self._esc(era)}</div>
-          <div style="width: 3px; min-height: 40px; align-self: stretch;"></div>
+          <div style="width: 3px; min-height: 40px; align-self: stretch; background: var(--accent);"></div>
           <div>
             <p style="font-size: var(--body-size); font-weight: 600;">{self._esc(name)}</p>
-            <p style="font-size: var(--small-size); opacity: 0.7;">{self._esc(brief[:80])}</p>
+            <p style="font-size: var(--small-size); opacity: 0.7;">{self._esc(brief[:120])}</p>
           </div>
         </div>'''
+        if not nodes:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content">
@@ -194,19 +231,27 @@ class SlideGeneratorTool(BaseTool):
     def _vertical_comparison_slide(self, comparisons: list) -> str:
         cards = ""
         for comp in comparisons[:4]:
-            name = comp.get("instance_name", "")
-            commons = comp.get("commonalities", [])
-            dists = comp.get("distinctions", [])
+            if not isinstance(comp, dict):
+                continue
+            name = self._safe_str(comp.get("instance_name", ""))
+            if not name:
+                continue
+            commons = self._safe_list(comp.get("commonalities", []))
+            dists = self._safe_list(comp.get("distinctions", []))
             comm_items = "".join(f'<li>{self._esc(c)}</li>' for c in commons[:3])
             dist_items = "".join(f'<li>{self._esc(d)}</li>' for d in dists[:2])
+            if not comm_items and not dist_items:
+                continue
             cards += f'''
-        <div class="reveal" style="background: var(--bg-secondary, #f5f5f5); padding: clamp(0.5rem, 1.5vw, 1rem); margin-bottom: var(--element-gap); border-radius: 6px;">
+        <div class="reveal" style="background: var(--bg-secondary); padding: clamp(0.5rem, 1.5vw, 1rem); margin-bottom: var(--element-gap); border-radius: 6px;">
           <p style="font-size: var(--h3-size); font-weight: 700; margin-bottom: var(--element-gap);">{self._esc(name)}</p>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--element-gap);">
-            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Commonalities</p><ul class="bullet-list" style="padding-left: 1em;">{comm_items}</ul></div>
-            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Distinctions</p><ul class="bullet-list" style="padding-left: 1em;">{dist_items}</ul></div>
+            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Commonalities</p><ul class="bullet-list" style="padding-left: 1em;">{comm_items or "<li>—</li>"}</ul></div>
+            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Distinctions</p><ul class="bullet-list" style="padding-left: 1em;">{dist_items or "<li>—</li>"}</ul></div>
           </div>
         </div>'''
+        if not cards:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content">
@@ -218,22 +263,28 @@ class SlideGeneratorTool(BaseTool):
 
     def _horizontal_map_slide(self, instances: list) -> str:
         cards = ""
-        for inst in instances[:6]:
-            domain = inst.get("era_or_domain", "")
-            name = inst.get("name", "")
-            brief = inst.get("brief", "")
+        for inst in instances[:8]:
+            if not isinstance(inst, dict):
+                continue
+            domain = self._safe_str(inst.get("era_or_domain", ""))
+            name = self._safe_str(inst.get("name", ""))
+            brief = self._safe_str(inst.get("brief", ""))
+            if not name:
+                continue
             cards += f'''
-        <div class="reveal" style="background: var(--bg-secondary, #f5f5f5); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px; border-top: 3px solid var(--accent);">
+        <div class="reveal" style="background: var(--bg-secondary); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px; border-top: 3px solid var(--accent);">
           <p style="font-size: var(--small-size); opacity: 0.6;">{self._esc(domain)}</p>
           <p style="font-size: var(--body-size); font-weight: 600;">{self._esc(name)}</p>
-          <p style="font-size: var(--small-size); opacity: 0.7; margin-top: 0.25em;">{self._esc(brief[:60])}</p>
+          <p style="font-size: var(--small-size); opacity: 0.7; margin-top: 0.25em;">{self._esc(brief[:100])}</p>
         </div>'''
+        if not cards:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content">
         <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5;">Horizontal — Across Domains</p>
         <h2 class="reveal" style="font-size: var(--h2-size); margin-bottom: var(--content-gap);">Cross-Domain Instances</h2>
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));">
           {cards}
         </div>
       </div>
@@ -242,19 +293,27 @@ class SlideGeneratorTool(BaseTool):
     def _horizontal_comparison_slide(self, comparisons: list) -> str:
         cards = ""
         for comp in comparisons[:4]:
-            name = comp.get("instance_name", "")
-            commons = comp.get("commonalities", [])
-            dists = comp.get("distinctions", [])
+            if not isinstance(comp, dict):
+                continue
+            name = self._safe_str(comp.get("instance_name", ""))
+            if not name:
+                continue
+            commons = self._safe_list(comp.get("commonalities", []))
+            dists = self._safe_list(comp.get("distinctions", []))
             comm_items = "".join(f'<li>{self._esc(c)}</li>' for c in commons[:3])
             dist_items = "".join(f'<li>{self._esc(d)}</li>' for d in dists[:2])
+            if not comm_items and not dist_items:
+                continue
             cards += f'''
-        <div class="reveal" style="background: var(--bg-secondary, #f5f5f5); padding: clamp(0.5rem, 1.5vw, 1rem); margin-bottom: var(--element-gap); border-radius: 6px;">
+        <div class="reveal" style="background: var(--bg-secondary); padding: clamp(0.5rem, 1.5vw, 1rem); margin-bottom: var(--element-gap); border-radius: 6px;">
           <p style="font-size: var(--h3-size); font-weight: 700; margin-bottom: var(--element-gap);">{self._esc(name)}</p>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--element-gap);">
-            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Commonalities</p><ul class="bullet-list" style="padding-left: 1em;">{comm_items}</ul></div>
-            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Distinctions</p><ul class="bullet-list" style="padding-left: 1em;">{dist_items}</ul></div>
+            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Commonalities</p><ul class="bullet-list" style="padding-left: 1em;">{comm_items or "<li>—</li>"}</ul></div>
+            <div><p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Distinctions</p><ul class="bullet-list" style="padding-left: 1em;">{dist_items or "<li>—</li>"}</ul></div>
           </div>
         </div>'''
+        if not cards:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content">
@@ -267,30 +326,40 @@ class SlideGeneratorTool(BaseTool):
     def _causal_validation_slide(self, validated: list, rejected: list) -> str:
         val_items = ""
         for v in validated[:5]:
-            comm = v.get("commonality", "")
-            chain = v.get("causal_chain", "")
+            if not isinstance(v, dict):
+                continue
+            comm = self._safe_str(v.get("commonality", ""))
+            chain = self._safe_str(v.get("causal_chain", ""))
             conf = v.get("confidence", 0)
+            if not comm:
+                continue
             val_items += f'''
         <div class="reveal" style="display: flex; gap: var(--element-gap); align-items: flex-start; margin-bottom: var(--element-gap);">
           <span style="font-size: var(--h3-size); color: #22c55e;">&#10003;</span>
           <div>
             <p style="font-size: var(--body-size); font-weight: 600;">{self._esc(comm)}</p>
-            <p style="font-size: var(--small-size); opacity: 0.7;">{self._esc(chain[:100])}</p>
+            <p style="font-size: var(--small-size); opacity: 0.7;">{self._esc(chain[:120])}</p>
             <p style="font-size: var(--small-size); opacity: 0.5;">Confidence: {conf:.0%}</p>
           </div>
         </div>'''
         rej_items = ""
         for r in rejected[:3]:
-            comm = r.get("commonality", "")
-            reason = r.get("rejection_reason", "")
+            if not isinstance(r, dict):
+                continue
+            comm = self._safe_str(r.get("commonality", ""))
+            reason = self._safe_str(r.get("rejection_reason", ""))
+            if not comm:
+                continue
             rej_items += f'''
         <div class="reveal" style="display: flex; gap: var(--element-gap); align-items: flex-start; margin-bottom: var(--element-gap); opacity: 0.6;">
           <span style="font-size: var(--h3-size); color: #ef4444;">&#10007;</span>
           <div>
             <p style="font-size: var(--body-size);">{self._esc(comm)}</p>
-            <p style="font-size: var(--small-size); opacity: 0.7;">{self._esc(reason[:80])}</p>
+            <p style="font-size: var(--small-size); opacity: 0.7;">{self._esc(reason[:100])}</p>
           </div>
         </div>'''
+        if not val_items and not rej_items:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content">
@@ -304,20 +373,27 @@ class SlideGeneratorTool(BaseTool):
     </section>'''
 
     def _thesis_slide(self, thesis: str) -> str:
+        thesis_str = self._safe_str(thesis)
+        if not thesis_str:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content" style="justify-content: center; align-items: center; text-align: center; max-width: min(80vw, 700px); margin: auto;">
         <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5;">Core Thesis</p>
-        <h2 class="reveal" style="font-size: var(--h2-size); margin-top: var(--content-gap); line-height: 1.3;">{self._esc(thesis)}</h2>
-        <div class="reveal" style="width: 60px; height: 3px; margin-top: var(--content-gap);"></div>
+        <h2 class="reveal" style="font-size: var(--h2-size); margin-top: var(--content-gap); line-height: 1.3;">{self._esc(thesis_str)}</h2>
+        <div class="reveal" style="width: 60px; height: 3px; background: var(--accent); margin-top: var(--content-gap);"></div>
       </div>
     </section>'''
 
     def _insight_slide(self, insight: dict, index: int) -> str:
-        title = insight.get("title", f"Insight {index}")
-        desc = insight.get("description", "")
-        v_ev = insight.get("vertical_evidence", "")
-        h_ev = insight.get("horizontal_evidence", "")
+        if not isinstance(insight, dict):
+            return ""
+        title = self._safe_str(insight.get("title", f"Insight {index}"))
+        desc = self._safe_str(insight.get("description", ""))
+        v_ev = self._safe_str(insight.get("vertical_evidence", ""))
+        h_ev = self._safe_str(insight.get("horizontal_evidence", ""))
+        if not title and not desc and not v_ev and not h_ev:
+            return ""
         return f'''
     <section class="slide">
       <div class="slide-content">
@@ -325,31 +401,32 @@ class SlideGeneratorTool(BaseTool):
         <h2 class="reveal" style="font-size: var(--h2-size); margin-bottom: var(--content-gap);">{self._esc(title)}</h2>
         <p class="reveal" style="font-size: var(--body-size); margin-bottom: var(--content-gap);">{self._esc(desc)}</p>
         <div class="reveal" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--content-gap);">
-          <div style="background: var(--accent_light, rgba(255,51,0,0.1)); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
+          <div style="background: var(--accent-light); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
             <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Vertical Evidence</p>
-            <p style="font-size: var(--small-size);">{self._esc(v_ev[:120])}</p>
+            <p style="font-size: var(--small-size);">{self._esc(v_ev[:200])}</p>
           </div>
-          <div style="background: var(--accent_light, rgba(255,51,0,0.1)); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
+          <div style="background: var(--accent-light); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
             <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Horizontal Evidence</p>
-            <p style="font-size: var(--small-size);">{self._esc(h_ev[:120])}</p>
+            <p style="font-size: var(--small-size);">{self._esc(h_ev[:200])}</p>
           </div>
         </div>
       </div>
     </section>'''
 
     def _prediction_slide(self, prediction: str, recommendations: list) -> str:
-        rec_items = "".join(
-            f'<li class="reveal" style="font-size: var(--body-size);">{self._esc(r)}</li>'
-            for r in recommendations[:4]
-        )
+        pred_str = self._safe_str(prediction)
+        rec_items = ""
+        for r in recommendations[:5]:
+            r_str = self._safe_str(r)
+            if r_str:
+                rec_items += f'<li class="reveal" style="font-size: var(--body-size);">{self._esc(r_str)}</li>'
         return f'''
     <section class="slide">
       <div class="slide-content">
         <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5;">Prediction</p>
         <h2 class="reveal" style="font-size: var(--h2-size); margin-bottom: var(--content-gap);">Forward Look</h2>
-        <p class="reveal" style="font-size: var(--body-size); margin-bottom: var(--content-gap);">{self._esc(prediction)}</p>
-        <p class="reveal" style="font-size: var(--small-size); font-weight: 600; opacity: 0.6; margin-bottom: var(--element-gap);">Recommendations</p>
-        <ul class="feature-list" style="padding-left: 1em;">{rec_items}</ul>
+        <p class="reveal" style="font-size: var(--body-size); margin-bottom: var(--content-gap);">{self._esc(pred_str)}</p>
+        {f'<p class="reveal" style="font-size: var(--small-size); font-weight: 600; opacity: 0.6; margin-bottom: var(--element-gap);">Recommendations</p><ul class="feature-list" style="padding-left: 1em;">{rec_items}</ul>' if rec_items else ""}
       </div>
     </section>'''
 
@@ -357,9 +434,10 @@ class SlideGeneratorTool(BaseTool):
         return f'''
     <section class="slide">
       <div class="slide-content" style="justify-content: center; align-items: center; text-align: center;">
-        <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5;">Spatio-Temporal Analysis</p>
+        <p class="reveal" style="font-size: var(--small-size); letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5;">Unveiling</p>
         <h1 class="reveal" style="font-size: var(--title-size); margin-top: var(--element-gap);">{self._esc(topic)}</h1>
         <p class="reveal" style="font-size: var(--body-size); margin-top: var(--content-gap); opacity: 0.6;">Understanding through analogy across space and time</p>
+        <div class="reveal" style="width: 60px; height: 3px; background: var(--accent); margin-top: var(--content-gap);"></div>
       </div>
     </section>'''
 
@@ -371,7 +449,7 @@ class SlideGeneratorTool(BaseTool):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{self._esc(title)} — Spatio-Temporal Analysis</title>
+  <title>{self._esc(title)} — Unveiling</title>
   <link rel="stylesheet" href="{style['font_url']}">
   <style>
     :root {{

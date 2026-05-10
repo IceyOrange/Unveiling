@@ -3,69 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatio-Temporal Analogy Analysis</title>
+  <title>Unveiling</title>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header>
-      <h1>Spatio-Temporal Analogy Analysis</h1>
-      <p class="subtitle">时空类比分析</p>
-    </header>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="#" class="brand">Unveiling</a>
+      <a href="#analysis" class="nav-link">开始分析</a>
+    </div>
+  </nav>
 
-    <!-- Input Section -->
-    <section id="input-section">
-      <div class="input-group">
-        <label for="topic-input">Topic</label>
-        <input type="text" id="topic-input" placeholder='输入分析主题，如 "AI"、"短视频"、"电动车市场"...' autocomplete="off">
-      </div>
-      <div class="input-group">
-        <label for="style-select">Slide Style</label>
-        <select id="style-select">
-          <option value="swiss-modern">Swiss Modern — Bauhaus, clean analytical</option>
-          <option value="bold-signal">Bold Signal — Dark, vibrant accent</option>
-          <option value="neon-cyber">Neon Cyber — Deep navy, neon glow</option>
-        </select>
-      </div>
-      <button id="start-btn" onclick="startAnalysis()">Start Analysis</button>
-    </section>
+  <main>
+    <section id="hero">
+      <div class="hero-inner">
+        <h1>输入主题，获取深度洞察</h1>
+        <p class="hero-desc">通过多个专业 Agent 的协作分析，从抽象透镜、历史演变、跨领域类比、结构化对比、因果验证到综合洞察，输出完整的认知报告。</p>
 
-    <!-- Progress Section -->
-    <section id="progress-section" style="display:none;">
-      <div class="progress-header">
-        <h2 id="progress-topic"></h2>
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" id="progress-bar"></div>
-        </div>
-        <span class="progress-pct" id="progress-pct">0%</span>
-      </div>
-      <div class="agent-timeline" id="agent-timeline"></div>
-      <div class="status-msg" id="status-msg">Initializing...</div>
-    </section>
+        <div class="hero-form">
+          <input type="text" id="topic-input" placeholder="输入分析主题，如 &quot;AI&quot;、&quot;短视频&quot;、&quot;电动车市场&quot;..." autocomplete="off">
+          <div class="hero-form-row">
+            <select id="style-select">
+              <option value="swiss-modern">Swiss Modern — 包豪斯，简洁分析</option>
+              <option value="bold-signal">Bold Signal — 深色，活力强调</option>
+              <option value="neon-cyber">Neon Cyber — 深海蓝，霓虹发光</option>
+            </select>
+            <select id="language-select">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <button id="start-btn" onclick="startAnalysis()">启动分析</button>
 
-    <!-- Result Section -->
-    <section id="result-section" style="display:none;">
-      <div class="result-header">
-        <h2>Analysis Complete</h2>
-        <div class="result-actions">
-          <button onclick="viewSlides()" class="btn-primary">View Presentation</button>
-          <a id="download-link" href="#" download class="btn-secondary">Download HTML</a>
-          <button onclick="resetUI()" class="btn-secondary">New Analysis</button>
+          <div class="quick-topics">
+            <span>快速尝试：</span>
+            <button onclick="setTopic('人工智能')">人工智能</button>
+            <button onclick="setTopic('短视频行业')">短视频行业</button>
+            <button onclick="setTopic('电动车市场')">电动车市场</button>
+            <button onclick="setTopic('咖啡文化')">咖啡文化</button>
+            <button onclick="setTopic('远程办公')">远程办公</button>
+          </div>
         </div>
       </div>
-      <div class="slide-frame-container">
-        <iframe id="slide-frame" src="" frameborder="0"></iframe>
+    </section>
+
+    <section id="pipeline">
+      <div class="pipeline-inner">
+        <h2>分析流程</h2>
+        <ol class="pipeline-steps">
+          <li>
+            <strong>Abstracter</strong>
+            <span>生成抽象透镜</span>
+          </li>
+          <li>
+            <strong>Vertical Discovery</strong>
+            <span>穿越时间搜索</span>
+          </li>
+          <li>
+            <strong>Horizontal Discovery</strong>
+            <span>穿越领域搜索</span>
+          </li>
+          <li>
+            <strong>Comparator</strong>
+            <span>逐个对比分析</span>
+          </li>
+          <li>
+            <strong>Causal Reviewer</strong>
+            <span>因果审查</span>
+          </li>
+          <li>
+            <strong>Synthesizer</strong>
+            <span>综合整合</span>
+          </li>
+        </ol>
       </div>
     </section>
 
-    <!-- Error Section -->
-    <section id="error-section" style="display:none;">
-      <h2>Error</h2>
-      <p id="error-msg" class="error-text"></p>
-      <button onclick="resetUI()" class="btn-secondary">Try Again</button>
+    <section id="analysis">
+      <!-- Progress -->
+      <div class="card" id="progress-section" style="display:none;">
+        <div class="progress-header">
+          <div class="progress-meta">
+            <h2 id="progress-topic"></h2>
+            <span class="progress-pct" id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+          </div>
+        </div>
+
+        <div class="progress-body">
+          <div class="agent-timeline-column">
+            <h3 class="panel-title">分析流水线</h3>
+            <div class="agent-timeline" id="agent-timeline"></div>
+          </div>
+          <div class="thinking-panel">
+            <h3 class="panel-title thinking-title">
+              <span class="thinking-dot"></span>
+              Agent 思考过程
+            </h3>
+            <div class="thinking-content" id="thinking-content">
+              <div class="thinking-placeholder">等待 Agent 开始思考...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="blackboard-section">
+          <h3 class="panel-title">
+            <span class="blackboard-icon">💬</span>
+            Agent 讨论板
+            <span class="blackboard-count" id="blackboard-count">0 条消息</span>
+          </h3>
+          <div class="blackboard-content" id="blackboard-content">
+            <div class="blackboard-placeholder">等待 Agent 开始讨论...</div>
+          </div>
+        </div>
+
+        <div class="status-msg" id="status-msg">初始化中...</div>
+      </div>
+
+      <!-- Result -->
+      <div class="card" id="result-section" style="display:none;">
+        <div class="result-header">
+          <h2>分析完成</h2>
+          <div class="result-actions">
+            <button onclick="viewSlides()" class="btn-primary">查看演示</button>
+            <a id="download-link" href="#" download class="btn-secondary">下载 HTML</a>
+            <button onclick="resetUI()" class="btn-secondary">新的分析</button>
+          </div>
+        </div>
+        <div class="slide-frame-container">
+          <iframe id="slide-frame" src="" frameborder="0"></iframe>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="card error-card" id="error-section" style="display:none;">
+        <h2>分析出错</h2>
+        <p id="error-msg" class="error-text"></p>
+        <button onclick="resetUI()" class="btn-secondary">重新尝试</button>
+      </div>
     </section>
-  </div>
+  </main>
+
+  <footer>
+    <p>Unveiling — 多 Agent 深度洞察引擎</p>
+  </footer>
 
   <script src="/static/js/app.js"></script>
 </body>
