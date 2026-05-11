@@ -4,7 +4,23 @@ import json
 import os
 from typing import Optional
 
+import openai
 from openai import OpenAI
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+
+# Transient errors worth retrying; auth and request-shape errors propagate immediately.
+_TRANSIENT_OPENAI_ERRORS = (
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+    openai.RateLimitError,
+    openai.InternalServerError,
+)
 
 
 class LLMJSONError(Exception):
@@ -55,8 +71,7 @@ class LLMClient:
         current_messages = list(messages)
 
         for attempt in range(max_retries):
-            response = self.client.chat.completions.create(
-                model=self.model,
+            response = self._create_completion(
                 messages=current_messages,
                 temperature=0.1 if json_mode else temperature,
             )
@@ -91,6 +106,20 @@ class LLMClient:
                     )
 
         return "", total_tokens
+
+    @retry(
+        retry=retry_if_exception_type(_TRANSIENT_OPENAI_ERRORS),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=8),
+        reraise=True,
+    )
+    def _create_completion(self, *, messages: list[dict], temperature: float):
+        """Single completion call with tenacity retry on transient transport errors."""
+        return self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=temperature,
+        )
 
     @staticmethod
     def _ensure_json_instruction(messages: list[dict]) -> list[dict]:

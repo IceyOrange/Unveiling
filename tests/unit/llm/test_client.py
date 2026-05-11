@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 
+import openai
 import pytest
 
 from llm.client import LLMClient, LLMJSONError
@@ -118,4 +119,55 @@ def test_non_json_mode_no_retry(mock_openai_cls):
 
     assert content == "this looks like {bad json"
     assert tokens == 7
+    assert mock_client.chat.completions.create.call_count == 1
+
+
+@patch("tenacity.nap.time.sleep", lambda *_a, **_kw: None)
+@patch("llm.client.OpenAI")
+def test_transient_error_retries_then_succeeds(mock_openai_cls):
+    transient = openai.APIConnectionError(request=MagicMock())
+    good = _make_response("hello", total_tokens=11)
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = [transient, good]
+    mock_openai_cls.return_value = mock_client
+
+    client = LLMClient()
+    content, tokens = client.chat(messages=[{"role": "user", "content": "hi"}])
+
+    assert content == "hello"
+    assert tokens == 11
+    assert mock_client.chat.completions.create.call_count == 2
+
+
+@patch("tenacity.nap.time.sleep", lambda *_a, **_kw: None)
+@patch("llm.client.OpenAI")
+def test_transient_error_reraises_after_max_attempts(mock_openai_cls):
+    transient = openai.APIConnectionError(request=MagicMock())
+    mock_client = MagicMock()
+    # 3 attempts (matches stop_after_attempt(3) in client.py); all fail.
+    mock_client.chat.completions.create.side_effect = [transient, transient, transient]
+    mock_openai_cls.return_value = mock_client
+
+    client = LLMClient()
+    with pytest.raises(openai.APIConnectionError):
+        client.chat(messages=[{"role": "user", "content": "hi"}])
+
+    assert mock_client.chat.completions.create.call_count == 3
+
+
+@patch("tenacity.nap.time.sleep", lambda *_a, **_kw: None)
+@patch("llm.client.OpenAI")
+def test_non_transient_error_does_not_retry(mock_openai_cls):
+    # BadRequestError is not in the transient set and should fail fast.
+    bad = openai.BadRequestError(
+        message="bad", response=MagicMock(status_code=400), body=None
+    )
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = bad
+    mock_openai_cls.return_value = mock_client
+
+    client = LLMClient()
+    with pytest.raises(openai.BadRequestError):
+        client.chat(messages=[{"role": "user", "content": "hi"}])
+
     assert mock_client.chat.completions.create.call_count == 1

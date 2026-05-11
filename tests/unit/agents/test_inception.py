@@ -130,3 +130,25 @@ def test_inception_discards_predictions_without_killer_evidence():
     assert len(preds) == 1
     assert preds[0].claim == "c1"
     assert preds[0].killer_evidence == "concrete observable"
+
+
+def test_inception_fallback_on_malformed_json():
+    """If chat() returns invalid JSON (contract violation), agent degrades instead of crashing."""
+    state = State(user_question="Q?")
+    with patch("agents.inception.LLMClient") as mock_cls, \
+         patch("agents.inception.DegradationLogger") as mock_logger_cls:
+        # chat returns invalid JSON instead of raising LLMJSONError.
+        mock_cls.return_value.chat.return_value = ("not { real json", 42)
+        mock_logger_cls.return_value.log_event.return_value = ScheduleLogEntry(
+            author="orchestrator.inception",
+            role=OrchestratorRole.scheduler,
+            decision="degradation",
+            reason="JSONDecodeError",
+            degradation_flag=True,
+        )
+        update = inception_node(state)
+
+    assert "issue_tree" in update
+    assert len(update["issue_tree"]) >= 1
+    assert update["phase"] == Phase.exploration
+    assert any(e.degradation_flag for e in update["schedule_log"])

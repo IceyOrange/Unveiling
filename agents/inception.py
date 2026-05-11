@@ -45,7 +45,8 @@ def inception_node(state: State) -> dict:
 
     try:
         content, tokens = client.chat(messages, json_mode=True, temperature=0.7)
-    except LLMJSONError as e:
+        data = json.loads(content)
+    except (LLMJSONError, json.JSONDecodeError) as e:
         logger = DegradationLogger()
         return {
             "schedule_log": [
@@ -58,8 +59,6 @@ def inception_node(state: State) -> dict:
             "token_spent": state.token_spent + 1000,  # rough estimate
             **_fallback_inception(question),
         }
-
-    data = json.loads(content)
 
     # Build issue tree
     driving = IssueTreeNode(
