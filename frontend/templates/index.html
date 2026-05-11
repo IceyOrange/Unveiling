@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unveiling — 多 Agent 类比分析</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <span class="brand">Unveiling</span>
+      <span class="nav-sub">多 Agent 类比分析系统</span>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Input Section -->
+    <section id="input-section">
+      <div class="container">
+        <h1>输入问题，获取深度洞察</h1>
+        <p class="subtitle">通过横向/纵向类比 + 抽象透镜，产出张力式洞察（不是共性堆叠）</p>
+        <div class="form-card">
+          <input type="text" id="question-input" placeholder="例如：AI 公司现在应不应该烧钱扩张？" autocomplete="off">
+          <div class="form-row">
+            <select id="mode-select">
+              <option value="focus">Focus — 聚焦深入</option>
+              <option value="balance" selected>Balance — 平衡探索</option>
+              <option value="explore">Explore — 广泛发散</option>
+            </select>
+            <button id="start-btn" onclick="startAnalysis()">启动分析</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Progress Section -->
+    <section id="progress-section" style="display:none;">
+      <div class="container">
+        <!-- Phase Timeline -->
+        <div class="phase-timeline">
+          <div class="phase-step" id="phase-inception">
+            <div class="phase-dot"></div>
+            <div class="phase-label">启动期</div>
+            <div class="phase-desc">生成问题树、透镜、预判</div>
+          </div>
+          <div class="phase-connector"></div>
+          <div class="phase-step" id="phase-exploration">
+            <div class="phase-dot"></div>
+            <div class="phase-label">探索期</div>
+            <div class="phase-desc">搜索、深挖、辩论、检验</div>
+          </div>
+          <div class="phase-connector"></div>
+          <div class="phase-step" id="phase-convergence">
+            <div class="phase-dot"></div>
+            <div class="phase-label">收敛期</div>
+            <div class="phase-desc">合成张力式结论</div>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-rounds">0</div>
+            <div class="stat-label">调度轮次</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-evidence">0</div>
+            <div class="stat-label">证据条目</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-debates">0</div>
+            <div class="stat-label">辩论回合</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-tokens">0</div>
+            <div class="stat-label">Token 消耗</div>
+          </div>
+        </div>
+
+        <!-- Issue Tree -->
+        <div class="panel">
+          <h3 class="panel-title">问题树</h3>
+          <div id="issue-tree-panel" class="issue-tree">
+            <div class="placeholder">等待启动期完成...</div>
+          </div>
+        </div>
+
+        <!-- Event Stream -->
+        <div class="panel">
+          <h3 class="panel-title">执行日志</h3>
+          <div id="event-stream" class="event-stream">
+            <div class="placeholder">等待分析开始...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Result Section -->
+    <section id="result-section" style="display:none;">
+      <div class="container">
+        <div class="result-header">
+          <h2>分析完成</h2>
+          <button onclick="resetUI()" class="btn-secondary">新的分析</button>
+        </div>
+
+        <div class="result-grid">
+          <!-- Conclusion Card -->
+          <div class="result-card conclusion-card">
+            <h3>核心发现</h3>
+            <p id="res-convergent-finding"></p>
+            <h4>张力</h4>
+            <p id="res-tension" class="tension-text"></p>
+            <h4>边界条件</h4>
+            <p id="res-boundary"></p>
+            <h4>未解决</h4>
+            <p id="res-unresolved"></p>
+            <h4>启示</h4>
+            <p id="res-implication"></p>
+          </div>
+
+          <!-- Lenses & Predictions -->
+          <div class="result-card">
+            <h3>透镜</h3>
+            <div id="res-lenses"></div>
+            <h3>预判</h3>
+            <div id="res-predictions"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Error Section -->
+    <section id="error-section" style="display:none;">
+      <div class="container">
+        <div class="error-card">
+          <h2>分析出错</h2>
+          <p id="error-msg"></p>
+          <button onclick="resetUI()" class="btn-secondary">重新尝试</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Unveiling — 多 Agent 类比分析系统</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
