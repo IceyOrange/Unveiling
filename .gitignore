@@ -14,6 +14,9 @@ venv/
 # Output (generated at runtime)
 output/
 
+# LangGraph checkpoints
+.checkpoints/
+
 # IDE
 .vscode/
 .idea/
@@ -23,6 +26,3 @@ output/
 # OS
 .DS_Store
 Thumbs.db
-
-# CrewAI
-.crewai/
