@@ -1,141 +1,146 @@
+"""Phase 1 agent: structural abstraction of the user's question.
+
+Produces exactly one LensRecord containing abstracted entities and
+relationships.  No issue tree, no predictions, no second abstraction pass.
+"""
+
 from __future__ import annotations
 
 import json
-from uuid import uuid4
 
-from models import IssueTreeNode, LensRecord, PredictionRecord, ScheduleLogEntry, State
-from models._enums import NodeStatus, OrchestratorRole, Phase, PredictionStatus
 from llm.client import LLMClient, LLMJSONError
 from llm.degradation import DegradationLogger
+from models._enums import Phase
+from models.blackboard import (
+    AbstractedEntity,
+    AbstractedRelation,
+    LensRecord,
+    ScheduleLogEntry,
+)
+from models.state import State
 
+_SYSTEM_PROMPT = """\
+You are a structural analyst.  Given a user's question, identify the key \
+entities and relationships it involves, then abstract each one to a \
+structural level that enables cross-temporal and cross-spatial comparison.
+"""
 
-INCEPTION_PROMPT = """\
-You are an analytical framework designer. Your job is to take a user's question and build a rigorous analytical structure around it.
+_USER_PROMPT_TEMPLATE = """\
+Question: {question}
 
-User question: {question}
+Identify every meaningful entity and relationship in this question and \
+abstract them to structural roles that would allow comparison with \
+analogous situations in other domains or time periods.
 
-Produce a JSON object with exactly these keys:
-- "driving_question": a clarified, precise restatement of the user's question
-- "sub_questions": list of 3-5 strings, each a MECE (mutually exclusive, collectively exhaustive) sub-question that breaks down the driving question. These must cover all key dimensions without overlap.
-- "lenses": list of 2-3 objects, each with "name" (a short, evocative name for an abstract analogy lens) and "rationale" (1-2 sentences explaining why this lens illuminates the driving question)
-- "predictions": list of 2-3 objects, each with:
-    - "claim": a falsifiable claim about the driving question
-    - "if_true_we_should_see": what evidence would support this claim
-    - "if_false_we_should_see": what evidence would refute this claim
-    - "killer_evidence": a specific, observable piece of evidence that would decisively settle the claim (must be concrete, not vague)
+Output valid JSON with exactly these keys:
+- "pattern_name": a short, concrete name for the structural pattern
+- "essence": 2-3 sentences explaining why this pattern holds (forces, mechanisms)
+- "entities": list of {{"surface": "<original term>", "structural_role": "<abstracted structural role>"}}
+- "relationships": list of {{"surface": "<original relationship>", "structural": "<abstracted structural relationship>"}}
 
 Rules:
-- Every prediction MUST have a concrete killer_evidence. If you cannot think of one, discard that prediction.
-- Sub-questions must be MECE: together they cover the full question, and none overlap.
-- Lenses should be cross-domain analogies (e.g., biological evolution, financial bubbles, military strategy), not restatements of the question itself.
-- Output valid JSON only. No markdown, no commentary outside the JSON.
+- Surface terms come directly from the question; structural roles must be \
+generic enough for cross-domain comparison but specific enough to be useful.
+- Every entity and relationship in the question must appear.
+- Output valid JSON only.  No markdown, no commentary.
 """
 
 
 def inception_node(state: State) -> dict:
-    """Inception agent: generate issue tree, lenses, and predictions via LLM.
+    """Phase 1: abstract the user question into a structural lens.
 
-    MVP implementation uses a single LLM call with structured JSON output.
-    Falls back to a minimal placeholder if LLM fails.
+    Returns a State-update dict with:
+      - hypothesis_zone: [LensRecord]
+      - schedule_log: [ScheduleLogEntry]
+      - phase: Phase.exploration
+      - token_spent: updated total
     """
-    question = state.user_question or "Should AI companies burn cash for expansion?"
+    question = state.user_question
+    total_tokens = 0
 
-    client = LLMClient()
-    messages = [{"role": "user", "content": INCEPTION_PROMPT.format(question=question)}]
-
+    # --- Call LLM for structural abstraction ---
+    client = LLMClient(language=state.output_language)
     try:
-        content, tokens = client.chat(messages, json_mode=True, temperature=0.7)
-        data = json.loads(content)
-    except (LLMJSONError, json.JSONDecodeError) as e:
-        logger = DegradationLogger()
-        return {
-            "schedule_log": [
-                logger.log_event(
-                    role="inception",
-                    scenario=f"LLM JSON failure: {e}",
-                    fallback_action="fallback_to_placeholder_inception",
-                )
+        raw, tokens = client.chat(
+            messages=[
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": _USER_PROMPT_TEMPLATE.format(question=question)},
             ],
-            "token_spent": state.token_spent + 1000,  # rough estimate
-            **_fallback_inception(question),
-        }
+            json_mode=True,
+            temperature=0.7,
+        )
+        total_tokens += tokens
+        data = json.loads(raw)
+    except (LLMJSONError, json.JSONDecodeError, Exception) as exc:
+        return _fallback(state, question, exc)
 
-    # Build issue tree
-    driving = IssueTreeNode(
+    # --- Parse LLM output into typed models ---
+    pattern_name = data.get("pattern_name", "Unknown Pattern")
+    essence = data.get("essence", "")
+
+    entities = [
+        AbstractedEntity(
+            surface=e.get("surface", ""),
+            structural_role=e.get("structural_role", ""),
+        )
+        for e in data.get("entities", [])
+        if e.get("surface")
+    ]
+
+    relationships = [
+        AbstractedRelation(
+            surface=r.get("surface", ""),
+            structural=r.get("structural", ""),
+        )
+        for r in data.get("relationships", [])
+        if r.get("surface")
+    ]
+
+    lens = LensRecord(
         author="inception",
-        content=data["driving_question"],
-        node_status=NodeStatus.untouched,
+        name=pattern_name,
+        rationale=essence,
+        entities=entities,
+        relationships=relationships,
     )
-    issue_tree = [driving]
-    for sq in data.get("sub_questions", []):
-        issue_tree.append(
-            IssueTreeNode(
-                author="inception",
-                content=sq,
-                parent_id=driving.id,
-                node_status=NodeStatus.untouched,
-            )
-        )
 
-    # Build lenses
-    lenses = []
-    for lens_data in data.get("lenses", []):
-        lenses.append(
-            LensRecord(
-                author="inception",
-                name=lens_data["name"],
-                rationale=lens_data["rationale"],
-            )
-        )
-
-    # Build predictions (filter out any missing killer_evidence)
-    predictions = []
-    for pred_data in data.get("predictions", []):
-        killer = pred_data.get("killer_evidence", "").strip()
-        if not killer:
-            continue
-        predictions.append(
-            PredictionRecord(
-                author="inception",
-                claim=pred_data["claim"],
-                if_true_we_should_see=pred_data["if_true_we_should_see"],
-                if_false_we_should_see=pred_data["if_false_we_should_see"],
-                killer_evidence=killer,
-                prediction_status=PredictionStatus.pending,
-            )
-        )
+    log = ScheduleLogEntry(
+        author="inception",
+        decision="inception_complete",
+        reason=(
+            f"abstracted to pattern '{pattern_name}', "
+            f"{len(entities)} entities, {len(relationships)} relationships"
+        ),
+    )
 
     return {
-        "issue_tree": issue_tree,
-        "hypothesis_zone": lenses + predictions,
-        "schedule_log": [
-            ScheduleLogEntry(
-                author="inception",
-                role=OrchestratorRole.scheduler,
-                decision="inception_complete",
-                reason=f"generated {len(issue_tree)} nodes, {len(lenses)} lenses, {len(predictions)} predictions",
-            )
-        ],
-        "token_spent": state.token_spent + tokens,
+        "hypothesis_zone": [lens],
+        "schedule_log": [log],
+        "token_spent": state.token_spent + total_tokens,
         "phase": Phase.exploration,
     }
 
 
-def _fallback_inception(question: str) -> dict:
-    """Minimal fallback when LLM fails."""
-    driving = IssueTreeNode(
-        author="inception",
-        content=question,
-        node_status=NodeStatus.untouched,
+def _fallback(state: State, question: str, exc: Exception) -> dict:
+    """Degradation path: log failure and return a minimal placeholder lens."""
+    logger = DegradationLogger()
+    log = logger.log_event(
+        role="inception",
+        scenario=f"LLM failure during inception: {exc}",
+        fallback_action="placeholder_lens_with_raw_question",
     )
-    child = IssueTreeNode(
+
+    lens = LensRecord(
         author="inception",
-        content="What are the key structural factors that determine the outcome?",
-        parent_id=driving.id,
-        node_status=NodeStatus.untouched,
+        name=question,
+        rationale="Fallback lens — LLM abstraction failed; using raw question.",
+        entities=[],
+        relationships=[],
     )
+
     return {
-        "issue_tree": [driving, child],
-        "hypothesis_zone": [],
+        "hypothesis_zone": [lens],
+        "schedule_log": [log],
+        "token_spent": state.token_spent + 500,
         "phase": Phase.exploration,
     }

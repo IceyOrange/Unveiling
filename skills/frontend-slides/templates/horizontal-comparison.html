@@ -1,17 +1,23 @@
 <!--
-  Horizontal Comparison Layout Template
+  Horizontal Comparison Layout Template (Unveiling-aligned)
 
   Layout: Two-column side-by-side comparison
-  Left: Original topic characteristics
-  Right: Cross-domain instance characteristics
-  Color-coded matching between shared features
+  Left: 原问题 (original_topic) — the user's question, rephrased as a concrete instance
+  Right: 跨领域的另一个例子 (cross_domain_instance) — the analogy from another field
+  Colored top border indicates layer or status — never orange unless this slide is the tension moment.
+
+  Variable mapping (route user-visible strings through UNVEILING_VOCAB.md):
+    {topic_name}     — 原问题的具体说法
+    {domain_name}    — 另一个领域的名字 (e.g. 黄金热 / 修道院 / 早期电报)
+    {instance_name}  — 那个领域里被拿来对照的具体例子
+    {feature_*}      — 共通点 / 不同点的要点
 
   Used for: Horizontal comparison slides
 -->
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--content-gap);">
-  <!-- Original Topic Card -->
-  <div style="background: var(--bg-secondary); padding: clamp(0.75rem, 2vw, 1.5rem); border-radius: 8px; border-top: 3px solid var(--accent);">
-    <p style="font-size: var(--small-size); opacity: 0.5;">ORIGINAL TOPIC</p>
+  <!-- 原问题 Card -->
+  <div style="background: var(--bg-sand); padding: clamp(0.75rem, 2vw, 1.5rem); border-radius: 8px; border-top: 3px solid var(--ink-primary);">
+    <p style="font-size: var(--small-size); opacity: 0.5;">原问题</p>
     <p style="font-size: var(--h3-size); font-weight: 700;">{topic_name}</p>
     <ul class="feature-list" style="margin-top: var(--element-gap);">
       <li>{feature_1}</li>
@@ -19,9 +25,9 @@
       <li>{feature_3}</li>
     </ul>
   </div>
-  <!-- Cross-Domain Instance Card -->
-  <div style="background: var(--bg-secondary); padding: clamp(0.75rem, 2vw, 1.5rem); border-radius: 8px; border-top: 3px solid var(--accent);">
-    <p style="font-size: var(--small-size); opacity: 0.5;">{domain_name}</p>
+  <!-- 跨领域的另一个例子 Card -->
+  <div style="background: var(--bg-sand); padding: clamp(0.75rem, 2vw, 1.5rem); border-radius: 8px; border-top: 3px solid var(--ink-primary);">
+    <p style="font-size: var(--small-size); opacity: 0.5;">另一个领域里的同类例子 · {domain_name}</p>
     <p style="font-size: var(--h3-size); font-weight: 700;">{instance_name}</p>
     <ul class="feature-list" style="margin-top: var(--element-gap);">
       <li>{feature_1}</li>

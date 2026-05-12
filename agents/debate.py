@@ -81,7 +81,7 @@ def debate_node(state: State) -> dict:
         for i, e in enumerate(related_evidence[:5])
     )
 
-    client = LLMClient()
+    client = LLMClient(language=state.output_language)
     messages = [
         {
             "role": "user",

@@ -124,7 +124,7 @@ def deepdig_node(state: State) -> dict:
         for e in sorted(related_evidence, key=lambda x: layer_order.get(x.layer, 1))
     )
 
-    client = LLMClient()
+    client = LLMClient(language=state.output_language)
     messages = [
         {
             "role": "user",

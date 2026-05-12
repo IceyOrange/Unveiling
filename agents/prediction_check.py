@@ -37,15 +37,28 @@ Rules:
 def prediction_check_node(state: State) -> dict:
     """Prediction check agent: evaluate a pending prediction against search evidence.
 
-    Picks the first pending prediction, searches for killer evidence,
-    and updates the prediction status.
+    Picks the first pending prediction that hasn't been checked too many times,
+    searches for killer evidence, and updates the prediction status.
     """
-    # Find first pending prediction
+    # Count how many times each prediction has been checked (via schedule_log)
+    # Reason format: "pred_{id}: {analysis}" — extract the prefix to count per prediction
+    check_counts: dict[str, int] = {}
+    for log in state.schedule_log:
+        if log.author == "prediction_check" and log.decision and log.decision.startswith("prediction_"):
+            if log.reason and log.reason.startswith("pred_"):
+                pred_id = log.reason.split(":")[0]  # "pred_{uuid}"
+                check_counts[pred_id] = check_counts.get(pred_id, 0) + 1
+
+    # Find a pending prediction that hasn't been checked too many times
+    MAX_CHECK_ATTEMPTS = 2
     target_pred = None
     for h in state.hypothesis_zone:
         if hasattr(h, "prediction_status") and h.prediction_status == PredictionStatus.pending:
-            target_pred = h
-            break
+            pred_key = f"pred_{h.id}"
+            attempts = check_counts.get(pred_key, 0)
+            if attempts < MAX_CHECK_ATTEMPTS:
+                target_pred = h
+                break
 
     if target_pred is None:
         return {
@@ -54,7 +67,7 @@ def prediction_check_node(state: State) -> dict:
                     author="prediction_check",
                     role=OrchestratorRole.scheduler,
                     decision="noop",
-                    reason="no pending predictions to check",
+                    reason="no pending predictions to check (all exhausted or resolved)",
                 )
             ]
         }
@@ -78,7 +91,7 @@ def prediction_check_node(state: State) -> dict:
         for i, r in enumerate(all_results[:8])
     ) or "No search results."
 
-    client = LLMClient()
+    client = LLMClient(language=state.output_language)
     messages = [
         {
             "role": "user",
@@ -124,7 +137,7 @@ def prediction_check_node(state: State) -> dict:
                 author="prediction_check",
                 role=OrchestratorRole.scheduler,
                 decision=f"prediction_{new_status.value}",
-                reason=data.get("reason", "no reason provided"),
+                reason=f"pred_{target_pred.id}: {data.get('reason', 'no reason provided')}",
             )
         ],
         "token_spent": state.token_spent + tokens,

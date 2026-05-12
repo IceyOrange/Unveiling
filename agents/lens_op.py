@@ -19,12 +19,14 @@ Recent evidence:
 
 Output exactly:
 Action: <keep|revise|replace>
+NewName: <if revise or replace, provide a fresh short vivid name for the evolved lens; if keep, output "same">
 Reason: <one sentence explaining why>
 
 Rules:
 - "keep" if the lens still provides useful insight
-- "revise" if the lens needs tweaking but the core analogy is sound
-- "replace" if the evidence contradicts the lens or a better analogy is needed
+- "revise" if the lens needs tweaking but the core idea is sound — give it a NEW name that reflects the tweak, do NOT append "(revised)" or "(updated)"
+- "replace" if the evidence contradicts the lens — give it a completely new name
+- Names should be vivid and accessible, not academic. Use metaphors, everyday language.
 - Output plain text only, no JSON.
 """
 
@@ -85,7 +87,7 @@ def lens_op_node(state: State) -> dict:
         for e in related_evidence
     ) or "No evidence yet."
 
-    client = LLMClient()
+    client = LLMClient(language=state.output_language)
     messages = [
         {
             "role": "user",
@@ -116,11 +118,14 @@ def lens_op_node(state: State) -> dict:
     # Parse action
     action = "keep"
     reason = ""
+    new_name = ""
     for line in content.splitlines():
         if line.startswith("Action:"):
             action = line[len("Action:"):].strip().lower()
         elif line.startswith("Reason:"):
             reason = line[len("Reason:"):].strip()
+        elif line.startswith("NewName:"):
+            new_name = line[len("NewName:"):].strip()
 
     if action == "keep" or not reason:
         return {
@@ -135,11 +140,14 @@ def lens_op_node(state: State) -> dict:
             "token_spent": state.token_spent + tokens,
         }
 
-    # Create revised lens with parent_lens_id chain
+    # Create revised lens with a fresh name
+    if not new_name or new_name.lower() == "same":
+        new_name = current_lens.name
+
     new_lens = LensRecord(
         author="lens_op",
         parent_lens_id=current_lens.id,
-        name=f"{current_lens.name} (revised)",
+        name=new_name,
         rationale=reason,
     )
 

@@ -298,6 +298,81 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 
 ---
 
+### 13. Unveiling Paper
+
+**Vibe:** Quiet, considered, single-reader, paper-like. Inspired by reading-table proofreading, not stage projection. **Locked to Mode D (Unveiling Analysis Deck) — do not offer this preset for generic decks.**
+
+**Layout:** Cream paper background. Title-slide centered with mode badge in the corner. Content slides use a 3px solid left rule for prose; a 4px solid orange left rule for the single tension slide; a dashed left rule when a slide carries a degradation note. Max read-width 720px. No grid pattern, no decorative geometry — the typography does the work.
+
+**Typography (three voices):**
+- Prose (serif): `Source Han Serif SC, Songti SC, Noto Serif CJK SC, Georgia, serif` — system stack, no CDN
+- UI / labels (sans): `-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", sans-serif`
+- Machine meta (mono): `"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace`
+- **PDF/export fallback:** Add a Google Fonts link for `Noto Serif SC` (400/700) + `Noto Sans SC` (400/500) **only** when exporting a standalone deck (e.g., user clicks "导出 PDF"). For in-app embed, system stack is enough and stays offline.
+
+**Colors (must match `frontend/static/css/style.css` `:root` exactly):**
+```css
+:root {
+    /* Canvas */
+    --bg-cream: #faf7f0;
+    --bg-sand: #f0ebe0;       /* humility / unresolved panels */
+    --surface-card: #ffffff;
+    --surface-inset: #f5f1e8;
+
+    /* Ink */
+    --ink-primary: #2d2a26;
+    --ink-secondary: #6b6660;
+    --ink-tertiary: #a8a39b;
+
+    /* Tension exclusive — never used decoratively */
+    --accent-tension: #ff6b35;
+    --accent-tension-soft: rgba(255, 107, 53, 0.08);
+    --accent-tension-border: rgba(255, 107, 53, 0.25);
+
+    /* Status (子问题 status indicators) */
+    --status-closed: #4a7c59;      /* forest */
+    --status-exploring: #c8941a;   /* amber */
+    --status-untouched: #a8a39b;   /* gray */
+    --status-stuck: #8b3a3a;       /* oxblood */
+
+    /* Layer (evidence layer badges) */
+    --layer-structure: #3a5a6c;    /* blue-gray */
+    --layer-mechanism: #6c5b3a;    /* olive */
+    --layer-phenomenon: #a8a39b;   /* gray */
+
+    /* Shadows (warm-black, not pure black) */
+    --shadow-sm: 0 1px 2px rgba(45, 42, 38, 0.04);
+    --shadow-md: 0 2px 8px rgba(45, 42, 38, 0.06);
+    --shadow-lg: 0 8px 24px rgba(45, 42, 38, 0.08);
+}
+```
+
+**Type scale (clamp-driven, viewport-fit invariants still apply):**
+- Hero serif (driving question, conclusion big-line): `clamp(2rem, 5vw, 3rem)` — Source Han Serif SC, weight 400
+- Section serif (slide headings): `clamp(1.4rem, 3vw, 1.625rem)` — weight 600
+- Pull-quote serif (tension): `clamp(1.1rem, 2.4vw, 1.375rem)` — italic optional
+- Body sans (子问题 bullets, evidence cards): `clamp(0.95rem, 1.8vw, 1.0625rem)`
+- Meta mono (回合数 / token / 模式徽章): `clamp(0.7rem, 1.2vw, 0.75rem)` — uppercase, letter-spacing 0.05em
+
+**Signature elements:**
+- **Left rules carry meaning, not decoration:**
+  - 3px solid `var(--ink-primary)` → 普通论述句
+  - 4px solid `var(--accent-tension)` → 张力 slide (the single moment orange appears)
+  - Dashed `var(--ink-tertiary)` → "走了捷径" / degradation hint (when applicable)
+- **Status dots before 子问题 bullets:** 8px solid circle in `--status-*` color, then the question text in sans
+- **Layer pills before evidence cards:** uppercase mono label in `--layer-*` color (no fill, just colored text + colored 1px border)
+- **Sand panels (`--bg-sand`) for humility moments:** unresolved / stuck slides use sand background to telegraph "this is what we don't know"
+- **Mode badge:** top-right corner, mono caps in `--ink-tertiary` — "刚开始 / 展开找 / 收尾" (never "inception/exploration/convergence")
+- **No drop caps, no decorative dingbats, no grid lines.** The signature is restraint.
+
+**What this preset forbids:**
+- Purple gradients, glassmorphism, neon glow, particle backgrounds, halftones
+- Any color outside the token list above (especially: no green checkmarks, no red crosses — use forest closed / oxblood stuck instead)
+- Decorative use of `--accent-tension` (only on the tension slide and on `is_unexpected=True` evidence)
+- Google Fonts loaded in the embed path (system stack only)
+
+---
+
 ## Font Pairing Quick Reference
 
 | Preset | Display Font | Body Font | Source |
@@ -312,6 +387,7 @@ Curated visual styles for Frontend Slides. Each preset is inspired by real desig
 | Vintage Editorial | Fraunces | Work Sans | Google |
 | Neon Cyber | Clash Display | Satoshi | Fontshare |
 | Terminal Green | JetBrains Mono | JetBrains Mono | JetBrains |
+| Unveiling Paper | Source Han Serif SC / Songti SC | system sans (PingFang SC / Hiragino Sans GB) | System (CDN fallback: Noto Serif/Sans SC, Google) |
 
 ---
 

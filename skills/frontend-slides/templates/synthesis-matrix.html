@@ -1,32 +1,39 @@
 <!--
-  Synthesis Matrix Layout Template
+  Synthesis Matrix Layout Template (Unveiling-aligned)
 
-  Layout: 2-column grid showing cross-dimensional insights
-  Left column: Vertical (temporal) evidence
-  Right column: Horizontal (cross-domain) evidence
-  Bottom: Cross-dimensional conclusion
+  Layout: 2-column grid 把跨时期 和 跨领域 的发现放一起对照
+  Left:  纵向(看不同时期) — vertical_evidence
+  Right: 横向(看不同领域) — horizontal_evidence
+  Bottom: 两边一起看,会发现…… — implication (the cross-dimensional payoff)
 
-  Used for: Synthesis insight slides
+  Variable mapping (route user-visible strings through UNVEILING_VOCAB.md):
+    {insight_title}        — 这一对照得出的标题
+    {insight_description}  — 一句话说清这次对照的视角
+    {vertical_evidence}    — 不同时期那一侧看到的
+    {horizontal_evidence}  — 不同领域那一侧看到的
+    {implication}          — 两个一起看的启发
+
+  Used for: 跨维度综合 slides — 通常出现在收尾阶段的"找到了什么"或"给你的提醒"前一张。
 -->
 <div>
   <h2 style="font-size: var(--h3-size); margin-bottom: var(--content-gap);">{insight_title}</h2>
   <p style="font-size: var(--body-size); margin-bottom: var(--content-gap);">{insight_description}</p>
 
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--content-gap); margin-bottom: var(--content-gap);">
-    <!-- Vertical Evidence -->
-    <div style="background: var(--accent_light); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
-      <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Vertical Evidence</p>
+    <!-- 纵向(看不同时期) -->
+    <div style="background: var(--bg-sand); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
+      <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">纵向(看不同时期)</p>
       <p style="font-size: var(--small-size);">{vertical_evidence}</p>
     </div>
-    <!-- Horizontal Evidence -->
-    <div style="background: var(--accent_light); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
-      <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">Horizontal Evidence</p>
+    <!-- 横向(看不同领域) -->
+    <div style="background: var(--bg-sand); padding: clamp(0.5rem, 1.5vw, 1rem); border-radius: 6px;">
+      <p style="font-size: var(--small-size); font-weight: 600; opacity: 0.6;">横向(看不同领域)</p>
       <p style="font-size: var(--small-size);">{horizontal_evidence}</p>
     </div>
   </div>
 
-  <div style="border-left: 4px solid var(--accent); padding-left: clamp(0.5rem, 1.5vw, 1rem);">
-    <p style="font-size: var(--body-size); font-weight: 600;">Cross-dimensional Implication</p>
+  <div style="border-left: 4px solid var(--ink-primary); padding-left: clamp(0.5rem, 1.5vw, 1rem);">
+    <p style="font-size: var(--body-size); font-weight: 600;">两边一起看,会发现:</p>
     <p style="font-size: var(--small-size); opacity: 0.8;">{implication}</p>
   </div>
 </div>

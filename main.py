@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from frontend.slides.generator import generate_slides
 from graph.build import build_graph
-from models.state import State
 from models._enums import Phase
+from models.state import State
 
 
 def main() -> None:
@@ -33,62 +34,62 @@ def main() -> None:
 
     load_dotenv()
 
-    # Map mode to near/far ratio
-    mode_ratio = {"focus": 0.8, "balance": 0.5, "explore": 0.2}
+    state = State(user_question=args.question)
 
-    state = State(
-        user_question=args.question,
-        # Mode ratio can be consumed by scheduler in future iterations
-    )
-
-    print(f"🚀 Unveiling analysis starting...")
+    print(f"Unveiling analysis starting...")
     print(f"Question: {args.question}")
-    print(f"Mode: {args.mode} (near/far ratio: {mode_ratio[args.mode]})")
+    print(f"Mode: {args.mode}")
     print("-" * 60)
 
     graph = build_graph()
-    result = graph.invoke(state, {"recursion_limit": args.recursion_limit})
+    step = 0
+    result = None
+    for chunk in graph.stream(state, {"recursion_limit": args.recursion_limit}):
+        for node_name, updates in chunk.items():
+            step += 1
+            logs = updates.get("schedule_log", [])
+            log_msg = ""
+            if logs:
+                last_log = logs[-1]
+                log_msg = f" | {last_log.decision}: {last_log.reason[:80]}"
+            print(f"  [{step:3d}] {node_name}{log_msg}")
+            if result is None:
+                result = updates
+            else:
+                for k, v in updates.items():
+                    if k in result and isinstance(result[k], list) and isinstance(v, list):
+                        result[k].extend(v)
+                    else:
+                        result[k] = v
 
-    print(f"\n✅ Analysis complete")
+    if result is None:
+        print("No result produced")
+        sys.exit(1)
+
+    print(f"\nAnalysis complete")
     print(f"Phase: {result['phase'].value}")
-    print(f"Rounds: {result['round_count']}")
     print(f"Tokens spent: {result['token_spent']}")
+    print(f"Evidence collected: lateral={result.get('lateral_count', 0)}, vertical={result.get('vertical_count', 0)}")
     print("-" * 60)
 
-    # Print issue tree
-    print("\n📋 Issue Tree")
-    latest = {}
-    for node in result["issue_tree"]:
-        latest[node.id] = node
-    for node in latest.values():
-        if node.parent_id is None:
-            print(f"  🎯 {node.content}")
-        else:
-            status_emoji = {
-                "untouched": "⬜",
-                "exploring": "🔍",
-                "closed": "✅",
-                "stuck": "⚠️",
-            }.get(node.node_status.value, "❓")
-            print(f"    {status_emoji} {node.content}")
-
-    # Print hypothesis zone (latest versions only)
-    if result["hypothesis_zone"]:
-        print("\n🔮 Hypotheses")
-        latest_hypotheses = {}
-        for h in result["hypothesis_zone"]:
-            latest_hypotheses[h.id] = h
-        for h in latest_hypotheses.values():
-            if hasattr(h, "name"):
-                print(f"  🔍 Lens: {h.name}")
-            elif hasattr(h, "claim"):
-                print(f"  📊 Prediction: {h.claim} [{h.prediction_status.value}]")
+    # Print lens
+    if result.get("hypothesis_zone"):
+        lens = result["hypothesis_zone"][-1]
+        print(f"\nLens: {lens.name}")
+        if lens.entities:
+            print("  Entities:")
+            for e in lens.entities:
+                print(f"    {e.surface} -> {e.structural_role}")
+        if lens.relationships:
+            print("  Relationships:")
+            for r in lens.relationships:
+                print(f"    {r.surface} -> {r.structural}")
 
     # Print conclusion
-    if result["conclusion_zone"]:
-        print("\n📝 Conclusion")
+    if result.get("conclusion_zone"):
+        print("\nConclusion")
         c = result["conclusion_zone"][-1]
-        print(f"  Core finding: {c.convergent_finding}")
+        print(f"  Core finding: {c.core_finding}")
         print(f"  Tension: {c.tension}")
         print(f"  Boundary: {c.boundary_condition}")
         print(f"  Unresolved: {c.unresolved}")
@@ -96,35 +97,146 @@ def main() -> None:
 
     # Degradation summary
     degradation_events = [
-        e for e in result["schedule_log"] if getattr(e, "degradation_flag", False)
+        e for e in result.get("schedule_log", []) if getattr(e, "degradation_flag", False)
     ]
     if degradation_events:
-        print(f"\n⚠️  Degradation events: {len(degradation_events)}")
+        print(f"\nDegradation events: {len(degradation_events)}")
         for e in degradation_events:
-            print(f"    - {e.author}: {e.reason}")
+            print(f"  - {e.author}: {e.reason}")
 
     # Integrity summary
-    closed_count = sum(
-        1 for n in latest.values()
-        if n.parent_id is not None and n.node_status.value == "closed"
-    )
-    stuck_count = sum(
-        1 for n in latest.values()
-        if n.parent_id is not None and n.node_status.value == "stuck"
-    )
-    total_sub = sum(1 for n in latest.values() if n.parent_id is not None)
-    print(f"\n📊 Integrity: {closed_count}/{total_sub} closed, {stuck_count} stuck")
+    total_evidence = len(result.get("evidence_zone", []))
+    print(f"\nIntegrity: {total_evidence} evidence records, {len(degradation_events)} degradations")
+
+    # ---- Detailed analysis log ----
+    print("\n" + "=" * 60)
+    print("DETAILED ANALYSIS LOG")
+    print("=" * 60)
+
+    # Schedule log
+    print("\n--- Schedule Log ---")
+    for i, log in enumerate(result.get("schedule_log", []), 1):
+        print(f"  [{i:2d}] {log.author} | {log.decision} | {log.reason}")
+
+    # Evidence breakdown
+    evidence_list = result.get("evidence_zone", [])
+    if evidence_list:
+        lateral_ev = [e for e in evidence_list if e.search_direction.value == "lateral"]
+        vertical_ev = [e for e in evidence_list if e.search_direction.value == "vertical"]
+        print(f"\n--- Evidence Breakdown ---")
+        print(f"  Lateral: {len(lateral_ev)} records")
+        print(f"  Vertical: {len(vertical_ev)} records")
+
+        print(f"\n--- Lateral Evidence (sample, first 5) ---")
+        for i, e in enumerate(lateral_ev[:5], 1):
+            print(f"  [{i}] [{e.layer.value}/{e.confidence.value}] {e.content[:100]}")
+
+        print(f"\n--- Vertical Evidence (sample, first 5) ---")
+        for i, e in enumerate(vertical_ev[:5], 1):
+            print(f"  [{i}] [{e.layer.value}/{e.confidence.value}] {e.content[:100]}")
+
+    # ---- Write analysis log to tmp/ ----
+    _write_log(result)
 
     if result["phase"] != Phase.convergence:
-        print("\n⚠️  Warning: analysis did not reach convergence phase")
+        print("\nWarning: analysis did not reach convergence phase")
         sys.exit(1)
 
-    # Generate HTML output
-    output_path = Path("output") / f"unveiling_{result['issue_tree'][0].id[:8]}.html"
-    output_path.parent.mkdir(exist_ok=True)
-    final_state = State(**result)
-    generate_slides(final_state, output_path)
-    print(f"\n📄 Output: {output_path.absolute()}")
+
+def _write_log(result: dict) -> None:
+    """Write detailed analysis log to tmp/ directory."""
+    log_dir = Path("tmp")
+    log_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = log_dir / f"analysis_{timestamp}.log"
+
+    lines: list[str] = []
+    lines.append("=" * 70)
+    lines.append("UNVEILING ANALYSIS LOG")
+    lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("=" * 70)
+
+    # Meta
+    lines.append(f"\nQuestion: {result.get('user_question', 'N/A')}")
+    lines.append(f"Phase: {result['phase'].value}")
+    lines.append(f"Tokens spent: {result['token_spent']}")
+    lines.append(f"Evidence: lateral={result.get('lateral_count', 0)}, vertical={result.get('vertical_count', 0)}")
+
+    # Lens
+    if result.get("hypothesis_zone"):
+        lens = result["hypothesis_zone"][-1]
+        lines.append(f"\n{'=' * 70}")
+        lines.append("LENS (Phase 1 Abstraction)")
+        lines.append(f"{'=' * 70}")
+        lines.append(f"Name: {lens.name}")
+        lines.append(f"Rationale: {lens.rationale}")
+        if lens.entities:
+            lines.append("\nEntities:")
+            for e in lens.entities:
+                lines.append(f"  {e.surface} -> {e.structural_role}")
+        if lens.relationships:
+            lines.append("\nRelationships:")
+            for r in lens.relationships:
+                lines.append(f"  {r.surface} -> {r.structural}")
+
+    # Schedule log
+    lines.append(f"\n{'=' * 70}")
+    lines.append("SCHEDULE LOG")
+    lines.append(f"{'=' * 70}")
+    for i, log in enumerate(result.get("schedule_log", []), 1):
+        lines.append(f"  [{i:2d}] {log.author} | {log.decision} | {log.reason}")
+
+    # Evidence — full detail
+    evidence_list = result.get("evidence_zone", [])
+    if evidence_list:
+        lateral_ev = [e for e in evidence_list if e.search_direction.value == "lateral"]
+        vertical_ev = [e for e in evidence_list if e.search_direction.value == "vertical"]
+
+        lines.append(f"\n{'=' * 70}")
+        lines.append(f"EVIDENCE — LATERAL ({len(lateral_ev)} cases)")
+        lines.append(f"{'=' * 70}")
+        for i, e in enumerate(lateral_ev, 1):
+            lines.append(f"\n  [{i}] {e.case_name} [{e.layer.value}/{e.confidence.value}]" + (" [UNEXPECTED]" if e.is_unexpected else ""))
+            lines.append(f"  {e.content}")
+            lines.append(f"  id={e.id[:8]} lens={e.source_lens_id[:8]}")
+
+        lines.append(f"\n{'=' * 70}")
+        lines.append(f"EVIDENCE — VERTICAL ({len(vertical_ev)} cases)")
+        lines.append(f"{'=' * 70}")
+        for i, e in enumerate(vertical_ev, 1):
+            lines.append(f"\n  [{i}] {e.case_name} [{e.layer.value}/{e.confidence.value}]" + (" [UNEXPECTED]" if e.is_unexpected else ""))
+            lines.append(f"  {e.content}")
+            lines.append(f"  id={e.id[:8]} lens={e.source_lens_id[:8]}")
+
+    # Conclusion
+    if result.get("conclusion_zone"):
+        lines.append(f"\n{'=' * 70}")
+        lines.append("CONCLUSION (Phase 3)")
+        lines.append(f"{'=' * 70}")
+        c = result["conclusion_zone"][-1]
+        lines.append(f"\nCore Finding:\n  {c.core_finding}")
+        lines.append(f"\nTension:\n  {c.tension}")
+        lines.append(f"\nBoundary Condition:\n  {c.boundary_condition}")
+        lines.append(f"\nUnresolved:\n  {c.unresolved}")
+        lines.append(f"\nImplication:\n  {c.implication}")
+
+    # Degradation
+    degradation_events = [
+        e for e in result.get("schedule_log", []) if getattr(e, "degradation_flag", False)
+    ]
+    if degradation_events:
+        lines.append(f"\n{'=' * 70}")
+        lines.append(f"DEGRADATION EVENTS ({len(degradation_events)})")
+        lines.append(f"{'=' * 70}")
+        for e in degradation_events:
+            lines.append(f"  - {e.author}: {e.reason}")
+
+    lines.append(f"\n{'=' * 70}")
+    lines.append("END OF LOG")
+    lines.append(f"{'=' * 70}")
+
+    log_path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"\nLog saved to: {log_path.absolute()}")
 
 
 if __name__ == "__main__":

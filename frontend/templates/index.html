@@ -3,149 +3,308 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unveiling — 多 Agent 类比分析</title>
+  <title>Unveiling · 在类比里看见被忽视的东西</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:,">
 </head>
 <body>
-  <nav class="navbar">
-    <div class="nav-inner">
-      <span class="brand">Unveiling</span>
-      <span class="nav-sub">多 Agent 类比分析系统</span>
+
+<!-- ============================== HOME ============================== -->
+<section class="screen screen--home is-active" data-screen="home">
+  <div class="home">
+    <header class="home__mast">
+      <span class="home__brand">UNVEILING</span>
+      <span class="home__brand-dot" aria-hidden="true"></span>
+      <span class="home__brand-sub">multi-agent analogy</span>
+      <a class="home__demo-link" href="?demo=1">看一份示例输出 <span aria-hidden="true">→</span></a>
+    </header>
+
+    <h1 class="manifesto">
+      <span class="manifesto__line">这个问题最常见的回答，你早就知道。</span>
+      <span class="manifesto__line">这里给一组刻意远的类比 —— <em class="manifesto__em">还能</em> 怎么看。</span>
+    </h1>
+
+    <form class="home-form" id="home-form">
+      <label class="home-form__label" for="home-question">你想搞清楚什么</label>
+      <textarea
+        class="home-form__input"
+        id="home-question"
+        rows="3"
+        placeholder="把它完整地写下来。具体一点 —— 类比才会锋利。"
+        required></textarea>
+
+      <div class="home-form__bottom">
+        <div class="home-form__mode" role="radiogroup" aria-label="分析模式">
+          <button type="button" class="home-form__mode-option" data-mode="focus" role="radio" aria-checked="false">
+            <span class="home-form__mode-name">就近</span>
+            <span class="home-form__mode-desc">先从邻近领域找</span>
+          </button>
+          <button type="button" class="home-form__mode-option is-selected" data-mode="balance" role="radio" aria-checked="true">
+            <span class="home-form__mode-name">平衡</span>
+            <span class="home-form__mode-desc">近与远各占一半</span>
+          </button>
+          <button type="button" class="home-form__mode-option" data-mode="explore" role="radio" aria-checked="false">
+            <span class="home-form__mode-name">远探</span>
+            <span class="home-form__mode-desc">偏好冷门的角落</span>
+          </button>
+        </div>
+
+        <div class="home-form__lang" role="radiogroup" aria-label="输出语言">
+          <button type="button" class="home-form__lang-option is-selected" data-lang="中文" role="radio" aria-checked="true">中文</button>
+          <button type="button" class="home-form__lang-option" data-lang="English" role="radio" aria-checked="false">English</button>
+        </div>
+
+        <button type="submit" class="home-form__submit">
+          <span>开始分析</span>
+          <span class="home-form__submit-arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+    </form>
+
+    <section class="prompts">
+      <div class="prompts__heading">
+        <span class="prompts__heading-rule" aria-hidden="true"></span>
+        <span class="prompts__heading-text">也可以从这些问题开始</span>
+        <span class="prompts__heading-rule" aria-hidden="true"></span>
+      </div>
+      <ul class="prompts__list">
+        <li>
+          <button type="button" class="prompt-card" data-example="AI 公司现在应不应该烧钱扩张？">
+            <span class="prompt-card__question">AI 公司现在应不应该烧钱扩张？</span>
+            <span class="prompt-card__arrow" aria-hidden="true">↬</span>
+            <span class="prompt-card__lenses">黄金热 · 火箭升空 · 生物变态发育</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="prompt-card" data-example="远程办公会让组织文化褪色吗？">
+            <span class="prompt-card__question">远程办公会让组织文化褪色吗？</span>
+            <span class="prompt-card__arrow" aria-hidden="true">↬</span>
+            <span class="prompt-card__lenses">修道院 · 跨国船队 · 电报革命</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="prompt-card" data-example="为什么社交平台都最终走向劣化？">
+            <span class="prompt-card__question">为什么社交平台都最终走向劣化？</span>
+            <span class="prompt-card__arrow" aria-hidden="true">↬</span>
+            <span class="prompt-card__lenses">购物中心 · 公共绿地 · 殖民地小镇</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="prompt-card" data-example="开源项目应该追求快速增长还是稳定治理？">
+            <span class="prompt-card__question">开源项目应该追求快速增长还是稳定治理？</span>
+            <span class="prompt-card__arrow" aria-hidden="true">↬</span>
+            <span class="prompt-card__lenses">生态系统 · 协会运作 · 政党组织</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="home__foot">
+      <span class="home__foot-line">不是给答案。</span>
+      <span class="home__foot-dash" aria-hidden="true">—</span>
+      <span class="home__foot-line">是给一个看法的支点。</span>
+    </footer>
+  </div>
+</section>
+
+
+<!-- ============================ ANALYSIS ============================ -->
+<section class="screen screen--analysis" data-screen="analysis">
+  <article class="analysis">
+
+    <header class="analysis__mast">
+      <span class="analysis__brand">UNVEILING</span>
+      <span class="analysis__edition" id="analysis-edition">issue · 思考进行中</span>
+    </header>
+
+    <!-- Phase timeline: most prominent state indicator on the screen. -->
+    <nav class="phases" id="phase-indicator" aria-label="分析阶段">
+      <div class="phases__step" data-phase="inception">
+        <span class="phases__step-marker" aria-hidden="true">
+          <span class="phases__step-dot"></span>
+        </span>
+        <span class="phases__step-name">刚开始</span>
+        <span class="phases__step-desc">建问题树 · 选透镜</span>
+      </div>
+      <span class="phases__rail" aria-hidden="true"></span>
+      <div class="phases__step" data-phase="exploration">
+        <span class="phases__step-marker" aria-hidden="true">
+          <span class="phases__step-dot"></span>
+        </span>
+        <span class="phases__step-name">展开找</span>
+        <span class="phases__step-desc">搜索 · 深挖 · 辩论</span>
+      </div>
+      <span class="phases__rail" aria-hidden="true"></span>
+      <div class="phases__step" data-phase="convergence">
+        <span class="phases__step-marker" aria-hidden="true">
+          <span class="phases__step-dot"></span>
+        </span>
+        <span class="phases__step-name">收尾</span>
+        <span class="phases__step-desc">合成张力式结论</span>
+      </div>
+    </nav>
+
+    <!-- Driving question owned by the user, returned to them in serif. -->
+    <h2 class="analysis__question" id="analysis-question"></h2>
+
+    <!-- Live narration line: what the system is doing RIGHT NOW. -->
+    <div class="now" id="now-line" aria-live="polite">
+      <span class="now__label" aria-hidden="true">现在</span>
+      <span class="now__arrow" aria-hidden="true">→</span>
+      <span class="now__text" id="narration-text">系统正在准备……</span>
     </div>
-  </nav>
 
-  <main>
-    <!-- Input Section -->
-    <section id="input-section">
-      <div class="container">
-        <h1>输入问题，获取深度洞察</h1>
-        <p class="subtitle">通过横向/纵向类比 + 抽象透镜，产出张力式洞察（不是共性堆叠）</p>
-        <div class="form-card">
-          <input type="text" id="question-input" placeholder="例如：AI 公司现在应不应该烧钱扩张？" autocomplete="off">
-          <div class="form-row">
-            <select id="mode-select">
-              <option value="focus">Focus — 聚焦深入</option>
-              <option value="balance" selected>Balance — 平衡探索</option>
-              <option value="explore">Explore — 广泛发散</option>
-            </select>
-            <button id="start-btn" onclick="startAnalysis()">启动分析</button>
-          </div>
-        </div>
+    <!-- Sub-question tree: the orchestrator's interface, made visible. -->
+    <section class="subs">
+      <h3 class="subs__heading">
+        <span class="subs__heading-text">问题树</span>
+        <span class="subs__heading-desc" id="subs-progress"></span>
+      </h3>
+      <ol class="subs__list" id="tree-node-list">
+        <li class="empty-line">问题树正在生成……</li>
+      </ol>
+    </section>
+
+    <!-- Persistent journey log — the heart of the analysis screen.
+         Bubbles never vanish; the reader can scroll back any time. -->
+    <section class="journey">
+      <h3 class="journey__heading">
+        <span class="journey__heading-text">一路上</span>
+        <span class="journey__heading-desc" id="journey-count">还没找到第一条</span>
+      </h3>
+      <ol class="journey__list" id="journey-list" aria-live="polite"></ol>
+    </section>
+
+    <!-- Machine-view drawer at the bottom: optional engineer disclosure. -->
+    <aside class="drawer" id="machine-view">
+      <button class="drawer__toggle" type="button" id="machine-view-toggle" aria-expanded="false">
+        <span class="drawer__toggle-label">机器视角</span>
+        <span class="drawer__toggle-meta" id="machine-view-meta">回合 0 · 0 token</span>
+        <span class="drawer__toggle-chevron" aria-hidden="true">+</span>
+      </button>
+      <div class="drawer__content" id="machine-view-content"></div>
+    </aside>
+
+  </article>
+</section>
+
+
+<!-- ============================= RESULT ============================= -->
+<section class="screen screen--result" data-screen="result">
+  <article class="paper">
+
+    <header class="paper__mast">
+      <span class="paper__brand">UNVEILING</span>
+      <span class="paper__brand-dot" aria-hidden="true"></span>
+      <span class="paper__edition" id="paper-edition">a closing reading</span>
+      <a class="paper__deck-link" id="paper-deck-link" target="_blank" rel="noopener">作为幻灯片打开 <span aria-hidden="true">→</span></a>
+    </header>
+
+    <h1 class="paper__question" id="paper-question"></h1>
+
+    <!-- Section 1: 一句话回答 — the takeaway lives at the top. -->
+    <section class="paper__section" id="section-takeaway">
+      <header class="paper__marker">
+        <span class="paper__marker-no">§ 1</span>
+        <span class="paper__marker-name">一句话回答</span>
+      </header>
+      <div class="paper__takeaway" id="paper-takeaway"></div>
+    </section>
+
+    <!-- Section 2: 张力 — the differentiator. -->
+    <section class="paper__section paper__section--tension" id="section-tension">
+      <header class="paper__marker paper__marker--accent">
+        <span class="paper__marker-no">§ 2</span>
+        <span class="paper__marker-name">张力 — 难处在哪</span>
+      </header>
+      <div class="paper__tension" id="paper-tension"></div>
+    </section>
+
+    <!-- Section 3: 在哪里不成立. -->
+    <section class="paper__section" id="section-boundary">
+      <header class="paper__marker">
+        <span class="paper__marker-no">§ 3</span>
+        <span class="paper__marker-name">这话在哪里不成立</span>
+      </header>
+      <div class="paper__boundary" id="paper-boundary"></div>
+    </section>
+
+    <!-- Section 4: 收敛的几条 — bullet list of supporting findings. -->
+    <section class="paper__section" id="section-findings">
+      <header class="paper__marker">
+        <span class="paper__marker-no">§ 4</span>
+        <span class="paper__marker-name">收敛的几条</span>
+      </header>
+      <ul class="paper__findings" id="paper-findings"></ul>
+    </section>
+
+    <!-- Section 5: 意外发现 — the rare orange section. -->
+    <section class="paper__section paper__section--unexpected" id="section-unexpected">
+      <header class="paper__marker paper__marker--accent">
+        <span class="paper__marker-no">§ 5</span>
+        <span class="paper__marker-name">意外发现</span>
+      </header>
+      <ul class="paper__unexpected" id="paper-unexpected"></ul>
+    </section>
+
+    <!-- Section 6: 验证过的预判. -->
+    <section class="paper__section" id="section-predictions">
+      <header class="paper__marker">
+        <span class="paper__marker-no">§ 6</span>
+        <span class="paper__marker-name">可证伪预判 — 检验过</span>
+      </header>
+      <ul class="paper__predictions" id="paper-predictions"></ul>
+    </section>
+
+    <!-- Section 7: 还没回答的. -->
+    <section class="paper__section" id="section-unresolved">
+      <header class="paper__marker">
+        <span class="paper__marker-no">§ 7</span>
+        <span class="paper__marker-name">还没回答清楚的</span>
+      </header>
+      <div class="paper__unresolved" id="paper-unresolved"></div>
+    </section>
+
+    <!-- Section 8: 然后呢. -->
+    <section class="paper__section" id="section-implication">
+      <header class="paper__marker">
+        <span class="paper__marker-no">§ 8</span>
+        <span class="paper__marker-name">所以你应该</span>
+      </header>
+      <div class="paper__implication" id="paper-implication"></div>
+    </section>
+
+    <hr class="paper__divider" aria-hidden="true">
+
+    <!-- Journey: how we got here — collapsed by default, expandable. -->
+    <section class="paper__journey">
+      <header class="paper__journey-header">
+        <h2 class="paper__journey-title">一路上 — 怎么走到这一步</h2>
+        <button type="button" class="paper__journey-toggle" id="thinking-toggle" data-expanded="false">展开详情</button>
+      </header>
+
+      <div class="paper__journey-block">
+        <div class="paper__journey-subheading">换过几次角度</div>
+        <div class="lens-chains" id="lens-timeline-chains"></div>
+      </div>
+
+      <div class="paper__journey-block">
+        <div class="paper__journey-subheading">拆出来的小问题</div>
+        <div class="sub-list" id="thinking-sub-questions-list"></div>
       </div>
     </section>
 
-    <!-- Progress Section -->
-    <section id="progress-section" style="display:none;">
-      <div class="container">
-        <!-- Phase Timeline -->
-        <div class="phase-timeline">
-          <div class="phase-step" id="phase-inception">
-            <div class="phase-dot"></div>
-            <div class="phase-label">启动期</div>
-            <div class="phase-desc">生成问题树、透镜、预判</div>
-          </div>
-          <div class="phase-connector"></div>
-          <div class="phase-step" id="phase-exploration">
-            <div class="phase-dot"></div>
-            <div class="phase-label">探索期</div>
-            <div class="phase-desc">搜索、深挖、辩论、检验</div>
-          </div>
-          <div class="phase-connector"></div>
-          <div class="phase-step" id="phase-convergence">
-            <div class="phase-dot"></div>
-            <div class="phase-label">收敛期</div>
-            <div class="phase-desc">合成张力式结论</div>
-          </div>
-        </div>
+    <footer class="paper__foot">
+      <button class="paper__back" type="button" id="result-back">
+        <span aria-hidden="true">←</span>
+        <span>重新开始</span>
+      </button>
+      <span class="paper__meta" id="result-meta"></span>
+    </footer>
 
-        <!-- Stats Row -->
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-value" id="stat-rounds">0</div>
-            <div class="stat-label">调度轮次</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-evidence">0</div>
-            <div class="stat-label">证据条目</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-debates">0</div>
-            <div class="stat-label">辩论回合</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-tokens">0</div>
-            <div class="stat-label">Token 消耗</div>
-          </div>
-        </div>
+  </article>
+</section>
 
-        <!-- Issue Tree -->
-        <div class="panel">
-          <h3 class="panel-title">问题树</h3>
-          <div id="issue-tree-panel" class="issue-tree">
-            <div class="placeholder">等待启动期完成...</div>
-          </div>
-        </div>
-
-        <!-- Event Stream -->
-        <div class="panel">
-          <h3 class="panel-title">执行日志</h3>
-          <div id="event-stream" class="event-stream">
-            <div class="placeholder">等待分析开始...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Result Section -->
-    <section id="result-section" style="display:none;">
-      <div class="container">
-        <div class="result-header">
-          <h2>分析完成</h2>
-          <button onclick="resetUI()" class="btn-secondary">新的分析</button>
-        </div>
-
-        <div class="result-grid">
-          <!-- Conclusion Card -->
-          <div class="result-card conclusion-card">
-            <h3>核心发现</h3>
-            <p id="res-convergent-finding"></p>
-            <h4>张力</h4>
-            <p id="res-tension" class="tension-text"></p>
-            <h4>边界条件</h4>
-            <p id="res-boundary"></p>
-            <h4>未解决</h4>
-            <p id="res-unresolved"></p>
-            <h4>启示</h4>
-            <p id="res-implication"></p>
-          </div>
-
-          <!-- Lenses & Predictions -->
-          <div class="result-card">
-            <h3>透镜</h3>
-            <div id="res-lenses"></div>
-            <h3>预判</h3>
-            <div id="res-predictions"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Error Section -->
-    <section id="error-section" style="display:none;">
-      <div class="container">
-        <div class="error-card">
-          <h2>分析出错</h2>
-          <p id="error-msg"></p>
-          <button onclick="resetUI()" class="btn-secondary">重新尝试</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p>Unveiling — 多 Agent 类比分析系统</p>
-  </footer>
-
-  <script src="/static/js/app.js"></script>
+<script src="/static/js/app.js"></script>
 </body>
 </html>

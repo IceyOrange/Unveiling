@@ -9,9 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from models._enums import (
     EvidenceConfidence,
     EvidenceLayer,
-    NodeStatus,
-    OrchestratorRole,
-    PredictionStatus,
+    SearchDirection,
 )
 
 
@@ -32,22 +30,39 @@ class BlackboardRecord(BaseModel):
     retraction_reason: Optional[str] = None
 
 
-class IssueTreeNode(BlackboardRecord):
-    """问题区 record. Represents a node in the issue tree.
+# ---------------------------------------------------------------------------
+# Lens sub-structures: abstracted entities and relationships
+# ---------------------------------------------------------------------------
 
-    Blackboard lifecycle: status (committed/retracted).
-    Analytical lifecycle: node_status (untouched/exploring/closed/stuck).
-    """
 
-    parent_id: Optional[str] = None
-    driving_question_id: Optional[str] = None
-    content: str
-    node_status: NodeStatus = NodeStatus.untouched
-    minimum_viable_answer: Optional[str] = None
+class AbstractedEntity(BaseModel):
+    """A single entity from the user's question, abstracted to structural level."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    surface: str           # original term, e.g. "AI"
+    structural_role: str   # abstracted structural role, e.g. "前卫生产力"
+
+
+class AbstractedRelation(BaseModel):
+    """A relationship between entities, abstracted to structural level."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    surface: str      # original relationship, e.g. "AI引发焦虑"
+    structural: str   # abstracted structural relationship
+
+
+# ---------------------------------------------------------------------------
+# Blackboard zone records
+# ---------------------------------------------------------------------------
 
 
 class LensRecord(BlackboardRecord):
-    """假设区 record for an abstract lens.
+    """假设区 record for the analytical lens.
+
+    Carries the Phase 1 abstraction result: entities and relationships
+    abstracted to structural level, enabling cross-temporal/spatial comparison.
 
     Invariant: lens演化只能"加新版本"，不能"原地改".
     parent_lens_id points to the previous version in the chain.
@@ -56,59 +71,33 @@ class LensRecord(BlackboardRecord):
     parent_lens_id: Optional[str] = None
     name: str
     rationale: str
-
-
-class PredictionRecord(BlackboardRecord):
-    """假设区 record for a falsifiable prediction.
-
-    Invariant: every prediction must carry killer_evidence.
-    A prediction without killer_evidence is invalid and must be discarded.
-    """
-
-    claim: str
-    if_true_we_should_see: str
-    if_false_we_should_see: str
-    killer_evidence: str
-    prediction_status: PredictionStatus = PredictionStatus.pending
+    entities: list[AbstractedEntity] = Field(default_factory=list)
+    relationships: list[AbstractedRelation] = Field(default_factory=list)
 
 
 class EvidenceRecord(BlackboardRecord):
     """证据区 record.
 
-    Invariant: all 6 metadata fields must be present.
+    Invariant: all metadata fields must be present.
     Missing metadata renders the evidence invalid.
     """
 
     source_lens_id: str
-    source_lens_version: str
-    sub_question_id: str
+    search_direction: SearchDirection
+    case_name: str
     layer: EvidenceLayer
     confidence: EvidenceConfidence
     is_unexpected: bool
     content: str
 
 
-class DebateRecord(BlackboardRecord):
-    """辩论区 record.
-
-    Stores a question-response round or a deep-dig cross-layer failure note.
-    """
-
-    round: int
-    question: str
-    response: str
-    sub_question_id: Optional[str] = None
-    cross_layer_failure_note: Optional[str] = None
-
-
 class ConclusionRecord(BlackboardRecord):
     """结论区 record.
 
-    Written during convergence phase. Tension-style output per sub-question.
+    Written during convergence phase. Tension-style output.
     """
 
-    sub_question_id: Optional[str] = None
-    convergent_finding: str
+    core_finding: str
     tension: str
     boundary_condition: str
     unresolved: str
@@ -121,7 +110,6 @@ class ScheduleLogEntry(BlackboardRecord):
     Append-only. Tracks Orchestrator decisions and degradation events.
     """
 
-    role: OrchestratorRole
     decision: str
     reason: str
     degradation_flag: bool = False

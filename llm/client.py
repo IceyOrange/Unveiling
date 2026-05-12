@@ -36,12 +36,13 @@ class LLMClient:
     an instruction and retries on malformed output.
     """
 
-    def __init__(self, model: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, language: str = ""):
         self.client = OpenAI(
             api_key=os.environ.get("OPENAI_API_KEY", ""),
             base_url=os.environ.get("OPENAI_API_BASE", "https://api.deepseek.com"),
         )
         self.model = model or os.environ.get("OPENAI_MODEL_NAME", "deepseek-chat")
+        self.language = language
 
     def chat(
         self,
@@ -49,6 +50,7 @@ class LLMClient:
         json_mode: bool = False,
         max_retries: int = 3,
         temperature: float = 0.7,
+        language: str = "",
     ) -> tuple[str, int]:
         """Send a chat completion request.
 
@@ -57,6 +59,7 @@ class LLMClient:
             json_mode: If True, enforce JSON-only output with retry loop.
             max_retries: Maximum JSON parse retries (only when json_mode=True).
             temperature: Sampling temperature.
+            language: If set, instruct the LLM to respond in this language (e.g. "中文", "English").
 
         Returns:
             Tuple of (content, tokens_consumed).
@@ -64,6 +67,9 @@ class LLMClient:
         Raises:
             LLMJSONError: If json_mode is True and parsing fails after all retries.
         """
+        effective_language = language or self.language
+        if effective_language:
+            messages = self._inject_language(messages, effective_language)
         if json_mode:
             messages = self._ensure_json_instruction(messages)
 
@@ -120,6 +126,26 @@ class LLMClient:
             messages=messages,
             temperature=temperature,
         )
+
+    @staticmethod
+    def _inject_language(messages: list[dict], language: str) -> list[dict]:
+        instruction = (
+            f"IMPORTANT: Write ALL text content in {language}. "
+            f"This includes names, descriptions, explanations, findings, questions, "
+            f"and any other natural-language text. "
+            f"Only keep JSON keys and structural formatting in English. "
+            f"Do NOT use English for content that should be in {language}."
+        )
+
+        if messages and messages[0].get("role") == "system":
+            updated = list(messages)
+            updated[0] = {
+                "role": "system",
+                "content": messages[0]["content"] + "\n\n" + instruction,
+            }
+            return updated
+
+        return [{"role": "system", "content": instruction}] + list(messages)
 
     @staticmethod
     def _ensure_json_instruction(messages: list[dict]) -> list[dict]:

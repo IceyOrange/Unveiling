@@ -70,6 +70,10 @@ Determine what the user wants:
 - **Mode A: New Presentation** — Create from scratch. Go to Phase 1.
 - **Mode B: PPT Conversion** — Convert a .pptx file. Go to Phase 4.
 - **Mode C: Enhancement** — Improve an existing HTML presentation. Read it, understand it, enhance. **Follow Mode C modification rules below.**
+- **Mode D: Unveiling Analysis Deck** — Render a structured analysis payload from the Unveiling system (`_serialize_result()` output) into an embedded HTML slide deck. **Skip Phase 1 (content is already structured), skip Phase 2 (style is locked to "Unveiling Paper" preset). Go straight to Phase 7.** Trigger signals:
+  - The caller is `frontend/slides/generator.py` in the Unveiling repo
+  - The input is a dict with keys `driving_question`, `sub_questions`, `lens_chains`, `predictions`, `evidence`, `conclusion`
+  - The user request mentions Unveiling, analogy analysis, or "把分析结果生成幻灯"
 
 ### Mode C: Modification Rules
 
@@ -309,14 +313,88 @@ This captures each slide as a screenshot and combines them into a PDF. Perfect f
 
 ---
 
+## Phase 7: Unveiling Analysis Deck (Mode D)
+
+Use this phase ONLY when the trigger signals in Phase 0 / Mode D fire. This is a sealed, opinionated pipeline — no AskUserQuestion, no style discovery, no content discovery. Input is structured, style is locked, audience is one (the person who asked the original question).
+
+### 7.1 Required Reading
+
+Before generating, read these files in order:
+
+1. [UNVEILING_DECK_RECIPE.md](UNVEILING_DECK_RECIPE.md) — canonical slide outline, HTML skeletons, data mapping, empty-fallback copy, embed-mode rules
+2. [UNVEILING_VOCAB.md](UNVEILING_VOCAB.md) — plain-language vocab table (the single source of truth for every user-visible string)
+3. [STYLE_PRESETS.md](STYLE_PRESETS.md) §13 "Unveiling Paper" — the locked preset (do not deviate)
+4. [viewport-base.css](viewport-base.css) — still mandatory, include in full
+
+### 7.2 Input Contract
+
+The caller passes a dict matching the `_serialize_result(state)` schema from `frontend/app.py`:
+
+```text
+{
+  "driving_question": str,
+  "phase": "inception" | "exploration" | "convergence",
+  "sub_questions": [
+    {"id": str, "content": str, "status": "untouched"|"exploring"|"closed"|"stuck",
+     "evidence_count": int, "top_evidence": [...], "conclusion": str|None}
+  ],
+  "lens_chains": [ [LensRecord, LensRecord, ...] ],  # version chains
+  "predictions": [
+    {"claim": str, "status": "pending"|"supported"|"refuted"|"modified",
+     "killer_evidence": str, "if_true_we_should_see": str, "if_false_we_should_see": str}
+  ],
+  "evidence": [
+    {"content": str, "layer": "phenomenon"|"mechanism"|"structure",
+     "confidence": "strong"|"medium"|"weak"|"unexpected",
+     "is_unexpected": bool, "source_lens_id": str}
+  ],
+  "conclusion": {"convergent_finding": str, "tension": str,
+                 "boundary_condition": str, "unresolved": str, "implication": str},
+  "debates": [...],
+  "mode": "focus" | "balance" | "explore",
+  "round_count": int,
+  "token_spent": int
+}
+```
+
+Map every field through UNVEILING_DECK_RECIPE.md §"Data mapping". Internal field names stay English — only user-visible strings are translated through UNVEILING_VOCAB.md.
+
+### 7.3 Output Contract
+
+- Single self-contained HTML file
+- 10–12 slides in the canonical order (see UNVEILING_DECK_RECIPE.md)
+- Optional slides (意外发现 / 敢打赌的猜想) included only when their source data is non-empty
+- Empty-fallback copy used for any missing required slide — never leave a slide blank
+- "Embed mode" flag: when `embed=True`, hide nav-dots, keyboard hint, and progress bar so the deck sits cleanly inside an iframe in the result page
+- Locked style: Unveiling Paper preset only. Do not run Phase 2 mood selection. Do not offer style alternatives.
+- Orange `#ff6b35` reserved exclusively for tension/unexpected markers — this is a PRD-enforced invariant inherited from `frontend/static/css/style.css`
+
+### 7.4 What to Skip
+
+- Skip Phase 1 entirely (input is already structured)
+- Skip Phase 2 entirely (preset is locked)
+- Skip Phase 6 by default (sharing/export is the result-page's job, not the deck's)
+- Do not ask the user about audience, mood, or length
+
+### 7.5 Validation Before Delivery
+
+- Every user-visible string passes through UNVEILING_VOCAB.md — no raw "收敛发现 / 张力 / 透镜 / 可证伪预判 / killer evidence" appears in rendered HTML
+- Color tokens match `frontend/static/css/style.css` `:root` exactly (cream/sand/ink/orange-tension/status/layer scales)
+- All slides fit 100vh — content density limits still apply
+- Empty fallbacks render readable copy, not blank panels
+
+---
+
 ## Supporting Files
 
 | File                                               | Purpose                                                              | When to Read              |
 | -------------------------------------------------- | -------------------------------------------------------------------- | ------------------------- |
-| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 12 curated visual presets with colors, fonts, and signature elements | Phase 2 (style selection) |
-| [viewport-base.css](viewport-base.css)             | Mandatory responsive CSS — copy into every presentation              | Phase 3 (generation)      |
+| [STYLE_PRESETS.md](STYLE_PRESETS.md)               | 13 curated visual presets with colors, fonts, and signature elements | Phase 2 / Phase 7         |
+| [viewport-base.css](viewport-base.css)             | Mandatory responsive CSS — copy into every presentation              | Phase 3 / Phase 7         |
 | [html-template.md](html-template.md)               | HTML structure, JS features, code quality standards                  | Phase 3 (generation)      |
 | [animation-patterns.md](animation-patterns.md)     | CSS/JS animation snippets and effect-to-feeling guide                | Phase 3 (generation)      |
+| [UNVEILING_DECK_RECIPE.md](UNVEILING_DECK_RECIPE.md) | Canonical slide outline + HTML skeletons + data mapping for Mode D | Phase 7 (Unveiling deck)  |
+| [UNVEILING_VOCAB.md](UNVEILING_VOCAB.md)           | Plain-language vocab table — single source of truth for user-visible strings | Phase 7 (Unveiling deck)  |
 | [scripts/extract-pptx.py](scripts/extract-pptx.py) | Python script for PPT content extraction                             | Phase 4 (conversion)      |
 | [scripts/deploy.sh](scripts/deploy.sh)             | Deploy slides to Vercel for instant sharing                          | Phase 6 (sharing)         |
 | [scripts/export-pdf.sh](scripts/export-pdf.sh)     | Export slides to PDF                                                 | Phase 6 (sharing)         |

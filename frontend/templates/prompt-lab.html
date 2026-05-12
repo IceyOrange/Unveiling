@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Lab · Unveiling</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:,">
+  <style>
+    /* --- Prompt Lab overrides --- */
+    body { background: var(--bg-cream); color: var(--ink-primary); font-family: var(--font-sans); }
+
+    .lab-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--surface-elevated);
+    }
+    .lab-header__brand { font-family: var(--font-sans); font-weight: 700; font-size: 14px; letter-spacing: .08em; color: var(--ink-tertiary); }
+    .lab-header__back { font-size: 13px; color: var(--ink-secondary); text-decoration: none; }
+    .lab-header__back:hover { color: var(--ink-primary); }
+
+    .lab-layout {
+      display: grid; grid-template-columns: 1fr 1fr;
+      height: calc(100vh - 49px);
+    }
+
+    /* Left panel: editor */
+    .lab-editor {
+      display: flex; flex-direction: column;
+      border-right: 1px solid var(--border-soft);
+      overflow: hidden;
+    }
+    .lab-editor__toolbar {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-hairline);
+      background: var(--surface-card);
+      flex-shrink: 0;
+    }
+    .lab-editor__select {
+      font-size: 13px; padding: 6px 10px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-medium); background: var(--surface-elevated);
+      color: var(--ink-primary); min-width: 200px;
+    }
+    .lab-editor__source {
+      font-size: 11px; color: var(--ink-tertiary); margin-left: auto;
+      font-family: var(--font-mono);
+    }
+
+    .lab-editor__textarea {
+      flex: 1; width: 100%; resize: none; border: none; outline: none;
+      padding: var(--space-4); font-size: 13px; line-height: 1.7;
+      font-family: var(--font-mono); background: var(--bg-cream);
+      color: var(--ink-primary); tab-size: 4;
+    }
+
+    .lab-editor__actions {
+      display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border-hairline); background: var(--surface-card);
+      flex-shrink: 0;
+    }
+
+    /* Right panel: test */
+    .lab-test {
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .lab-test__toolbar {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-hairline);
+      background: var(--surface-card);
+      flex-shrink: 0;
+    }
+    .lab-test__toolbar label { font-size: 12px; color: var(--ink-secondary); }
+    .lab-test__lang {
+      font-size: 12px; padding: 4px 8px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-medium); background: var(--surface-elevated);
+    }
+
+    .lab-test__inputs {
+      padding: var(--space-4); overflow-y: auto; flex-shrink: 0;
+      border-bottom: 1px solid var(--border-hairline);
+      max-height: 40vh;
+    }
+    .lab-test__field { margin-bottom: var(--space-3); }
+    .lab-test__field-label {
+      font-size: 11px; font-weight: 600; color: var(--ink-secondary);
+      margin-bottom: 2px; display: block; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .lab-test__field-input {
+      width: 100%; font-size: 13px; padding: 6px 8px;
+      border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+      background: var(--surface-elevated); font-family: var(--font-sans);
+      color: var(--ink-primary);
+    }
+    .lab-test__field-input--tall { min-height: 60px; resize: vertical; font-family: var(--font-mono); font-size: 12px; }
+
+    .lab-test__run-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-hairline);
+      background: var(--surface-card); flex-shrink: 0;
+    }
+
+    .lab-test__output {
+      flex: 1; overflow-y: auto; padding: var(--space-4);
+    }
+    .lab-test__output-label {
+      font-size: 11px; font-weight: 600; color: var(--ink-secondary);
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: var(--space-2);
+    }
+    .lab-test__output-raw {
+      white-space: pre-wrap; word-break: break-word;
+      font-size: 13px; line-height: 1.6; font-family: var(--font-mono);
+      color: var(--ink-primary);
+    }
+    .lab-test__output-json {
+      font-size: 13px; line-height: 1.6; font-family: var(--font-mono);
+      color: var(--ink-primary);
+    }
+    .lab-test__output-json .json-key { color: var(--layer-structure); }
+    .lab-test__output-json .json-string { color: var(--status-closed); }
+    .lab-test__output-json .json-bool { color: var(--accent-tension); }
+
+    /* Buttons */
+    .btn {
+      font-size: 12px; font-weight: 600; padding: 6px 14px;
+      border-radius: var(--radius-sm); border: 1px solid var(--border-medium);
+      cursor: pointer; transition: all 120ms;
+    }
+    .btn--save { background: var(--status-closed); color: var(--ink-on-accent); border-color: var(--status-closed); }
+    .btn--save:hover { opacity: .85; }
+    .btn--run { background: var(--accent-tension); color: var(--ink-on-accent); border-color: var(--accent-tension); }
+    .btn--run:hover { opacity: .85; }
+    .btn--reset { background: transparent; color: var(--ink-secondary); }
+    .btn--reset:hover { color: var(--ink-primary); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .lab-test__tokens { font-size: 11px; color: var(--ink-tertiary); margin-left: auto; }
+
+    .lab-status {
+      font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm);
+      display: inline-block; margin-left: var(--space-2);
+    }
+    .lab-status--saved { background: var(--status-closed-soft); color: var(--status-closed); }
+    .lab-status--error { background: var(--status-stuck-soft); color: var(--status-stuck); }
+
+    /* Mobile: stack vertically */
+    @media (max-width: 768px) {
+      .lab-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+      .lab-editor { border-right: none; border-bottom: 1px solid var(--border-soft); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="lab-header">
+  <span class="lab-header__brand">UNVEILING · PROMPT LAB</span>
+  <a class="lab-header__back" href="/">← 回到首页</a>
+</div>
+
+<div class="lab-layout">
+  <!-- Left: Editor -->
+  <div class="lab-editor">
+    <div class="lab-editor__toolbar">
+      <select class="lab-editor__select" id="prompt-select"></select>
+      <span class="lab-editor__source" id="prompt-source"></span>
+    </div>
+    <textarea class="lab-editor__textarea" id="prompt-text" spellcheck="false"
+              placeholder="选择一个 Prompt 开始编辑..."></textarea>
+    <div class="lab-editor__actions">
+      <button class="btn btn--save" id="btn-save">💾 保存</button>
+      <button class="btn btn--reset" id="btn-reset">↩ 重置</button>
+      <span id="save-status"></span>
+    </div>
+  </div>
+
+  <!-- Right: Test -->
+  <div class="lab-test">
+    <div class="lab-test__toolbar">
+      <label>语言</label>
+      <select class="lab-test__lang" id="test-language">
+        <option value="中文" selected>中文</option>
+        <option value="English">English</option>
+      </select>
+      <span style="margin-left:auto;font-size:11px;color:var(--ink-tertiary)" id="json-mode-badge"></span>
+    </div>
+
+    <div class="lab-test__inputs" id="test-inputs">
+      <!-- Dynamic input fields -->
+    </div>
+
+    <div class="lab-test__run-row">
+      <button class="btn btn--run" id="btn-run">▶ 运行</button>
+      <span class="lab-test__tokens" id="test-tokens"></span>
+    </div>
+
+    <div class="lab-test__output">
+      <div class="lab-test__output-label">输出</div>
+      <div id="test-output"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const promptSelect = $('#prompt-select');
+const promptText = $('#prompt-text');
+const promptSource = $('#prompt-source');
+const testInputs = $('#test-inputs');
+const testOutput = $('#test-output');
+const saveStatus = $('#save-status');
+const jsonModeBadge = $('#json-mode-badge');
+
+let promptsMeta = {};  // name -> metadata
+let currentPrompt = null;
+let originalText = '';
+
+// --- Load prompt list ---
+async function loadPrompts() {
+  const res = await fetch('/api/prompts');
+  const list = await res.json();
+  promptSelect.innerHTML = '';
+  for (const p of list) {
+    const opt = document.createElement('option');
+    opt.value = p.name;
+    opt.textContent = `${p.label} (${p.name})`;
+    promptSelect.appendChild(opt);
+  }
+  if (list.length > 0) {
+    loadPrompt(list[0].name);
+  }
+}
+
+// --- Load a specific prompt ---
+async function loadPrompt(name) {
+  const res = await fetch(`/api/prompts/${name}`);
+  const data = await res.json();
+  currentPrompt = data;
+  originalText = data.text;
+  promptText.value = data.text;
+  promptSource.textContent = data.source;
+  jsonModeBadge.textContent = data.json_mode ? 'JSON mode' : 'Text mode';
+
+  // Build input fields
+  testInputs.innerHTML = '';
+  for (const varName of (data.variables || [])) {
+    const label = (data.var_labels || {})[varName] || varName;
+    const defaultVal = (data.defaults || {})[varName] || '';
+    const isLong = defaultVal.length > 60 || defaultVal.includes('\n');
+
+    const field = document.createElement('div');
+    field.className = 'lab-test__field';
+    const lbl = document.createElement('label');
+    lbl.className = 'lab-test__field-label';
+    lbl.textContent = label;
+    lbl.setAttribute('for', `input-${varName}`);
+
+    let input;
+    if (isLong) {
+      input = document.createElement('textarea');
+      input.className = 'lab-test__field-input lab-test__field-input--tall';
+      input.rows = 4;
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'lab-test__field-input';
+    }
+    input.id = `input-${varName}`;
+    input.value = defaultVal;
+    input.placeholder = varName;
+
+    field.appendChild(lbl);
+    field.appendChild(input);
+    testInputs.appendChild(field);
+  }
+
+  testOutput.innerHTML = '';
+  $('#test-tokens').textContent = '';
+}
+
+promptSelect.addEventListener('change', () => loadPrompt(promptSelect.value));
+
+// --- Save ---
+$('#btn-save').addEventListener('click', async () => {
+  if (!currentPrompt) return;
+  saveStatus.textContent = '保存中...';
+  saveStatus.className = '';
+  try {
+    const res = await fetch(`/api/prompts/${currentPrompt.name}`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: promptText.value}),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      originalText = promptText.value;
+      saveStatus.textContent = '已保存 ✓';
+      saveStatus.className = 'lab-status lab-status--saved';
+    } else {
+      saveStatus.textContent = '保存失败';
+      saveStatus.className = 'lab-status lab-status--error';
+    }
+  } catch (e) {
+    saveStatus.textContent = '网络错误';
+    saveStatus.className = 'lab-status lab-status--error';
+  }
+  setTimeout(() => { saveStatus.textContent = ''; saveStatus.className = ''; }, 2000);
+});
+
+// --- Reset ---
+$('#btn-reset').addEventListener('click', () => {
+  if (currentPrompt) promptText.value = originalText;
+});
+
+// --- Run ---
+$('#btn-run').addEventListener('click', async () => {
+  if (!currentPrompt) return;
+  const btn = $('#btn-run');
+  btn.disabled = true;
+  btn.textContent = '⏳ 运行中...';
+  testOutput.innerHTML = '<div style="color:var(--ink-tertiary)">调用 LLM 中...</div>';
+
+  // Collect inputs
+  const inputs = {};
+  for (const varName of (currentPrompt.variables || [])) {
+    const el = document.getElementById(`input-${varName}`);
+    if (el) inputs[varName] = el.value;
+  }
+
+  try {
+    const res = await fetch(`/api/prompts/${currentPrompt.name}/run`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        text: promptText.value,
+        inputs: inputs,
+        language: $('#test-language').value,
+      }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      testOutput.innerHTML = `<div class="lab-test__output-raw" style="color:var(--status-stuck)">Error: ${data.error}</div>`;
+    } else if (data.parsed) {
+      testOutput.innerHTML = `<div class="lab-test__output-json">${syntaxHighlight(JSON.stringify(data.parsed, null, 2))}</div>`;
+    } else {
+      testOutput.innerHTML = `<div class="lab-test__output-raw">${escapeHtml(data.output)}</div>`;
+    }
+    $('#test-tokens').textContent = data.tokens ? `${data.tokens} tokens` : '';
+  } catch (e) {
+    testOutput.innerHTML = `<div style="color:var(--status-stuck)">请求失败: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '▶ 运行';
+});
+
+// --- Helpers ---
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function syntaxHighlight(json) {
+  json = escapeHtml(json);
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+    let cls = 'json-bool';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = 'json-key';
+      } else {
+        cls = 'json-string';
+      }
+    }
+    return `<span class="${cls}">${match}</span>`;
+  });
+}
+
+// --- Init ---
+loadPrompts();
+
+// Tab key support in textarea
+promptText.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = promptText.selectionStart;
+    const end = promptText.selectionEnd;
+    promptText.value = promptText.value.substring(0, start) + '    ' + promptText.value.substring(end);
+    promptText.selectionStart = promptText.selectionEnd = start + 4;
+  }
+});
+</script>
+</body>
+</html>

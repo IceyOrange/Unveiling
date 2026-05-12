@@ -1,131 +1,67 @@
 from __future__ import annotations
 
 from models import ScheduleLogEntry, State
-from models._enums import NodeStatus, OrchestratorRole, Phase
+from models._enums import Phase
 from orchestrator.rules import (
-    all_leaves_closed_or_stuck,
-    pick_first_non_closed_subquestion,
+    both_directions_done,
+    search_coverage_met,
     token_budget_exceeded,
+    TARGET_EXAMPLES,
+    MAX_ROUNDS_PER_DIRECTION,
 )
-
-META_INTERVAL = 5
 
 
 def scheduler_node(state: State) -> dict:
-    """Orchestrator Scheduler: decide what to do next.
+    """Decide whether to continue searching or move to convergence.
 
-    Rule-led, LLM tie-breaker (MVP: rules only).
-    Reads issue_tree; writes schedule_log, next_agent, target_sub_question_id.
+    Each direction (lateral/vertical) converges independently when it hits
+    TARGET_EXAMPLES or exhausts MAX_ROUNDS_PER_DIRECTION. Phase 3 starts
+    only when both directions are done.
     """
-    # 1. Convergence check
     if token_budget_exceeded(state):
         return {
             "schedule_log": [
                 ScheduleLogEntry(
                     author="orchestrator.scheduler",
-                    role=OrchestratorRole.scheduler,
                     decision="force_convergence",
                     reason=(
-                        f"token budget exceeded: "
-                        f"{state.token_spent} >= {state.budget_ceiling}"
+                        f"token budget exceeded: {state.token_spent} "
+                        f">= {state.budget_ceiling}"
                     ),
                 )
             ],
             "phase": Phase.convergence,
         }
 
-    if all_leaves_closed_or_stuck(state):
+    if both_directions_done(state):
+        coverage = "coverage met" if search_coverage_met(state) else "max rounds reached"
         return {
             "schedule_log": [
                 ScheduleLogEntry(
                     author="orchestrator.scheduler",
-                    role=OrchestratorRole.scheduler,
                     decision="convergence",
-                    reason="all leaf nodes are closed or stuck",
+                    reason=(
+                        f"{coverage}: lateral={state.lateral_count} "
+                        f"({state.lateral_rounds}/{MAX_ROUNDS_PER_DIRECTION} rounds), "
+                        f"vertical={state.vertical_count} "
+                        f"({state.vertical_rounds}/{MAX_ROUNDS_PER_DIRECTION} rounds)"
+                    ),
                 )
             ],
             "phase": Phase.convergence,
         }
 
-    # 2. Meta trigger
-    if state.round_count > 0 and state.round_count % META_INTERVAL == 0:
-        return {
-            "schedule_log": [
-                ScheduleLogEntry(
-                    author="orchestrator.scheduler",
-                    role=OrchestratorRole.scheduler,
-                    decision="meta_evaluation",
-                    reason=f"round {state.round_count} reached meta interval",
-                )
-            ],
-            "round_count": state.round_count + 1,
-            "next_agent": "meta",
-        }
-
-    # 3. Pick target sub-question
-    target = pick_first_non_closed_subquestion(state)
-    if target is None:
-        return {
-            "schedule_log": [
-                ScheduleLogEntry(
-                    author="orchestrator.scheduler",
-                    role=OrchestratorRole.scheduler,
-                    decision="convergence",
-                    reason="no non-closed sub-questions found",
-                )
-            ],
-            "phase": Phase.convergence,
-        }
-
-    # 4. Decide agent
-    next_agent = _decide_agent(state, target)
-
-    # 5. Update node status untouched -> exploring
-    updates: dict = {}
-    if target.node_status == NodeStatus.untouched:
-        updates["issue_tree"] = [
-            target.model_copy(update={"node_status": NodeStatus.exploring})
-        ]
-
-    # 6. Update attempt counter
-    counter = state.attempt_counters.get(target.id, 0)
-    updates["attempt_counters"] = {target.id: counter + 1}
-
-    # 7. Log and return routing info
-    updates["schedule_log"] = [
-        ScheduleLogEntry(
-            author="orchestrator.scheduler",
-            role=OrchestratorRole.scheduler,
-            decision=f"schedule {next_agent}",
-            reason=(
-                f"target sub-question {target.id} "
-                f"status={target.node_status.value}"
-            ),
-        )
-    ]
-    updates["round_count"] = state.round_count + 1
-    updates["next_agent"] = next_agent
-    updates["target_sub_question_id"] = target.id
-
-    return updates
-
-
-def _decide_agent(state: State, target) -> str:
-    """Rule-based agent selection for MVP.
-
-    Full cycle per sub-question:
-    search_lateral → search_vertical → deepdig → lens_op → debate → prediction_check → judge
-    """
-    counter = state.attempt_counters.get(target.id, 0)
-    agents = [
-        "search_lateral",
-        "search_vertical",
-        "deepdig",
-        "lens_op",
-        "debate",
-        "prediction_check",
-    ]
-    # Every 6th attempt (after full cycle): judge; otherwise cycle through agents
-    if counter > 0 and counter % 6 == 0:
-        return "judge"
-    return agents[counter % len(agents)]
+    return {
+        "schedule_log": [
+            ScheduleLogEntry(
+                author="orchestrator.scheduler",
+                decision="continue_search",
+                reason=(
+                    f"lateral={state.lateral_count}/{TARGET_EXAMPLES} "
+                    f"({state.lateral_rounds}/{MAX_ROUNDS_PER_DIRECTION}), "
+                    f"vertical={state.vertical_count}/{TARGET_EXAMPLES} "
+                    f"({state.vertical_rounds}/{MAX_ROUNDS_PER_DIRECTION})"
+                ),
+            )
+        ],
+    }

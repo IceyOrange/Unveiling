@@ -13,6 +13,8 @@ venv/
 
 # Output (generated at runtime)
 output/
+tmp/
+*.log
 
 # LangGraph checkpoints
 .checkpoints/

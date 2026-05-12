@@ -6,20 +6,6 @@ class RecordStatus(str, Enum):
     retracted = "retracted"
 
 
-class NodeStatus(str, Enum):
-    untouched = "untouched"
-    exploring = "exploring"
-    closed = "closed"
-    stuck = "stuck"
-
-
-class PredictionStatus(str, Enum):
-    pending = "pending"
-    supported = "supported"
-    refuted = "refuted"
-    modified = "modified"
-
-
 class EvidenceLayer(str, Enum):
     phenomenon = "phenomenon"
     mechanism = "mechanism"
@@ -33,24 +19,12 @@ class EvidenceConfidence(str, Enum):
     unexpected = "unexpected"
 
 
+class SearchDirection(str, Enum):
+    lateral = "lateral"
+    vertical = "vertical"
+
+
 class Phase(str, Enum):
     inception = "inception"
     exploration = "exploration"
     convergence = "convergence"
-
-
-class AgentName(str, Enum):
-    search_lateral = "search_lateral"
-    search_vertical = "search_vertical"
-    deepdig = "deepdig"
-    lens_op = "lens_op"
-    debate = "debate"
-    prediction_check = "prediction_check"
-    inception = "inception"
-    convergence = "convergence"
-
-
-class OrchestratorRole(str, Enum):
-    scheduler = "scheduler"
-    judge = "judge"
-    meta = "meta"
