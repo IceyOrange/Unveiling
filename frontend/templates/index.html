@@ -15,13 +15,13 @@
     <header class="home__mast">
       <span class="home__brand">UNVEILING</span>
       <span class="home__brand-dot" aria-hidden="true"></span>
-      <span class="home__brand-sub">multi-agent analogy</span>
-      <a class="home__demo-link" href="?demo=1">看一份示例输出 <span aria-hidden="true">→</span></a>
+      <span class="home__brand-sub">analogies from elsewhere</span>
+      <a class="home__demo-link" href="?demo=1">看一份示例 <span aria-hidden="true">→</span></a>
     </header>
 
     <h1 class="manifesto">
-      <span class="manifesto__line">这个问题最常见的回答，你早就知道。</span>
-      <span class="manifesto__line">这里给一组刻意远的类比 —— <em class="manifesto__em">还能</em> 怎么看。</span>
+      <span class="manifesto__line">你的问题，搬到别的行业、别的时代里。</span>
+      <span class="manifesto__line">看它<em class="manifesto__em">在那儿</em>怎么走 —— 然后你再决定。</span>
     </h1>
 
     <form class="home-form" id="home-form">
@@ -30,28 +30,34 @@
         class="home-form__input"
         id="home-question"
         rows="3"
-        placeholder="把它完整地写下来。具体一点 —— 类比才会锋利。"
+        placeholder="把它完整地写下来。越具体，类比越准。"
         required></textarea>
 
       <div class="home-form__bottom">
-        <div class="home-form__mode" role="radiogroup" aria-label="分析模式">
-          <button type="button" class="home-form__mode-option" data-mode="focus" role="radio" aria-checked="false">
-            <span class="home-form__mode-name">就近</span>
-            <span class="home-form__mode-desc">先从邻近领域找</span>
-          </button>
-          <button type="button" class="home-form__mode-option is-selected" data-mode="balance" role="radio" aria-checked="true">
-            <span class="home-form__mode-name">平衡</span>
-            <span class="home-form__mode-desc">近与远各占一半</span>
-          </button>
-          <button type="button" class="home-form__mode-option" data-mode="explore" role="radio" aria-checked="false">
-            <span class="home-form__mode-name">远探</span>
-            <span class="home-form__mode-desc">偏好冷门的角落</span>
-          </button>
+        <div class="home-form__field">
+          <span class="home-form__field-label">类比的距离</span>
+          <div class="home-form__mode" role="radiogroup" aria-label="类比的距离">
+            <button type="button" class="home-form__mode-option" data-mode="focus" role="radio" aria-checked="false">
+              <span class="home-form__mode-name">近一些</span>
+              <span class="home-form__mode-desc">邻近行业里找</span>
+            </button>
+            <button type="button" class="home-form__mode-option is-selected" data-mode="balance" role="radio" aria-checked="true">
+              <span class="home-form__mode-name">平衡</span>
+              <span class="home-form__mode-desc">近远各占一半</span>
+            </button>
+            <button type="button" class="home-form__mode-option" data-mode="explore" role="radio" aria-checked="false">
+              <span class="home-form__mode-name">远一些</span>
+              <span class="home-form__mode-desc">陌生领域里找</span>
+            </button>
+          </div>
         </div>
 
-        <div class="home-form__lang" role="radiogroup" aria-label="输出语言">
-          <button type="button" class="home-form__lang-option is-selected" data-lang="中文" role="radio" aria-checked="true">中文</button>
-          <button type="button" class="home-form__lang-option" data-lang="English" role="radio" aria-checked="false">English</button>
+        <div class="home-form__field home-form__field--lang">
+          <span class="home-form__field-label">输出语言</span>
+          <div class="home-form__lang" role="radiogroup" aria-label="输出语言">
+            <button type="button" class="home-form__lang-option is-selected" data-lang="中文" role="radio" aria-checked="true">中文</button>
+            <button type="button" class="home-form__lang-option" data-lang="English" role="radio" aria-checked="false">English</button>
+          </div>
         </div>
 
         <button type="submit" class="home-form__submit">
@@ -72,28 +78,28 @@
           <button type="button" class="prompt-card" data-example="大学生实习难找">
             <span class="prompt-card__question">大学生实习难找</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">内卷 · 没有实习经历就找不到实习</span>
+            <span class="prompt-card__lenses">也许会聊：医师执照 · 师徒制 · 城市的入场券</span>
           </button>
         </li>
         <li>
           <button type="button" class="prompt-card" data-example="街上看到越来越多低头族">
             <span class="prompt-card__question">街上看到越来越多低头族</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">精神素质低下与物质富足的不对称</span>
+            <span class="prompt-card__lenses">也许会聊：街边咖啡馆 · 火车上的报纸 · 早年的电视</span>
           </button>
         </li>
         <li>
           <button type="button" class="prompt-card" data-example="社交平台的劣化趋势">
             <span class="prompt-card__question">社交平台的劣化趋势</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">购物中心 · 公共绿地 · 殖民地小镇</span>
+            <span class="prompt-card__lenses">也许会聊：购物中心 · 公共绿地 · 殖民地小镇</span>
           </button>
         </li>
         <li>
           <button type="button" class="prompt-card" data-example="养小猫还是养小狗">
             <span class="prompt-card__question">养小猫还是养小狗</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">🐱 · 🐶</span>
+            <span class="prompt-card__lenses">也许会聊：合伙人 · 房客 · 一段长期友谊</span>
           </button>
         </li>
       </ul>
@@ -110,6 +116,74 @@
 
 <!-- ============================ ANALYSIS ============================ -->
 <section class="screen screen--analysis" data-screen="analysis">
+
+  <!-- Outline rail: persistent left-side TOC for wide viewports.
+       All items begin as --pending; JS upgrades them to --available
+       as their target sections come out of `hidden`, and marks one
+       as --current based on scroll position. -->
+  <aside class="outline" id="outline" aria-label="这次分析的目录">
+    <div class="outline__head">
+      <span class="outline__title">这次分析</span>
+    </div>
+    <ol class="outline__list">
+      <li class="outline__item outline__item--pending" data-target="lens-reveal">
+        <a class="outline__link" href="#lens-reveal">
+          <span class="outline__num" aria-hidden="true">01</span>
+          <span class="outline__label">观察角度</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="rails">
+        <a class="outline__link" href="#rails">
+          <span class="outline__num" aria-hidden="true">02</span>
+          <span class="outline__label">搜索进度</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="cases">
+        <a class="outline__link" href="#cases">
+          <span class="outline__num" aria-hidden="true">03</span>
+          <span class="outline__label">找到的类比</span>
+        </a>
+      </li>
+      <li class="outline__divider" aria-hidden="true"></li>
+      <li class="outline__item outline__item--pending" data-target="chapter-core_finding">
+        <a class="outline__link" href="#chapter-core_finding">
+          <span class="outline__num" aria-hidden="true">§ 1</span>
+          <span class="outline__label">核心结论</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="chapter-temporal_trajectory">
+        <a class="outline__link" href="#chapter-temporal_trajectory">
+          <span class="outline__num" aria-hidden="true">§ 2</span>
+          <span class="outline__label">这件事的走向</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="chapter-tension">
+        <a class="outline__link" href="#chapter-tension">
+          <span class="outline__num" aria-hidden="true">§ 3</span>
+          <span class="outline__label">难处在哪</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="chapter-boundary_condition">
+        <a class="outline__link" href="#chapter-boundary_condition">
+          <span class="outline__num" aria-hidden="true">§ 4</span>
+          <span class="outline__label">这话在哪里不成立</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="chapter-unresolved">
+        <a class="outline__link" href="#chapter-unresolved">
+          <span class="outline__num" aria-hidden="true">§ 5</span>
+          <span class="outline__label">还没回答清楚的</span>
+        </a>
+      </li>
+      <li class="outline__item outline__item--pending" data-target="chapter-implication">
+        <a class="outline__link" href="#chapter-implication">
+          <span class="outline__num" aria-hidden="true">§ 6</span>
+          <span class="outline__label">所以你应该</span>
+        </a>
+      </li>
+    </ol>
+  </aside>
+
   <article class="analysis">
 
     <header class="analysis__mast">
@@ -132,7 +206,7 @@
           <span class="phases__step-dot"></span>
         </span>
         <span class="phases__step-name">搜集</span>
-        <span class="phases__step-desc">跨领域 × 跨时期 找类比</span>
+        <span class="phases__step-desc">跨领域、跨时期 找类比</span>
       </div>
       <span class="phases__rail" aria-hidden="true"></span>
       <div class="phases__step" data-phase="convergence">
@@ -178,7 +252,7 @@
     <section class="rails" id="rails" hidden>
       <header class="rails__head">
         <span class="rails__title">搜索进度</span>
-        <span class="rails__subtitle">两个方向各找 10 个类比，或跑满 3 轮</span>
+        <span class="rails__subtitle">两个方向 · 各找 10 个 · 最多 3 轮</span>
       </header>
       <div class="rails__grid">
         <div class="rail" data-direction="lateral" id="rail-lateral">
@@ -257,8 +331,8 @@
         <span class="integrity__value" id="integrity-vertical">0</span>
         <span class="integrity__unit">个案例</span>
       </div>
-      <div class="integrity__cell">
-        <span class="integrity__label">走了捷径</span>
+      <div class="integrity__cell" title="LLM 调用失败时启用的备用方案次数">
+        <span class="integrity__label">降级处理</span>
         <span class="integrity__value" id="integrity-degradation">0</span>
         <span class="integrity__unit">处</span>
       </div>

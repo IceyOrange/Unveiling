@@ -287,16 +287,31 @@ em { font-style: normal; }
 
 .home-form__bottom {
   display: flex;
-  align-items: stretch;
+  align-items: flex-end;
   gap: var(--space-4);
   flex-wrap: wrap;
+}
+
+.home-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 240px;
+  min-width: 240px;
+}
+.home-form__field--lang { flex: 0 0 auto; min-width: 0; }
+.home-form__field-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
 }
 
 .home-form__mode {
   display: flex;
   align-items: stretch;
-  flex: 1;
-  min-width: 240px;
+  min-height: 56px;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -304,7 +319,7 @@ em { font-style: normal; }
 }
 .home-form__mode-option {
   flex: 1;
-  padding: 10px 14px;
+  padding: 8px 14px;
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 500;
@@ -317,6 +332,7 @@ em { font-style: normal; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
   gap: 2px;
   text-align: left;
 }
@@ -330,6 +346,7 @@ em { font-style: normal; }
 .home-form__lang {
   display: flex;
   align-items: stretch;
+  min-height: 56px;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -345,6 +362,9 @@ em { font-style: normal; }
   border-right: 1px solid var(--border-hairline);
   cursor: pointer;
   transition: background-color 180ms ease, color 180ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .home-form__lang-option:last-child { border-right: 0; }
 .home-form__lang-option:hover { background: var(--surface-inset); color: var(--ink-primary); }
@@ -858,6 +878,149 @@ em { font-style: normal; }
 
 
 /* ============================================================================
+   6.x  Outline rail — persistent TOC on the left edge.
+        Shown only on wide viewports (≥1280px) so the centered article keeps
+        its margins. State is conveyed by typography (weight, color, opacity)
+        and a 3px translateX nudge — never by colored bars or background tints.
+        Orange is reserved for tension and never appears here.
+   ========================================================================== */
+
+.outline {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .outline {
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: clamp(20px, 3.2vw, 56px);
+    transform: translateY(-50%);
+    width: 156px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    z-index: 5;
+    background: linear-gradient(
+      90deg,
+      var(--bg-cream) 0%,
+      var(--bg-cream) 86%,
+      transparent 100%
+    );
+    padding: 4px 12px 4px 2px;
+    /* Soft scrollbar inside the rail */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-soft) transparent;
+  }
+}
+
+.outline__head {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.outline__title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+
+.outline__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.outline__item { list-style: none; }
+
+.outline__divider {
+  list-style: none;
+  height: 1px;
+  background: var(--border-hairline);
+  margin: 8px 6px;
+}
+
+.outline__link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0 4px 2px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--ink-tertiary);
+  text-decoration: none;
+  transition: color 200ms ease, transform 200ms ease, font-weight 200ms ease, opacity 200ms ease;
+}
+
+.outline__num {
+  flex-shrink: 0;
+  width: 26px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: inherit;
+  opacity: 0.7;
+  text-align: left;
+  padding-top: 1px;
+}
+
+.outline__label {
+  flex: 1;
+  color: inherit;
+}
+
+/* Pending — section hasn't been revealed yet. Dim, not clickable. */
+.outline__item--pending .outline__link {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Available — section now exists in the page. Clickable. */
+.outline__item--available .outline__link {
+  color: var(--ink-secondary);
+  opacity: 1;
+}
+.outline__item--available .outline__link:hover {
+  color: var(--ink-primary);
+  transform: translateX(2px);
+}
+.outline__item--available .outline__link:focus-visible {
+  outline: 1px solid var(--border-medium);
+  outline-offset: 2px;
+}
+
+/* Current — the section currently in view. Weight + color + 3px nudge. */
+.outline__item--current .outline__link {
+  color: var(--ink-primary);
+  font-weight: 500;
+  transform: translateX(3px);
+  opacity: 1;
+}
+.outline__item--current .outline__num {
+  opacity: 1;
+  color: var(--ink-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outline__link {
+    transition: color 200ms ease;
+  }
+  .outline__item--current .outline__link,
+  .outline__item--available .outline__link:hover {
+    transform: none;
+  }
+}
+
+
+/* ============================================================================
    7. Transition & conclusion zone — inline below process elements.
    ========================================================================== */
 
@@ -1264,6 +1427,7 @@ em { font-style: normal; }
   .phases__step-marker { grid-row: 1; }
 
   .home-form__bottom { flex-direction: column; align-items: stretch; }
+  .home-form__field { min-width: 0; flex: 1 1 auto; }
   .home-form__mode { min-width: 0; }
   .home-form__submit { justify-content: center; }
 
@@ -1299,6 +1463,7 @@ em { font-style: normal; }
 @media print {
   body { background: var(--bg-cream); color: var(--ink-primary); }
   .drawer,
+  .outline,
   .analysis__back,
   .analysis__transition,
   .conclusion__toggle,

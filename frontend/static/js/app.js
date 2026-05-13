@@ -226,6 +226,7 @@
     bindHome();
     bindAnalysisControls();
     bindConclusionControls();
+    outline.init();
 
     var params = new URLSearchParams(window.location.search);
     if (params.get('demo') === '1') {
@@ -360,6 +361,10 @@
       var tagline = document.getElementById('tagline-' + chap.key);
       if (tagline) setText(tagline, '');
     });
+
+    // Outline back to all-pending — sections will re-announce themselves
+    // through MutationObserver as they come out of `hidden`.
+    if (outline && outline.reset) outline.reset();
   }
 
   // ========================== Start a run ============================
@@ -937,6 +942,189 @@
     transitionToResult(demo);
     showScreen('analysis');
   }
+
+  // ============================== Outline ============================
+  //
+  // A persistent left-side TOC. Each item has three states:
+  //   pending   — target section is still hidden in the DOM
+  //   available — section has been revealed; jumpable
+  //   current   — section is the one currently in the user's viewport
+  //
+  // We listen for `hidden` attribute changes on the tracked elements to
+  // flip pending → available, and use IntersectionObserver to pick one
+  // available item as current. No coupling into the existing render flow.
+
+  var outline = (function () {
+    var rail = null;
+    var items = [];
+    var ioObserver = null;
+    var targetsCache = [];
+
+    // Each tracked DOM element enables one or more outline items.
+    // #conclusions becoming visible reveals all six chapters at once.
+    var ENABLE_MAP = {
+      'lens-reveal': ['lens-reveal'],
+      'rails': ['rails'],
+      'cases': ['cases'],
+      'conclusions': [
+        'chapter-core_finding',
+        'chapter-temporal_trajectory',
+        'chapter-tension',
+        'chapter-boundary_condition',
+        'chapter-unresolved',
+        'chapter-implication',
+      ],
+    };
+
+    function findItem(targetId) {
+      if (!rail) return null;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].dataset.target === targetId) return items[i];
+      }
+      return null;
+    }
+
+    function setItemState(item, state) {
+      if (!item) return;
+      item.classList.remove(
+        'outline__item--pending',
+        'outline__item--available',
+        'outline__item--current'
+      );
+      item.classList.add('outline__item--' + state);
+    }
+
+    function handleVisibilityChange(sourceId, isVisible) {
+      var targetIds = ENABLE_MAP[sourceId] || [];
+      targetIds.forEach(function (tid) {
+        var item = findItem(tid);
+        if (!item) return;
+        if (isVisible) {
+          if (!item.classList.contains('outline__item--current')) {
+            setItemState(item, 'available');
+          }
+        } else {
+          setItemState(item, 'pending');
+        }
+      });
+      // Refresh the IO target cache when visibility changes.
+      refreshTargetsCache();
+    }
+
+    function refreshTargetsCache() {
+      targetsCache = items
+        .map(function (item) {
+          return { item: item, el: document.getElementById(item.dataset.target) };
+        })
+        .filter(function (x) { return x.el && !x.el.hidden; });
+    }
+
+    function updateCurrent() {
+      if (!targetsCache.length) return;
+      var focusLine = Math.max(window.innerHeight * 0.28, 120);
+      var current = null;
+
+      for (var i = 0; i < targetsCache.length; i++) {
+        var t = targetsCache[i];
+        var rect = t.el.getBoundingClientRect();
+        if (rect.top <= focusLine && rect.bottom > 80) {
+          if (!current) current = t;
+          else if (rect.top > current.el.getBoundingClientRect().top) current = t;
+        }
+      }
+
+      // Fallback: if nothing crosses the focus line, the topmost
+      // visible-on-screen section is current.
+      if (!current) {
+        for (var j = 0; j < targetsCache.length; j++) {
+          var t2 = targetsCache[j];
+          var r2 = t2.el.getBoundingClientRect();
+          if (r2.bottom > 0 && r2.top < window.innerHeight) {
+            if (!current) current = t2;
+            else if (r2.top < current.el.getBoundingClientRect().top) current = t2;
+          }
+        }
+      }
+
+      items.forEach(function (item) {
+        if (item.classList.contains('outline__item--pending')) return;
+        if (current && item === current.item) {
+          setItemState(item, 'current');
+        } else if (item.classList.contains('outline__item--current')) {
+          setItemState(item, 'available');
+        }
+      });
+    }
+
+    function init() {
+      rail = document.getElementById('outline');
+      if (!rail) return;
+      items = Array.prototype.slice.call(
+        rail.querySelectorAll('.outline__item[data-target]')
+      );
+
+      // 1. Click → smooth scroll
+      items.forEach(function (item) {
+        var link = item.querySelector('.outline__link');
+        if (!link) return;
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (item.classList.contains('outline__item--pending')) return;
+          var target = document.getElementById(item.dataset.target);
+          if (!target) return;
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      // 2. MutationObserver on hidden attribute of each tracked element
+      Object.keys(ENABLE_MAP).forEach(function (sourceId) {
+        var source = document.getElementById(sourceId);
+        if (!source) return;
+        var mo = new MutationObserver(function () {
+          handleVisibilityChange(sourceId, !source.hidden);
+        });
+        mo.observe(source, { attributes: true, attributeFilter: ['hidden'] });
+        // Initial sync
+        handleVisibilityChange(sourceId, !source.hidden);
+      });
+
+      // 3. IntersectionObserver for scroll position
+      if ('IntersectionObserver' in window) {
+        ioObserver = new IntersectionObserver(function () {
+          updateCurrent();
+        }, {
+          rootMargin: '-25% 0px -65% 0px',
+          threshold: [0, 0.1, 0.5, 1],
+        });
+        // Observe every potential target — observers are no-ops on hidden.
+        var allTargets = [];
+        items.forEach(function (item) {
+          var el = document.getElementById(item.dataset.target);
+          if (el) allTargets.push(el);
+        });
+        allTargets.forEach(function (el) { ioObserver.observe(el); });
+      }
+
+      // 4. Throttled scroll fallback (and for chapter expand/collapse)
+      var scrollTick = null;
+      window.addEventListener('scroll', function () {
+        if (scrollTick) return;
+        scrollTick = requestAnimationFrame(function () {
+          scrollTick = null;
+          updateCurrent();
+        });
+      }, { passive: true });
+    }
+
+    function reset() {
+      items.forEach(function (item) {
+        setItemState(item, 'pending');
+      });
+      refreshTargetsCache();
+    }
+
+    return { init: init, reset: reset };
+  })();
 
   // ============================== Boot ===============================
 
