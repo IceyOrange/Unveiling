@@ -5,33 +5,48 @@ import pytest
 from llm import prompt_loader
 
 
-def test_load_prompt_strips_frontmatter():
-    body = prompt_loader.load_prompt("scheduler")
-    assert "---" not in body.split("\n")[:1]
-    assert "Scheduler Agent Prompt" in body
-    assert "Output Schema (JSON)" in body
+def test_load_lab_prompt_reads_existing_file():
+    body = prompt_loader.load_lab_prompt("inception_user")
+    assert "{question}" in body  # the variable placeholder must survive
 
 
-def test_load_prompt_caches():
-    body1 = prompt_loader.load_prompt("scheduler")
-    body2 = prompt_loader.load_prompt("scheduler")
-    assert body1 is body2  # same object due to cache
+def test_load_lab_prompt_inception_system_has_no_variables():
+    body = prompt_loader.load_lab_prompt("inception_system")
+    assert body.strip()  # non-empty
 
 
-def test_load_prompt_not_found():
+def test_load_lab_prompt_not_found():
     with pytest.raises(FileNotFoundError):
-        prompt_loader.load_prompt("nonexistent_prompt_xyz")
+        prompt_loader.load_lab_prompt("nonexistent_prompt_xyz")
 
 
-def test_list_prompts_includes_scheduler():
-    names = prompt_loader.list_prompts()
-    assert "scheduler" in names
-    assert "judge" in names
-    assert "meta" in names
+def test_list_lab_prompts_covers_pipeline():
+    names = prompt_loader.list_lab_prompts()
+    # All 7 live prompts must be present in the lab.
+    for required in [
+        "inception_system",
+        "inception_user",
+        "lateral_query",
+        "vertical_query",
+        "validate_queries",
+        "case_extraction",
+        "convergence_synthesize",
+    ]:
+        assert required in names, f"missing lab prompt: {required}"
 
 
-def test_clear_cache():
-    prompt_loader.load_prompt("scheduler")
-    assert "scheduler" in prompt_loader._CACHE
-    prompt_loader.clear_cache()
-    assert "scheduler" not in prompt_loader._CACHE
+def test_load_lab_prompt_reads_fresh_each_call(tmp_path, monkeypatch):
+    # Point the loader at a temporary lab and verify it re-reads the file
+    # on every call (no caching).
+    monkeypatch.setattr(prompt_loader, "_LAB_DIR", tmp_path)
+    target = tmp_path / "hot_reload.txt"
+    target.write_text("v1", encoding="utf-8")
+    assert prompt_loader.load_lab_prompt("hot_reload") == "v1"
+    target.write_text("v2", encoding="utf-8")
+    assert prompt_loader.load_lab_prompt("hot_reload") == "v2"
+
+
+def test_lab_prompt_path_returns_expected_path():
+    p = prompt_loader.lab_prompt_path("inception_user")
+    assert p.name == "inception_user.txt"
+    assert p.exists()

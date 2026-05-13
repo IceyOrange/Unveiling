@@ -171,3 +171,93 @@ def test_non_transient_error_does_not_retry(mock_openai_cls):
         client.chat(messages=[{"role": "user", "content": "hi"}])
 
     assert mock_client.chat.completions.create.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Language injection
+# ---------------------------------------------------------------------------
+
+def test_inject_language_prepends_system_when_none_exists():
+    messages = [{"role": "user", "content": "hi"}]
+    result = LLMClient._inject_language(messages, "中文")
+
+    assert result[0]["role"] == "system"
+    assert "Write ALL natural-language content in 中文" in result[0]["content"]
+    assert result[1] == {"role": "user", "content": "hi"}
+    # Input list not mutated.
+    assert messages == [{"role": "user", "content": "hi"}]
+
+
+def test_inject_language_appends_to_existing_system():
+    messages = [
+        {"role": "system", "content": "You are an analyst."},
+        {"role": "user", "content": "hi"},
+    ]
+    result = LLMClient._inject_language(messages, "English")
+
+    assert result[0]["role"] == "system"
+    assert "You are an analyst." in result[0]["content"]
+    assert "Write ALL natural-language content in English" in result[0]["content"]
+    # Original system message not mutated.
+    assert messages[0]["content"] == "You are an analyst."
+
+
+@pytest.mark.parametrize("language", ["English", "中文", "日本語", "Español"])
+def test_inject_language_instruction_is_self_consistent(language):
+    """Regression: the instruction must never tell the LLM to AVOID the same
+    language it is supposed to write in. Earlier versions hard-coded
+    'English' as the structural fallback, which contradicted itself when the
+    user picked English ('write in English ... do NOT use English')."""
+    result = LLMClient._inject_language([{"role": "user", "content": "hi"}], language)
+    content = result[0]["content"]
+    assert f"Write ALL natural-language content in {language}" in content
+    # The instruction must not tell the LLM to NOT use the same language
+    # that it was just told to write in.
+    assert f"Do NOT use {language}" not in content
+
+
+@patch("llm.client.OpenAI")
+def test_chat_constructor_language_reaches_system_message(mock_openai_cls):
+    """End-to-end: language passed to LLMClient(...) must show up in the
+    system message that gets sent to the API. The lab calls
+    ``LLMClient(language=...)`` and then ``chat()`` with no language kwarg,
+    so this path must work via the ``self.language`` fallback."""
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _make_response("ok", 1)
+    mock_openai_cls.return_value = mock_client
+
+    client = LLMClient(language="English")
+    client.chat(messages=[{"role": "user", "content": "hi"}])
+
+    sent_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
+    assert sent_messages[0]["role"] == "system"
+    assert "Write ALL natural-language content in English" in sent_messages[0]["content"]
+
+
+@patch("llm.client.OpenAI")
+def test_chat_language_kwarg_overrides_constructor(mock_openai_cls):
+    """Explicit ``chat(language=...)`` should win over the constructor default."""
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _make_response("ok", 1)
+    mock_openai_cls.return_value = mock_client
+
+    client = LLMClient(language="English")
+    client.chat(messages=[{"role": "user", "content": "hi"}], language="中文")
+
+    sent_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
+    assert "Write ALL natural-language content in 中文" in sent_messages[0]["content"]
+    assert "Write ALL natural-language content in English" not in sent_messages[0]["content"]
+
+
+@patch("llm.client.OpenAI")
+def test_chat_empty_language_skips_injection(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _make_response("ok", 1)
+    mock_openai_cls.return_value = mock_client
+
+    client = LLMClient()  # language defaults to ""
+    client.chat(messages=[{"role": "user", "content": "hi"}])
+
+    sent_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
+    # Only the user message survives; no language system prompt prepended.
+    assert sent_messages == [{"role": "user", "content": "hi"}]

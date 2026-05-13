@@ -69,31 +69,31 @@
       </div>
       <ul class="prompts__list">
         <li>
-          <button type="button" class="prompt-card" data-example="AI 公司现在应不应该烧钱扩张？">
-            <span class="prompt-card__question">AI 公司现在应不应该烧钱扩张？</span>
+          <button type="button" class="prompt-card" data-example="大学生实习难找">
+            <span class="prompt-card__question">大学生实习难找</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">黄金热 · 火箭升空 · 生物变态发育</span>
+            <span class="prompt-card__lenses">内卷 · 没有实习经历就找不到实习</span>
           </button>
         </li>
         <li>
-          <button type="button" class="prompt-card" data-example="远程办公会让组织文化褪色吗？">
-            <span class="prompt-card__question">远程办公会让组织文化褪色吗？</span>
+          <button type="button" class="prompt-card" data-example="街上看到越来越多低头族">
+            <span class="prompt-card__question">街上看到越来越多低头族</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">修道院 · 跨国船队 · 电报革命</span>
+            <span class="prompt-card__lenses">精神素质低下与物质富足的不对称</span>
           </button>
         </li>
         <li>
-          <button type="button" class="prompt-card" data-example="为什么社交平台都最终走向劣化？">
-            <span class="prompt-card__question">为什么社交平台都最终走向劣化？</span>
+          <button type="button" class="prompt-card" data-example="社交平台的劣化趋势">
+            <span class="prompt-card__question">社交平台的劣化趋势</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
             <span class="prompt-card__lenses">购物中心 · 公共绿地 · 殖民地小镇</span>
           </button>
         </li>
         <li>
-          <button type="button" class="prompt-card" data-example="开源项目应该追求快速增长还是稳定治理？">
-            <span class="prompt-card__question">开源项目应该追求快速增长还是稳定治理？</span>
+          <button type="button" class="prompt-card" data-example="养小猫还是养小狗">
+            <span class="prompt-card__question">养小猫还是养小狗</span>
             <span class="prompt-card__arrow" aria-hidden="true">↬</span>
-            <span class="prompt-card__lenses">生态系统 · 协会运作 · 政党组织</span>
+            <span class="prompt-card__lenses">🐱 · 🐶</span>
           </button>
         </li>
       </ul>
@@ -114,75 +114,132 @@
 
     <header class="analysis__mast">
       <span class="analysis__brand">UNVEILING</span>
-      <span class="analysis__edition" id="analysis-edition">issue · 思考进行中</span>
+      <span class="analysis__edition" id="analysis-edition">一份正在进行的分析</span>
     </header>
 
-    <!-- Phase timeline: most prominent state indicator on the screen. -->
+    <!-- Phase ribbon: 抽象 → 搜集 → 收拢 -->
     <nav class="phases" id="phase-indicator" aria-label="分析阶段">
       <div class="phases__step" data-phase="inception">
         <span class="phases__step-marker" aria-hidden="true">
           <span class="phases__step-dot"></span>
         </span>
-        <span class="phases__step-name">刚开始</span>
-        <span class="phases__step-desc">建问题树 · 选透镜</span>
+        <span class="phases__step-name">抽象</span>
+        <span class="phases__step-desc">把问题翻译成结构</span>
       </div>
       <span class="phases__rail" aria-hidden="true"></span>
       <div class="phases__step" data-phase="exploration">
         <span class="phases__step-marker" aria-hidden="true">
           <span class="phases__step-dot"></span>
         </span>
-        <span class="phases__step-name">展开找</span>
-        <span class="phases__step-desc">搜索 · 深挖 · 辩论</span>
+        <span class="phases__step-name">搜集</span>
+        <span class="phases__step-desc">横向 × 纵向 找类比</span>
       </div>
       <span class="phases__rail" aria-hidden="true"></span>
       <div class="phases__step" data-phase="convergence">
         <span class="phases__step-marker" aria-hidden="true">
           <span class="phases__step-dot"></span>
         </span>
-        <span class="phases__step-name">收尾</span>
-        <span class="phases__step-desc">合成张力式结论</span>
+        <span class="phases__step-name">收拢</span>
+        <span class="phases__step-desc">归纳 · 找张力</span>
       </div>
     </nav>
 
-    <!-- Driving question owned by the user, returned to them in serif. -->
+    <!-- The user's question, returned to them in serif. -->
     <h2 class="analysis__question" id="analysis-question"></h2>
 
-    <!-- Live narration line: what the system is doing RIGHT NOW. -->
+    <!-- 现在 line: a single live sentence describing the current action. -->
     <div class="now" id="now-line" aria-live="polite">
       <span class="now__label" aria-hidden="true">现在</span>
       <span class="now__arrow" aria-hidden="true">→</span>
-      <span class="now__text" id="narration-text">系统正在准备……</span>
+      <span class="now__text" id="narration-text">正在准备分析……</span>
     </div>
 
-    <!-- Sub-question tree: the orchestrator's interface, made visible. -->
-    <section class="subs">
-      <h3 class="subs__heading">
-        <span class="subs__heading-text">问题树</span>
-        <span class="subs__heading-desc" id="subs-progress"></span>
-      </h3>
-      <ol class="subs__list" id="tree-node-list">
-        <li class="empty-line">问题树正在生成……</li>
-      </ol>
+    <!-- Lens reveal: shows after Phase 1 lands a LensRecord on the blackboard.
+         The surface → structural map IS the payoff of inception. -->
+    <section class="lens-reveal" id="lens-reveal" hidden>
+      <header class="lens-reveal__head">
+        <span class="lens-reveal__tag">透镜</span>
+        <h3 class="lens-reveal__name" id="lens-name"></h3>
+      </header>
+      <p class="lens-reveal__rationale" id="lens-rationale"></p>
+      <div class="lens-reveal__map">
+        <div class="lens-reveal__col">
+          <div class="lens-reveal__col-head">主体</div>
+          <ul class="lens-reveal__list" id="lens-entities"></ul>
+        </div>
+        <div class="lens-reveal__col">
+          <div class="lens-reveal__col-head">关系</div>
+          <ul class="lens-reveal__list" id="lens-relations"></ul>
+        </div>
+      </div>
     </section>
 
-    <!-- Persistent journey log — the heart of the analysis screen.
-         Bubbles never vanish; the reader can scroll back any time. -->
-    <section class="journey">
-      <h3 class="journey__heading">
-        <span class="journey__heading-text">一路上</span>
-        <span class="journey__heading-desc" id="journey-count">还没找到第一条</span>
-      </h3>
-      <ol class="journey__list" id="journey-list" aria-live="polite"></ol>
+    <!-- Dual progress rails: lateral (cross-domain) ↔ vertical (cross-time).
+         Each direction converges independently. -->
+    <section class="rails" id="rails" hidden>
+      <header class="rails__head">
+        <span class="rails__title">搜集进度</span>
+        <span class="rails__subtitle">两个方向各自收敛 — 找到 10 个 或 跑满 3 轮</span>
+      </header>
+      <div class="rails__grid">
+        <div class="rail" data-direction="lateral" id="rail-lateral">
+          <div class="rail__head">
+            <span class="rail__name">横向</span>
+            <span class="rail__desc">跨领域 · 当代</span>
+            <span class="rail__counter">
+              <span class="rail__count" id="lateral-count">0</span>
+              <span class="rail__count-divider">/</span>
+              <span class="rail__count-target">10</span>
+            </span>
+          </div>
+          <div class="rail__track" aria-hidden="true">
+            <div class="rail__fill" id="lateral-fill" style="width:0%"></div>
+          </div>
+          <div class="rail__meta">
+            <span class="rail__rounds">第 <span id="lateral-rounds">0</span> / 3 轮</span>
+            <span class="rail__status" id="lateral-status">尚未开始</span>
+          </div>
+        </div>
+        <div class="rail" data-direction="vertical" id="rail-vertical">
+          <div class="rail__head">
+            <span class="rail__name">纵向</span>
+            <span class="rail__desc">跨时期 · 历史</span>
+            <span class="rail__counter">
+              <span class="rail__count" id="vertical-count">0</span>
+              <span class="rail__count-divider">/</span>
+              <span class="rail__count-target">10</span>
+            </span>
+          </div>
+          <div class="rail__track" aria-hidden="true">
+            <div class="rail__fill" id="vertical-fill" style="width:0%"></div>
+          </div>
+          <div class="rail__meta">
+            <span class="rail__rounds">第 <span id="vertical-rounds">0</span> / 3 轮</span>
+            <span class="rail__status" id="vertical-status">尚未开始</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Machine-view drawer at the bottom: optional engineer disclosure. -->
+    <!-- Recent cases: chronological feed of evidence as it lands. -->
+    <section class="cases" id="cases" hidden>
+      <header class="cases__head">
+        <span class="cases__title">刚找到的</span>
+        <span class="cases__counter" id="cases-counter">0 条</span>
+      </header>
+      <ol class="cases__list" id="cases-list" aria-live="polite"></ol>
+    </section>
+
+    <!-- Machine view drawer: full schedule log + token count, collapsed. -->
     <aside class="drawer" id="machine-view">
       <button class="drawer__toggle" type="button" id="machine-view-toggle" aria-expanded="false">
         <span class="drawer__toggle-label">机器视角</span>
-        <span class="drawer__toggle-meta" id="machine-view-meta">回合 0 · 0 token</span>
+        <span class="drawer__toggle-meta" id="machine-view-meta">0 条调度 · 0 token</span>
         <span class="drawer__toggle-chevron" aria-hidden="true">+</span>
       </button>
-      <div class="drawer__content" id="machine-view-content"></div>
+      <div class="drawer__content" id="machine-view-content">
+        <ol class="drawer__log" id="schedule-log-list"></ol>
+      </div>
     </aside>
 
   </article>
@@ -197,102 +254,195 @@
       <span class="paper__brand">UNVEILING</span>
       <span class="paper__brand-dot" aria-hidden="true"></span>
       <span class="paper__edition" id="paper-edition">a closing reading</span>
-      <a class="paper__deck-link" id="paper-deck-link" target="_blank" rel="noopener">作为幻灯片打开 <span aria-hidden="true">→</span></a>
     </header>
 
     <h1 class="paper__question" id="paper-question"></h1>
 
-    <!-- Section 1: 一句话回答 — the takeaway lives at the top. -->
-    <section class="paper__section" id="section-takeaway">
-      <header class="paper__marker">
+    <!-- Integrity strip: how broad was the search, did anything degrade? -->
+    <aside class="integrity" id="integrity">
+      <div class="integrity__cell">
+        <span class="integrity__label">横向</span>
+        <span class="integrity__value" id="integrity-lateral">0</span>
+        <span class="integrity__unit">个案例</span>
+      </div>
+      <div class="integrity__cell">
+        <span class="integrity__label">纵向</span>
+        <span class="integrity__value" id="integrity-vertical">0</span>
+        <span class="integrity__unit">个案例</span>
+      </div>
+      <div class="integrity__cell">
+        <span class="integrity__label">降级</span>
+        <span class="integrity__value" id="integrity-degradation">0</span>
+        <span class="integrity__unit">处</span>
+      </div>
+      <div class="integrity__cell">
+        <span class="integrity__label">token</span>
+        <span class="integrity__value" id="integrity-tokens">0</span>
+      </div>
+    </aside>
+
+    <!-- Sticky chapter nav: highlights the chapter currently in view. -->
+    <nav class="paper__nav" id="paper-nav" aria-label="章节导航">
+      <a href="#chapter-core_finding" class="paper__nav-item is-active" data-anchor="core_finding">
+        <span class="paper__nav-no">1</span>
+        <span class="paper__nav-name">核心</span>
+      </a>
+      <a href="#chapter-temporal_trajectory" class="paper__nav-item" data-anchor="temporal_trajectory">
+        <span class="paper__nav-no">2</span>
+        <span class="paper__nav-name">走向</span>
+      </a>
+      <a href="#chapter-tension" class="paper__nav-item" data-anchor="tension">
+        <span class="paper__nav-no">3</span>
+        <span class="paper__nav-name">张力</span>
+      </a>
+      <a href="#chapter-boundary_condition" class="paper__nav-item" data-anchor="boundary_condition">
+        <span class="paper__nav-no">4</span>
+        <span class="paper__nav-name">边界</span>
+      </a>
+      <a href="#chapter-unresolved" class="paper__nav-item" data-anchor="unresolved">
+        <span class="paper__nav-no">5</span>
+        <span class="paper__nav-name">未解决</span>
+      </a>
+      <a href="#chapter-implication" class="paper__nav-item" data-anchor="implication">
+        <span class="paper__nav-no">6</span>
+        <span class="paper__nav-name">启示</span>
+      </a>
+    </nav>
+
+    <!-- §1 核心结论 — core_finding -->
+    <section class="paper__chapter" id="chapter-core_finding" data-key="core_finding">
+      <header class="paper__chapter-marker paper__marker">
         <span class="paper__marker-no">§ 1</span>
-        <span class="paper__marker-name">一句话回答</span>
+        <span class="paper__marker-name">核心结论</span>
       </header>
-      <div class="paper__takeaway" id="paper-takeaway"></div>
+      <p class="paper__chapter-tagline" id="tagline-core_finding"></p>
+      <div class="paper__chapter-body" id="body-core_finding" aria-hidden="true"></div>
+      <button class="paper__chapter-toggle" type="button" data-target="core_finding" aria-expanded="false" aria-controls="body-core_finding">
+        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
+        <span class="paper__chapter-toggle-close">↑ 收起</span>
+      </button>
     </section>
 
-    <!-- Section 2: 张力 — the differentiator. -->
-    <section class="paper__section paper__section--tension" id="section-tension">
-      <header class="paper__marker paper__marker--accent">
+    <!-- §2 走向 — temporal_trajectory -->
+    <section class="paper__chapter" id="chapter-temporal_trajectory" data-key="temporal_trajectory">
+      <header class="paper__chapter-marker paper__marker">
         <span class="paper__marker-no">§ 2</span>
+        <span class="paper__marker-name">这件事的走向</span>
+      </header>
+      <p class="paper__chapter-tagline" id="tagline-temporal_trajectory"></p>
+      <div class="paper__chapter-body" id="body-temporal_trajectory" aria-hidden="true"></div>
+      <button class="paper__chapter-toggle" type="button" data-target="temporal_trajectory" aria-expanded="false" aria-controls="body-temporal_trajectory">
+        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
+        <span class="paper__chapter-toggle-close">↑ 收起</span>
+      </button>
+    </section>
+
+    <!-- §3 张力 — tension (the rare orange chapter) -->
+    <section class="paper__chapter paper__chapter--tension" id="chapter-tension" data-key="tension">
+      <header class="paper__chapter-marker paper__marker paper__marker--accent">
+        <span class="paper__marker-no">§ 3</span>
         <span class="paper__marker-name">张力 — 难处在哪</span>
       </header>
-      <div class="paper__tension" id="paper-tension"></div>
+      <p class="paper__chapter-tagline" id="tagline-tension"></p>
+      <div class="paper__chapter-body" id="body-tension" aria-hidden="true"></div>
+      <button class="paper__chapter-toggle" type="button" data-target="tension" aria-expanded="false" aria-controls="body-tension">
+        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
+        <span class="paper__chapter-toggle-close">↑ 收起</span>
+      </button>
     </section>
 
-    <!-- Section 3: 在哪里不成立. -->
-    <section class="paper__section" id="section-boundary">
-      <header class="paper__marker">
-        <span class="paper__marker-no">§ 3</span>
+    <!-- §4 边界条件 — boundary_condition -->
+    <section class="paper__chapter" id="chapter-boundary_condition" data-key="boundary_condition">
+      <header class="paper__chapter-marker paper__marker">
+        <span class="paper__marker-no">§ 4</span>
         <span class="paper__marker-name">这话在哪里不成立</span>
       </header>
-      <div class="paper__boundary" id="paper-boundary"></div>
+      <p class="paper__chapter-tagline" id="tagline-boundary_condition"></p>
+      <div class="paper__chapter-body" id="body-boundary_condition" aria-hidden="true"></div>
+      <button class="paper__chapter-toggle" type="button" data-target="boundary_condition" aria-expanded="false" aria-controls="body-boundary_condition">
+        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
+        <span class="paper__chapter-toggle-close">↑ 收起</span>
+      </button>
     </section>
 
-    <!-- Section 4: 收敛的几条 — bullet list of supporting findings. -->
-    <section class="paper__section" id="section-findings">
-      <header class="paper__marker">
-        <span class="paper__marker-no">§ 4</span>
-        <span class="paper__marker-name">收敛的几条</span>
-      </header>
-      <ul class="paper__findings" id="paper-findings"></ul>
-    </section>
-
-    <!-- Section 5: 意外发现 — the rare orange section. -->
-    <section class="paper__section paper__section--unexpected" id="section-unexpected">
-      <header class="paper__marker paper__marker--accent">
+    <!-- §5 未解决 — unresolved -->
+    <section class="paper__chapter" id="chapter-unresolved" data-key="unresolved">
+      <header class="paper__chapter-marker paper__marker">
         <span class="paper__marker-no">§ 5</span>
-        <span class="paper__marker-name">意外发现</span>
-      </header>
-      <ul class="paper__unexpected" id="paper-unexpected"></ul>
-    </section>
-
-    <!-- Section 6: 验证过的预判. -->
-    <section class="paper__section" id="section-predictions">
-      <header class="paper__marker">
-        <span class="paper__marker-no">§ 6</span>
-        <span class="paper__marker-name">可证伪预判 — 检验过</span>
-      </header>
-      <ul class="paper__predictions" id="paper-predictions"></ul>
-    </section>
-
-    <!-- Section 7: 还没回答的. -->
-    <section class="paper__section" id="section-unresolved">
-      <header class="paper__marker">
-        <span class="paper__marker-no">§ 7</span>
         <span class="paper__marker-name">还没回答清楚的</span>
       </header>
-      <div class="paper__unresolved" id="paper-unresolved"></div>
+      <p class="paper__chapter-tagline" id="tagline-unresolved"></p>
+      <div class="paper__chapter-body" id="body-unresolved" aria-hidden="true"></div>
+      <button class="paper__chapter-toggle" type="button" data-target="unresolved" aria-expanded="false" aria-controls="body-unresolved">
+        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
+        <span class="paper__chapter-toggle-close">↑ 收起</span>
+      </button>
     </section>
 
-    <!-- Section 8: 然后呢. -->
-    <section class="paper__section" id="section-implication">
-      <header class="paper__marker">
-        <span class="paper__marker-no">§ 8</span>
+    <!-- §6 启示 — implication -->
+    <section class="paper__chapter" id="chapter-implication" data-key="implication">
+      <header class="paper__chapter-marker paper__marker">
+        <span class="paper__marker-no">§ 6</span>
         <span class="paper__marker-name">所以你应该</span>
       </header>
-      <div class="paper__implication" id="paper-implication"></div>
+      <p class="paper__chapter-tagline" id="tagline-implication"></p>
+      <div class="paper__chapter-body" id="body-implication" aria-hidden="true"></div>
+      <button class="paper__chapter-toggle" type="button" data-target="implication" aria-expanded="false" aria-controls="body-implication">
+        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
+        <span class="paper__chapter-toggle-close">↑ 收起</span>
+      </button>
     </section>
 
     <hr class="paper__divider" aria-hidden="true">
 
-    <!-- Journey: how we got here — collapsed by default, expandable. -->
-    <section class="paper__journey">
-      <header class="paper__journey-header">
-        <h2 class="paper__journey-title">一路上 — 怎么走到这一步</h2>
-        <button type="button" class="paper__journey-toggle" id="thinking-toggle" data-expanded="false">展开详情</button>
-      </header>
+    <!-- Recap drawer: replay the reasoning trail on demand. -->
+    <aside class="recap" id="recap">
+      <button class="recap__toggle" type="button" id="recap-toggle" aria-expanded="false" aria-controls="recap-content">
+        <span class="recap__toggle-label">分析过程速览</span>
+        <span class="recap__toggle-meta" id="recap-meta">透镜 · 案例索引</span>
+        <span class="recap__toggle-chevron" aria-hidden="true">+</span>
+      </button>
+      <div class="recap__content" id="recap-content">
 
-      <div class="paper__journey-block">
-        <div class="paper__journey-subheading">换过几次角度</div>
-        <div class="lens-chains" id="lens-timeline-chains"></div>
-      </div>
+        <!-- 透镜 — the abstraction map produced by Phase 1 -->
+        <section class="recap__section" id="section-lens">
+          <header class="recap__section-head">
+            <h2 class="recap__section-title">透镜 — 我们用什么角度看</h2>
+            <span class="recap__section-sub" id="lens-result-name"></span>
+          </header>
+          <p class="recap__section-body" id="lens-result-rationale"></p>
+          <div class="lens-map">
+            <div class="lens-map__col">
+              <div class="lens-map__col-head">主体</div>
+              <ul class="lens-map__list" id="lens-result-entities"></ul>
+            </div>
+            <div class="lens-map__col">
+              <div class="lens-map__col-head">关系</div>
+              <ul class="lens-map__list" id="lens-result-relations"></ul>
+            </div>
+          </div>
+        </section>
 
-      <div class="paper__journey-block">
-        <div class="paper__journey-subheading">拆出来的小问题</div>
-        <div class="sub-list" id="thinking-sub-questions-list"></div>
+        <!-- 案例索引: direction × layer grid -->
+        <section class="recap__section" id="section-case-index">
+          <header class="recap__section-head">
+            <h2 class="recap__section-title">案例索引</h2>
+            <span class="recap__section-sub" id="case-index-meta"></span>
+          </header>
+          <div class="case-index" id="case-index"></div>
+        </section>
+
+        <!-- 降级与跳过: shown only when something interesting happened -->
+        <section class="recap__section" id="section-degradation" hidden>
+          <header class="recap__section-head">
+            <h2 class="recap__section-title">降级与跳过</h2>
+            <span class="recap__section-sub">系统在分析中遇到的失败点</span>
+          </header>
+          <ul class="degradation-list" id="degradation-list"></ul>
+        </section>
+
       </div>
-    </section>
+    </aside>
 
     <footer class="paper__foot">
       <button class="paper__back" type="button" id="result-back">
@@ -305,6 +455,7 @@
   </article>
 </section>
 
+<script src="/static/js/api-config.js" onerror=""></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

@@ -4,61 +4,16 @@ import json
 
 from llm.client import LLMClient, LLMJSONError
 from llm.degradation import DegradationLogger
+from llm.prompt_loader import load_lab_prompt
 from models._enums import Phase
 from models.blackboard import ConclusionRecord, ScheduleLogEntry
 from models.state import State
 
 # ---------------------------------------------------------------------------
-# Prompt templates
+# Prompt templates live in prompt_lab/convergence_synthesize.txt and are
+# reloaded from disk on every call so /prompt-lab UI edits take effect
+# without restarting the server.
 # ---------------------------------------------------------------------------
-
-_SYNTHESIZE_PROMPT = """\
-You are a synthesis analyst performing the final convergence of a cross-domain \
-analogy analysis.
-
-USER'S ORIGINAL QUESTION:
-{question}
-
-CURRENT LENS (structural abstraction frame):
-{lens_summary}
-
-ALL COMMITTED EVIDENCE ({evidence_count} records):
-{evidence_detail}
-
-STEP 1 — SYNTHESIZE PATTERNS
-Look across ALL evidence records for structural commonalities that go deeper \
-than surface similarities. What patterns repeat across the ~20 cases? This is \
-the deeper abstraction that earlier phases deliberately did not perform.
-
-STEP 2 — FIND TENSIONS
-From the synthesized patterns, identify genuine structural conflicts — not \
-"there are pros and cons" but real incompatibilities, forced choices, or \
-paradoxes that emerge from the structure itself.
-
-STEP 3 — CHALLENGE
-Look for counter-evidence, confirmation bias, and cases that do not fit. \
-Be honest about what the evidence does NOT support.
-
-STEP 4 — CONCLUDE
-Based on steps 1-3, produce the final conclusion.
-
-Respond with a single JSON object with exactly these keys:
-- "core_finding": the single most robust structural insight from this analysis
-- "tension": the genuine structural conflict this analysis reveals \
-(not a summary of findings, but the underlying tension)
-- "boundary_condition": specific conditions under which the core finding holds \
-vs. breaks down — must be concrete enough to be testable
-- "unresolved": what remains genuinely uncertain after this analysis \
-(must not be empty — every honest analysis leaves something open)
-- "implication": what this means as an answer to the original question
-
-Rules:
-- Tension must be a real conflict, not "there are pros and cons".
-- Boundary condition must be specific enough to be falsifiable.
-- Unresolved must not be empty.
-- Do not overclaim — stay within what the evidence actually supports.
-- Output valid JSON only. No markdown, no commentary outside the JSON.
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +42,25 @@ def _build_lens_summary(state: State) -> str:
             )
         )
     return "\n".join(parts)
+
+
+def _build_root_cause_chain(state: State) -> str:
+    """Format the root cause chain from the latest lens."""
+    if not state.hypothesis_zone:
+        return "(No root cause chain)"
+
+    chain = state.hypothesis_zone[-1].root_cause_chain
+    if not chain:
+        return "(No root cause chain produced during inception)"
+
+    lines: list[str] = []
+    for rc in chain:
+        lines.append(
+            f"Level {rc.level}: Q: {rc.surface_why}\n"
+            f"  A: {rc.answer}\n"
+            f"  Structural: {rc.structural_why}"
+        )
+    return "\n".join(lines)
 
 
 def _build_evidence_detail(state: State) -> str:
@@ -144,9 +118,10 @@ def convergence_node(state: State) -> dict:
         e for e in state.evidence_zone if e.status == "committed"
     ]
 
-    prompt = _SYNTHESIZE_PROMPT.format(
+    prompt = load_lab_prompt("convergence_synthesize").format(
         question=state.user_question,
         lens_summary=_build_lens_summary(state),
+        root_cause_chain=_build_root_cause_chain(state),
         evidence_count=len(committed_evidence),
         evidence_detail=_build_evidence_detail(state),
     )
@@ -197,6 +172,8 @@ def convergence_node(state: State) -> dict:
         boundary_condition=data["boundary_condition"],
         unresolved=data["unresolved"],
         implication=data["implication"],
+        temporal_trajectory=data.get("temporal_trajectory", ""),
+        taglines=data["taglines"] if isinstance(data.get("taglines"), dict) else {},
     )
 
     log = ScheduleLogEntry(

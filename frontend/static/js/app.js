@@ -1,21 +1,70 @@
 'use strict';
 
 // =====================================================================
-// Unveiling frontend controller.
+// Unveiling frontend controller — three screens, one column each.
 //
-// Three screens, one column each:
-//   • home      — single-screen manifesto + form
-//   • analysis  — phase timeline + sub-question rows + persistent journey log
-//   • result    — inline long-scroll paper (no iframe), 8 cognitive sections
+//   • home      — manifesto + question form
+//   • analysis  — phase ribbon + lens reveal + dual progress rails +
+//                 chronological case feed + machine-view drawer
+//   • result    — five-section paper (核心结论 → 张力 → 边界 → 未解决 →
+//                 启示), lens map, case index, degradation log
 //
-// The journey log is PERSISTENT — entries never disappear. Users complained
-// that bubbles vanished too quickly; this rebuild treats every finding as
-// something the reader can scroll back to.
+// Backed by:
+//   POST /analyze                  → { task_id }
+//   GET  /progress/<task_id>       → SSE stream of typed events
+//   GET  /result/<task_id>         → final cached JSON payload
+//
+// SSE event kinds: meta · phase · lens · evidence_batch · schedule ·
+//                  conclusion · tokens · progress · done · error
 // =====================================================================
 
 (function () {
 
+  // API base URL — empty for local dev (same-origin), set via api-config.js for production
+  var API = window.UNVEILING_API || '';
+
   // ============================== State ==============================
+
+  const TARGET_PER_DIRECTION = 10;
+  const MAX_ROUNDS = 3;
+
+  const PHASE_ORDER = ['inception', 'exploration', 'convergence'];
+  const PHASE_LABEL = {
+    inception: '抽象',
+    exploration: '搜集',
+    convergence: '收拢',
+  };
+
+  const DIRECTION_LABEL = { lateral: '横向', vertical: '纵向' };
+  const LAYER_LABEL = {
+    phenomenon: '现象',
+    mechanism: '机制',
+    structure: '结构',
+  };
+  const CONFIDENCE_LABEL = {
+    strong: '强',
+    medium: '中',
+    weak: '弱',
+    unexpected: '意外',
+  };
+  // ■■■ / ■■□ / ■□□ — layer marker by depth
+  const LAYER_MARKER = {
+    structure: '■■■',
+    mechanism: '■■□',
+    phenomenon: '■□□',
+  };
+
+  // Result-page chapters. Each chapter binds a conclusion key to its visual
+  // body class (so the existing typography is reused) and a fallback label
+  // (used when the LLM did not emit a tagline for this chapter).
+  const CHAPTERS = [
+    { key: 'core_finding',        fallback: '核心结论',         bodyClass: 'paper__takeaway' },
+    { key: 'temporal_trajectory', fallback: '这件事的走向',     bodyClass: 'paper__trajectory' },
+    { key: 'tension',             fallback: '难处在哪',         bodyClass: 'paper__tension' },
+    { key: 'boundary_condition',  fallback: '这话在哪里不成立', bodyClass: 'paper__boundary' },
+    { key: 'unresolved',          fallback: '还没回答清楚的',   bodyClass: 'paper__unresolved' },
+    { key: 'implication',         fallback: '所以你应该',       bodyClass: 'paper__implication' },
+  ];
 
   const state = {
     screen: 'home',
@@ -23,11 +72,16 @@
     language: '中文',
     taskId: null,
     eventSource: null,
-    treeSignature: '',
-    activeSubQuestionId: null,
     phase: 'inception',
-    schedule: [],
-    journeyCount: 0,
+    lens: null,                          // most recent LensRecord (analysis screen)
+    evidence: [],                        // running list of all evidence
+    schedule: [],                        // running schedule log
+    tokens: 0,
+    lateral: { count: 0, rounds: 0, done: false },
+    vertical: { count: 0, rounds: 0, done: false },
+    degradationCount: 0,
+    conclusion: null,
+    result: null,                        // final payload from `done` event
   };
 
   // ============================ DOM refs =============================
@@ -49,44 +103,61 @@
       analysisEdition: document.getElementById('analysis-edition'),
       analysisQuestion: document.getElementById('analysis-question'),
       phaseIndicator: document.getElementById('phase-indicator'),
-      nowLine: document.getElementById('now-line'),
       narrationText: document.getElementById('narration-text'),
-      subsProgress: document.getElementById('subs-progress'),
-      treeList: document.getElementById('tree-node-list'),
-      journeyList: document.getElementById('journey-list'),
-      journeyCount: document.getElementById('journey-count'),
+
+      lensReveal: document.getElementById('lens-reveal'),
+      lensName: document.getElementById('lens-name'),
+      lensRationale: document.getElementById('lens-rationale'),
+      lensEntities: document.getElementById('lens-entities'),
+      lensRelations: document.getElementById('lens-relations'),
+
+      rails: document.getElementById('rails'),
+      lateralCount: document.getElementById('lateral-count'),
+      lateralRounds: document.getElementById('lateral-rounds'),
+      lateralFill: document.getElementById('lateral-fill'),
+      lateralStatus: document.getElementById('lateral-status'),
+      verticalCount: document.getElementById('vertical-count'),
+      verticalRounds: document.getElementById('vertical-rounds'),
+      verticalFill: document.getElementById('vertical-fill'),
+      verticalStatus: document.getElementById('vertical-status'),
+
+      casesSection: document.getElementById('cases'),
+      casesList: document.getElementById('cases-list'),
+      casesCounter: document.getElementById('cases-counter'),
+
       machineView: document.getElementById('machine-view'),
       machineToggle: document.getElementById('machine-view-toggle'),
       machineMeta: document.getElementById('machine-view-meta'),
-      machineContent: document.getElementById('machine-view-content'),
+      scheduleLogList: document.getElementById('schedule-log-list'),
 
-      // Result — paper sections
+      // Result
       paperEdition: document.getElementById('paper-edition'),
       paperQuestion: document.getElementById('paper-question'),
-      paperDeckLink: document.getElementById('paper-deck-link'),
-      paperTakeaway: document.getElementById('paper-takeaway'),
-      paperTension: document.getElementById('paper-tension'),
-      paperBoundary: document.getElementById('paper-boundary'),
-      paperFindings: document.getElementById('paper-findings'),
-      paperUnexpected: document.getElementById('paper-unexpected'),
-      paperPredictions: document.getElementById('paper-predictions'),
-      paperUnresolved: document.getElementById('paper-unresolved'),
-      paperImplication: document.getElementById('paper-implication'),
 
-      // Result — section wrappers (for is-empty toggling)
-      sectionTakeaway: document.getElementById('section-takeaway'),
-      sectionTension: document.getElementById('section-tension'),
-      sectionBoundary: document.getElementById('section-boundary'),
-      sectionFindings: document.getElementById('section-findings'),
-      sectionUnexpected: document.getElementById('section-unexpected'),
-      sectionPredictions: document.getElementById('section-predictions'),
-      sectionUnresolved: document.getElementById('section-unresolved'),
-      sectionImplication: document.getElementById('section-implication'),
+      integrityLateral: document.getElementById('integrity-lateral'),
+      integrityVertical: document.getElementById('integrity-vertical'),
+      integrityDegradation: document.getElementById('integrity-degradation'),
+      integrityTokens: document.getElementById('integrity-tokens'),
 
-      // Result — journey block
-      lensChains: document.getElementById('lens-timeline-chains'),
-      subList: document.getElementById('thinking-sub-questions-list'),
-      thinkingToggle: document.getElementById('thinking-toggle'),
+      paperNav: document.getElementById('paper-nav'),
+      paperChapters: document.querySelectorAll('.paper__chapter'),
+      paperNavItems: document.querySelectorAll('.paper__nav-item'),
+
+      recap: document.getElementById('recap'),
+      recapToggle: document.getElementById('recap-toggle'),
+      recapMeta: document.getElementById('recap-meta'),
+
+      lensResultName: document.getElementById('lens-result-name'),
+      lensResultRationale: document.getElementById('lens-result-rationale'),
+      lensResultEntities: document.getElementById('lens-result-entities'),
+      lensResultRelations: document.getElementById('lens-result-relations'),
+
+      caseIndex: document.getElementById('case-index'),
+      caseIndexMeta: document.getElementById('case-index-meta'),
+
+      sectionDegradation: document.getElementById('section-degradation'),
+      degradationList: document.getElementById('degradation-list'),
+
       resultBack: document.getElementById('result-back'),
       resultMeta: document.getElementById('result-meta'),
     };
@@ -109,7 +180,7 @@
           });
         } else if (k.startsWith('on') && typeof attrs[k] === 'function') {
           node.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
-        } else if (k in node) {
+        } else if (k in node && k !== 'list') {
           node[k] = attrs[k];
         } else {
           node.setAttribute(k, attrs[k]);
@@ -135,14 +206,17 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
-  function toggleEmpty(section, isEmpty) {
-    if (!section) return;
-    section.classList.toggle('is-empty', !!isEmpty);
-  }
+  function show(node) { if (node) node.hidden = false; }
+  function hide(node) { if (node) node.hidden = true; }
 
   function formatTokens(n) {
     if (n >= 10000) return (n / 1000).toFixed(1) + 'k';
     return String(n);
+  }
+
+  function pct(num, denom) {
+    if (!denom) return 0;
+    return Math.min(100, Math.round((num / denom) * 100));
   }
 
   // ====================== Screen switching ===========================
@@ -203,7 +277,7 @@
       e.preventDefault();
       const q = (dom.homeQuestion.value || '').trim();
       if (!q) return;
-      startAnalysis(q, state.mode);
+      startAnalysis(q, state.mode, state.language);
     });
   }
 
@@ -224,14 +298,53 @@
       showScreen('home');
     });
 
-    dom.thinkingToggle.addEventListener('click', function () {
-      const expanded = dom.thinkingToggle.dataset.expanded === 'true';
-      const next = !expanded;
-      dom.thinkingToggle.dataset.expanded = next ? 'true' : 'false';
-      dom.thinkingToggle.textContent = next ? '收起详情' : '展开详情';
-      $$('.sub-card', dom.subList).forEach(function (card) {
-        card.classList.toggle('is-expanded', next);
+    // Chapter toggle — event delegated on each chapter.
+    Array.prototype.forEach.call(dom.paperChapters, function (chapter) {
+      const toggle = chapter.querySelector('.paper__chapter-toggle');
+      if (!toggle) return;
+      toggle.addEventListener('click', function () {
+        const expanded = chapter.classList.toggle('is-expanded');
+        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        const body = chapter.querySelector('.paper__chapter-body');
+        if (body) body.setAttribute('aria-hidden', expanded ? 'false' : 'true');
       });
+    });
+
+    // Recap drawer toggle.
+    if (dom.recapToggle && dom.recap) {
+      dom.recapToggle.addEventListener('click', function () {
+        const open = dom.recap.classList.toggle('is-open');
+        dom.recapToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+
+    // Sticky nav highlight: mark the chapter currently dominating the viewport.
+    setupChapterNav();
+  }
+
+  function setupChapterNav() {
+    if (!('IntersectionObserver' in window)) return;
+    const navByKey = {};
+    Array.prototype.forEach.call(dom.paperNavItems, function (item) {
+      navByKey[item.dataset.anchor] = item;
+    });
+    if (!Object.keys(navByKey).length) return;
+
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        const key = entry.target.dataset.key;
+        const item = navByKey[key];
+        if (!item) return;
+        Array.prototype.forEach.call(dom.paperNavItems, function (n) {
+          n.classList.remove('is-active');
+        });
+        item.classList.add('is-active');
+      });
+    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+    Array.prototype.forEach.call(dom.paperChapters, function (chapter) {
+      io.observe(chapter);
     });
   }
 
@@ -239,616 +352,519 @@
 
   function resetAnalysisState() {
     state.taskId = null;
-    state.activeSubQuestionId = null;
-    state.treeSignature = '';
     state.phase = 'inception';
+    state.lens = null;
+    state.evidence = [];
     state.schedule = [];
-    state.journeyCount = 0;
+    state.tokens = 0;
+    state.lateral = { count: 0, rounds: 0, done: false };
+    state.vertical = { count: 0, rounds: 0, done: false };
+    state.degradationCount = 0;
+    state.conclusion = null;
+    state.result = null;
 
-    setText(dom.analysisEdition, 'issue · 思考进行中');
-    setText(dom.analysisQuestion, '');
-    setText(dom.narrationText, '系统正在准备……');
-    if (dom.nowLine) dom.nowLine.classList.remove('is-degradation');
-    setText(dom.subsProgress, '');
-    clear(dom.treeList);
-    dom.treeList.appendChild(el('li', { class: 'empty-line', textContent: '问题树正在生成……' }));
-    clear(dom.journeyList);
-    setText(dom.journeyCount, '还没找到第一条');
-    clear(dom.machineContent);
-    setText(dom.machineMeta, '回合 0 · 0 token');
-    dom.machineView.classList.remove('is-expanded');
-    dom.machineToggle.setAttribute('aria-expanded', 'false');
-    updatePhaseIndicator('inception');
-
-    // Result-screen cleanup so a new run starts blank.
-    setText(dom.paperQuestion, '');
-    setText(dom.paperTakeaway, '');
-    setText(dom.paperTension, '');
-    setText(dom.paperBoundary, '');
-    clear(dom.paperFindings);
-    clear(dom.paperUnexpected);
-    clear(dom.paperPredictions);
-    setText(dom.paperUnresolved, '');
-    setText(dom.paperImplication, '');
-    clear(dom.lensChains);
-    clear(dom.subList);
-    if (dom.thinkingToggle) {
-      dom.thinkingToggle.dataset.expanded = 'false';
-      dom.thinkingToggle.textContent = '展开详情';
-    }
+    setText(dom.narrationText, '正在准备分析……');
+    hide(dom.lensReveal);
+    hide(dom.rails);
+    hide(dom.casesSection);
+    clear(dom.lensEntities);
+    clear(dom.lensRelations);
+    clear(dom.casesList);
+    clear(dom.scheduleLogList);
+    setText(dom.casesCounter, '0 条');
+    setText(dom.machineMeta, '0 条调度 · 0 token');
+    setPhase('inception');
+    updateRailUI('lateral');
+    updateRailUI('vertical');
   }
 
-  // ======================== Analysis start ===========================
+  // ========================== Start a run ============================
 
-  function startAnalysis(question, mode) {
+  function startAnalysis(question, mode, language) {
     resetAnalysisState();
     setText(dom.analysisQuestion, question);
+    setText(dom.paperQuestion, question);
+    showScreen('analysis');
 
-    fetch('/analyze', {
+    fetch(API + '/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question, mode: mode, language: state.language }),
+      body: JSON.stringify({ question: question, mode: mode, language: language }),
     })
-      .then(function (res) { return res.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error('analyze failed: ' + r.status);
+        return r.json();
+      })
       .then(function (data) {
-        if (!data || !data.task_id) {
-          throw new Error(data && data.error ? data.error : '启动分析失败');
-        }
+        if (!data || !data.task_id) throw new Error('no task_id returned');
         state.taskId = data.task_id;
-        showScreen('analysis');
-        openStream(data.task_id);
+        openEventSource(data.task_id);
       })
       .catch(function (err) {
-        alert('启动失败:' + (err && err.message ? err.message : err));
+        setText(dom.narrationText, '启动分析失败：' + (err.message || err));
       });
   }
 
-  function openStream(taskId) {
-    const es = new EventSource('/progress/' + encodeURIComponent(taskId));
+  function openEventSource(taskId) {
+    const es = new EventSource(API + '/progress/' + encodeURIComponent(taskId));
     state.eventSource = es;
-    es.onmessage = function (ev) {
-      try {
-        handleEvent(JSON.parse(ev.data));
-      } catch (e) {
-        console.warn('Bad SSE payload', e, ev.data);
-      }
+
+    es.onmessage = function (e) {
+      let payload;
+      try { payload = JSON.parse(e.data); }
+      catch (_) { return; }
+      if (!payload || !payload.kind) return;
+      handleEvent(payload);
     };
-    es.onerror = function () {
-      // Stream usually closes cleanly after `done`.
+
+    es.addEventListener('end', function () {
       es.close();
       state.eventSource = null;
+      if (state.result) {
+        renderResult(state.result);
+        showScreen('result');
+      }
+    });
+
+    es.onerror = function () {
+      // Browser will reconnect on its own; surface a soft note.
+      // If the worker emitted a `done` already, nothing more to do.
     };
   }
 
-  // ============================ Events ===============================
+  // ====================== SSE event dispatch =========================
 
   function handleEvent(ev) {
-    switch (ev.type) {
-      case 'started':
-        setText(dom.analysisQuestion, ev.question || '');
-        break;
-      case 'phase':
-        updatePhaseIndicator(ev.phase);
-        state.phase = ev.phase;
-        break;
-      case 'issue_tree':
-        renderIssueTree(ev.tree || [], ev.active_sub_question_id);
-        if (ev.phase) {
-          updatePhaseIndicator(ev.phase);
-          state.phase = ev.phase;
-        }
-        if (typeof ev.round_count === 'number') {
-          setText(dom.machineMeta, '回合 ' + ev.round_count + ' · 实时');
-        }
-        break;
-      case 'narration':
-        renderNarration(ev.text || '', ev.author || '', !!ev.degradation);
-        appendMachineEntry(ev);
-        break;
-      case 'bubble':
-        appendJourneyEntry(ev);
-        break;
-      case 'done':
-        finishAnalysis();
-        break;
-      case 'error':
-        alert('分析出错:' + (ev.error || '未知错误'));
-        if (state.eventSource) { state.eventSource.close(); state.eventSource = null; }
-        showScreen('home');
-        break;
-      default:
-        // unknown event, ignore
+    switch (ev.kind) {
+      case 'meta':         return; // already wired from form submit
+      case 'phase':        return onPhase(ev);
+      case 'lens':         return onLens(ev);
+      case 'evidence_batch': return onEvidenceBatch(ev);
+      case 'schedule':     return onSchedule(ev);
+      case 'conclusion':   return onConclusion(ev);
+      case 'tokens':       return onTokens(ev);
+      case 'progress':     return onProgress(ev);
+      case 'done':         return onDone(ev);
+      case 'error':        return onError(ev);
     }
   }
 
-  function finishAnalysis() {
-    if (!state.taskId) return;
-    fetch('/result/' + encodeURIComponent(state.taskId))
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
-        if (data && data.status === 'error') {
-          alert('分析出错:' + (data.error || '未知错误'));
-          showScreen('home');
-          return;
-        }
-        renderResult(data);
-        showScreen('result');
-      })
-      .catch(function (err) {
-        alert('获取结果失败:' + (err && err.message ? err.message : err));
-      });
+  function onPhase(ev) {
+    setPhase(ev.phase);
+    if (ev.phase === 'exploration') {
+      show(dom.rails);
+      show(dom.casesSection);
+      setText(dom.narrationText, '横向与纵向并行搜索 — 找跨时空的结构匹配案例');
+    } else if (ev.phase === 'convergence') {
+      setText(dom.narrationText, '正在跨案例归纳共性 · 找张力 · 写结论');
+    } else if (ev.phase === 'inception') {
+      setText(dom.narrationText, '正在抽象问题 — 把表面术语翻译成结构角色');
+    }
   }
 
-  // ======================== Phase indicator ==========================
+  function onLens(ev) {
+    state.lens = ev.lens;
+    renderLens(ev.lens);
+    show(dom.lensReveal);
+    setText(dom.narrationText, '透镜已就位：' + (ev.lens.name || '未命名'));
+  }
 
-  const PHASE_ORDER = ['inception', 'exploration', 'convergence'];
+  function onEvidenceBatch(ev) {
+    const items = ev.evidence || [];
+    items.forEach(function (e) { state.evidence.push(e); });
 
-  function updatePhaseIndicator(current) {
-    if (!PHASE_ORDER.includes(current)) return;
-    const idx = PHASE_ORDER.indexOf(current);
+    state.lateral.count = ev.lateral_count != null ? ev.lateral_count : state.lateral.count;
+    state.vertical.count = ev.vertical_count != null ? ev.vertical_count : state.vertical.count;
+    state.lateral.rounds = ev.lateral_rounds != null ? ev.lateral_rounds : state.lateral.rounds;
+    state.vertical.rounds = ev.vertical_rounds != null ? ev.vertical_rounds : state.vertical.rounds;
+
+    updateRailUI('lateral');
+    updateRailUI('vertical');
+    appendCases(items);
+
+    if (items.length) {
+      const first = items[0];
+      const dirLabel = DIRECTION_LABEL[first.search_direction] || first.search_direction;
+      const moreNote = items.length > 1 ? '（共 ' + items.length + ' 条）' : '';
+      setText(dom.narrationText, '刚刚找到 [' + dirLabel + '] ' + (first.case_name || '一条案例') + moreNote);
+    }
+  }
+
+  function onSchedule(ev) {
+    if (!ev.entry) return;
+    state.schedule.push(ev.entry);
+    if (ev.entry.is_degradation) state.degradationCount += 1;
+    appendScheduleLog(ev.entry);
+    updateMachineMeta();
+  }
+
+  function onConclusion(ev) {
+    state.conclusion = ev.conclusion;
+    setText(dom.narrationText, '结论已写入黑板，准备渲染……');
+  }
+
+  function onTokens(ev) {
+    state.tokens = ev.tokens || 0;
+    updateMachineMeta();
+  }
+
+  function onProgress(ev) {
+    state.lateral.count = ev.lateral_count != null ? ev.lateral_count : state.lateral.count;
+    state.vertical.count = ev.vertical_count != null ? ev.vertical_count : state.vertical.count;
+    state.lateral.rounds = ev.lateral_rounds != null ? ev.lateral_rounds : state.lateral.rounds;
+    state.vertical.rounds = ev.vertical_rounds != null ? ev.vertical_rounds : state.vertical.rounds;
+    updateRailUI('lateral');
+    updateRailUI('vertical');
+  }
+
+  function onDone(ev) {
+    state.result = ev.result;
+    // The `end` handler will switch screens after the stream closes.
+  }
+
+  function onError(ev) {
+    setText(dom.narrationText, '出错了：' + (ev.error || '未知错误'));
+  }
+
+  // ============================ Renderers ============================
+
+  function setPhase(phaseKey) {
+    state.phase = phaseKey;
+    const idx = PHASE_ORDER.indexOf(phaseKey);
     $$('.phases__step', dom.phaseIndicator).forEach(function (step, i) {
-      step.classList.toggle('is-active', i === idx);
-      step.classList.toggle('is-complete', i < idx);
+      step.classList.remove('is-active', 'is-done', 'is-future');
+      if (i < idx) step.classList.add('is-done');
+      else if (i === idx) step.classList.add('is-active');
+      else step.classList.add('is-future');
+    });
+    setText(dom.analysisEdition, '一份正在进行的分析 · ' + (PHASE_LABEL[phaseKey] || phaseKey));
+  }
+
+  function renderLens(lens) {
+    setText(dom.lensName, lens.name || '未命名透镜');
+    setText(dom.lensRationale, lens.rationale || '');
+    clear(dom.lensEntities);
+    (lens.entities || []).forEach(function (e) {
+      dom.lensEntities.appendChild(buildLensPair(e.surface, e.structural_role));
+    });
+    clear(dom.lensRelations);
+    (lens.relationships || []).forEach(function (r) {
+      dom.lensRelations.appendChild(buildLensPair(r.surface, r.structural));
     });
   }
 
-  // ====================== Issue tree (sub-rows) =======================
-
-  function renderIssueTree(tree, activeId) {
-    state.activeSubQuestionId = activeId || null;
-
-    const root = tree.find(function (n) { return !n.parent_id; });
-    const subs = tree.filter(function (n) { return !!n.parent_id; });
-
-    if (root && !dom.analysisQuestion.textContent) {
-      setText(dom.analysisQuestion, root.content);
-    }
-
-    const signature = subs
-      .map(function (n) { return n.id + ':' + n.status; })
-      .join('|') + '||active=' + (activeId || '');
-
-    if (signature === state.treeSignature) return;
-    state.treeSignature = signature;
-
-    clear(dom.treeList);
-    if (subs.length === 0) {
-      dom.treeList.appendChild(el('li', {
-        class: 'empty-line', textContent: '问题树正在生成……',
-      }));
-      setText(dom.subsProgress, '');
-      return;
-    }
-
-    const closedCount = subs.filter(function (n) { return n.status === 'closed'; }).length;
-    setText(dom.subsProgress, closedCount + '/' + subs.length + ' 想清楚');
-
-    subs.forEach(function (node, i) {
-      const row = el('li', {
-        class: 'sub-row' + (node.id === activeId ? ' is-active' : ''),
-        dataset: { status: node.status || 'untouched', id: node.id },
-      }, [
-        el('span', { class: 'sub-row__index', textContent: String(i + 1).padStart(2, '0') }),
-        el('span', { class: 'sub-row__content', textContent: node.content || '' }),
-        el('span', {
-          class: 'sub-row__pill',
-        }, [
-          el('span', { class: 'pill', textContent: statusLabel(node.status) }),
-        ]),
-      ]);
-      dom.treeList.appendChild(row);
-    });
-  }
-
-  function statusLabel(status) {
-    switch (status) {
-      case 'closed': return '想清楚了';
-      case 'exploring': return '还在看';
-      case 'untouched': return '还没看';
-      case 'stuck': return '卡住了';
-      default: return status || '—';
-    }
-  }
-
-  // =========================== Narration =============================
-
-  function renderNarration(text, author, degradation) {
-    setText(dom.narrationText, text);
-    if (dom.nowLine) {
-      dom.nowLine.classList.toggle('is-degradation', !!degradation);
-      if (author) dom.nowLine.dataset.author = author;
-    }
-  }
-
-  // ====================== Journey log (persistent) ====================
-
-  // Maps SSE bubble kinds to {glyph, label}. These never disappear; the
-  // reader can scroll the log at any moment to revisit what was found.
-  const JOURNEY_GLYPH = {
-    lens_initial:           { glyph: '⊙', label: '新透镜' },
-    lens_evolved:           { glyph: '◐', label: '透镜演化' },
-    prediction_new:         { glyph: '⊕', label: '新预判' },
-    prediction_supported:   { glyph: '✓', label: '预判被支持' },
-    prediction_refuted:     { glyph: '✗', label: '预判被驳' },
-    prediction_modified:    { glyph: '↻', label: '预判修正' },
-    evidence_structure:     { glyph: '▲', label: '结构层' },
-    evidence_mechanism:     { glyph: '◆', label: '机制层' },
-    evidence_unexpected:    { glyph: '★', label: '意外发现' },
-    debate:                 { glyph: '✶', label: '辩论' },
-    sub_question_closed:    { glyph: '✓', label: '子问题闭合' },
-    sub_question_stuck:     { glyph: '⊘', label: '子问题卡住' },
-    degradation:            { glyph: '⚠', label: '降级' },
-  };
-
-  function appendJourneyEntry(payload) {
-    const kind = payload.kind || 'generic';
-    const meta = JOURNEY_GLYPH[kind] || { glyph: '·', label: payload.title || kind };
-    const detail = payload.detail || '';
-
-    const entry = el('li', {
-      class: 'journey-entry is-entering',
-      dataset: { kind: kind },
-    }, [
-      el('span', { class: 'journey-entry__glyph', textContent: meta.glyph }),
-      el('span', { class: 'journey-entry__kind', textContent: meta.label }),
-      el('span', { class: 'journey-entry__detail', textContent: detail }),
+  function buildLensPair(surface, structural) {
+    return el('li', { class: 'lens-pair' }, [
+      el('span', { class: 'lens-pair__surface' }, surface || ''),
+      el('span', { class: 'lens-pair__arrow', 'aria-hidden': 'true' }, '→'),
+      el('span', { class: 'lens-pair__structural' }, structural || ''),
     ]);
-    dom.journeyList.appendChild(entry);
-
-    state.journeyCount += 1;
-    setText(dom.journeyCount, state.journeyCount + ' 件事');
-
-    // Drop the entrance class once animation settles.
-    setTimeout(function () { entry.classList.remove('is-entering'); }, 400);
   }
 
-  // ======================= Machine-view drawer =======================
+  function updateRailUI(direction) {
+    const rec = state[direction];
+    const isLateral = direction === 'lateral';
+    const countEl = isLateral ? dom.lateralCount : dom.verticalCount;
+    const roundsEl = isLateral ? dom.lateralRounds : dom.verticalRounds;
+    const fillEl = isLateral ? dom.lateralFill : dom.verticalFill;
+    const statusEl = isLateral ? dom.lateralStatus : dom.verticalStatus;
+    if (!countEl) return;
 
-  function appendMachineEntry(ev) {
-    const line = el('div', { class: 'drawer__entry' });
-    line.appendChild(el('span', {
-      class: 'drawer__entry-author',
-      textContent: (ev.author || '') + ' · ',
-    }));
-    line.appendChild(el('span', {
-      class: 'drawer__entry-text',
-      textContent: ev.text || '',
-    }));
-    if (ev.degradation) line.classList.add('is-degradation');
-    dom.machineContent.appendChild(line);
-    state.schedule.push(ev);
-    if (state.schedule.length > 200) {
-      const first = dom.machineContent.firstChild;
-      if (first) dom.machineContent.removeChild(first);
-      state.schedule.shift();
+    setText(countEl, rec.count);
+    setText(roundsEl, rec.rounds);
+    const fillPct = pct(rec.count, TARGET_PER_DIRECTION);
+    fillEl.style.width = fillPct + '%';
+
+    let label = '进行中';
+    if (rec.count >= TARGET_PER_DIRECTION) {
+      label = '已收敛 — 找到 ' + rec.count + ' 条';
+      fillEl.classList.add('rail__fill--done');
+    } else if (rec.rounds >= MAX_ROUNDS) {
+      label = '已用完轮次 — 带 ' + rec.count + ' 条收敛';
+      fillEl.classList.add('rail__fill--stuck');
+    } else if (rec.rounds === 0 && rec.count === 0) {
+      label = '尚未开始';
     }
-    dom.machineContent.scrollTop = dom.machineContent.scrollHeight;
+    setText(statusEl, label);
   }
 
-  // ============================================================
-  // ============     RESULT SCREEN RENDERING     ===============
-  // ============================================================
+  function appendCases(items) {
+    items.forEach(function (e) {
+      dom.casesList.appendChild(buildCaseRow(e));
+    });
+    setText(dom.casesCounter, state.evidence.length + ' 条');
+  }
 
-  function loadDemoResult() {
-    fetch('/demo-result')
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
-        state.taskId = 'demo';
-        renderResult(data);
-        showScreen('result');
-      })
-      .catch(function (err) {
-        alert('加载示例失败:' + (err && err.message ? err.message : err));
+  function buildCaseRow(e) {
+    const direction = e.search_direction;
+    const layer = e.layer;
+    const conf = e.confidence;
+    const isUnexpected = !!e.is_unexpected;
+    const dirChip = el('span', {
+      class: 'case__chip case__chip--dir case__chip--' + direction,
+    }, DIRECTION_LABEL[direction] || direction);
+    const layerMark = el('span', {
+      class: 'case__layer',
+      title: '层级：' + (LAYER_LABEL[layer] || layer),
+    }, LAYER_MARKER[layer] || '■□□');
+    const confChip = el('span', {
+      class: 'case__chip case__chip--conf case__chip--conf-' + conf,
+    }, CONFIDENCE_LABEL[conf] || conf);
+    const meta = el('div', { class: 'case__meta' }, [dirChip, layerMark, confChip]);
+    if (isUnexpected) {
+      meta.appendChild(el('span', {
+        class: 'case__chip case__chip--unexpected',
+        title: '系统标注为意外发现',
+      }, '意外'));
+    }
+    return el('li', { class: 'case' + (isUnexpected ? ' case--unexpected' : '') }, [
+      meta,
+      el('div', { class: 'case__name' }, e.case_name || '（未命名案例）'),
+      el('div', { class: 'case__body' }, e.content || ''),
+    ]);
+  }
+
+  function appendScheduleLog(entry) {
+    const klass = 'log' + (entry.is_degradation ? ' log--degraded' : '');
+    const author = el('span', { class: 'log__author' }, entry.author || 'system');
+    const decision = el('span', { class: 'log__decision' }, entry.decision || '');
+    const reason = el('span', { class: 'log__reason' }, entry.reason || '');
+    dom.scheduleLogList.appendChild(
+      el('li', { class: klass }, [author, decision, reason])
+    );
+  }
+
+  function updateMachineMeta() {
+    setText(
+      dom.machineMeta,
+      state.schedule.length + ' 条调度 · ' + formatTokens(state.tokens) + ' token'
+    );
+  }
+
+  // ============================ Result page ==========================
+
+  function renderResult(result) {
+    if (!result) return;
+    setText(dom.paperQuestion, result.question || '');
+
+    // Integrity strip
+    setText(dom.integrityLateral, result.lateral_count || 0);
+    setText(dom.integrityVertical, result.vertical_count || 0);
+    const degCount = (result.schedule_log || []).filter(function (l) {
+      return l.is_degradation;
+    }).length;
+    setText(dom.integrityDegradation, degCount);
+    setText(dom.integrityTokens, formatTokens(result.token_spent || 0));
+
+    // Six chapters — taglines on top, full body inside the collapsible.
+    const c = result.conclusion || {};
+    const taglines = (c.taglines && typeof c.taglines === 'object') ? c.taglines : {};
+    CHAPTERS.forEach(function (chap) {
+      renderChapter(chap, taglines[chap.key], c[chap.key]);
+    });
+
+    // Lens snapshot — show the most recent lens
+    const lenses = result.lenses || [];
+    if (lenses.length) {
+      const lens = lenses[lenses.length - 1];
+      setText(dom.lensResultName, lens.name || '');
+      setText(dom.lensResultRationale, lens.rationale || '');
+      clear(dom.lensResultEntities);
+      (lens.entities || []).forEach(function (e) {
+        dom.lensResultEntities.appendChild(buildLensPair(e.surface, e.structural_role));
       });
+      clear(dom.lensResultRelations);
+      (lens.relationships || []).forEach(function (r) {
+        dom.lensResultRelations.appendChild(buildLensPair(r.surface, r.structural));
+      });
+    }
+
+    // Case index: direction × layer grid
+    renderCaseIndex(result.evidence || []);
+
+    // Degradation list (only shown if any)
+    const degraded = (result.schedule_log || []).filter(function (l) {
+      return l.is_degradation;
+    });
+    if (degraded.length) {
+      clear(dom.degradationList);
+      degraded.forEach(function (l) {
+        dom.degradationList.appendChild(
+          el('li', { class: 'degradation' }, [
+            el('span', { class: 'degradation__author' }, l.author || ''),
+            el('span', { class: 'degradation__decision' }, l.decision || ''),
+            el('span', { class: 'degradation__reason' }, l.reason || ''),
+          ])
+        );
+      });
+      show(dom.sectionDegradation);
+    } else {
+      hide(dom.sectionDegradation);
+    }
+
+    setText(dom.resultMeta,
+      '横向 ' + (result.lateral_count || 0) +
+      ' · 纵向 ' + (result.vertical_count || 0) +
+      ' · ' + formatTokens(result.token_spent || 0) + ' token' +
+      (degCount ? ' · ' + degCount + ' 处降级' : '')
+    );
+
+    // Recap drawer meta — tell the reader what's inside before they open it.
+    if (dom.recapMeta) {
+      const bits = [];
+      if ((result.lenses || []).length) bits.push('透镜');
+      const evCount = (result.evidence || []).length;
+      if (evCount) bits.push(evCount + ' 个案例');
+      if (degCount) bits.push(degCount + ' 处降级');
+      setText(dom.recapMeta, bits.length ? bits.join(' · ') : '本次没有可回顾的过程材料');
+    }
   }
 
-  function renderResult(data) {
-    if (!data) return;
+  // Render one chapter: tagline on top, full reasoning inside the
+  // collapsible body. When the LLM omits a tagline we fall back to the
+  // §marker name so the chapter still reads as a real heading.
+  function renderChapter(chap, tagline, body) {
+    const chapterEl = document.getElementById('chapter-' + chap.key);
+    const taglineEl = document.getElementById('tagline-' + chap.key);
+    const bodyEl = document.getElementById('body-' + chap.key);
 
-    const deckTarget = state.taskId || 'demo';
-    if (dom.paperDeckLink) {
-      dom.paperDeckLink.href = '/deck/' + encodeURIComponent(deckTarget);
-    }
-    setText(dom.paperEdition, 'a closing reading');
-    setText(dom.paperQuestion, data.driving_question || '');
+    const text = (body == null ? '' : String(body)).trim();
+    const taglineText = (tagline == null ? '' : String(tagline)).trim() || chap.fallback;
 
-    renderPaperSections(data);
-    renderLensTimeline(data.lens_chains || []);
-    renderSubList(data.sub_questions || []);
+    if (taglineEl) setText(taglineEl, taglineText);
 
-    if (data.integrity) {
-      setText(dom.resultMeta,
-        '回合 ' + (data.integrity.round_count || 0) +
-        ' · ' + formatTokens(data.integrity.token_spent || 0) + ' token'
+    if (bodyEl) {
+      clear(bodyEl);
+      const bodyClass = chap.bodyClass + (text ? '' : ' is-empty');
+      bodyEl.appendChild(
+        el('p', { class: bodyClass }, text || '（系统未给出此项）')
       );
     }
 
-    // Always reset the journey toggle to collapsed on each render.
-    if (dom.thinkingToggle) {
-      dom.thinkingToggle.dataset.expanded = 'false';
-      dom.thinkingToggle.textContent = '展开详情';
+    if (chapterEl) {
+      chapterEl.classList.toggle('is-empty', !text);
     }
   }
 
-  // -------- The 8 cognitive-rhythm paper sections --------
-
-  function renderPaperSections(data) {
-    const conclusion = data.conclusion || {};
-    const subs = data.sub_questions || [];
-    const evidence = data.evidence || [];
-    const predictions = data.predictions || [];
-
-    // §1 一句话回答
-    const takeaway = conclusion.convergent_finding || '';
-    setText(dom.paperTakeaway, takeaway);
-    toggleEmpty(dom.sectionTakeaway, !takeaway);
-
-    // §2 张力
-    setText(dom.paperTension, conclusion.tension || '');
-    toggleEmpty(dom.sectionTension, !conclusion.tension);
-
-    // §3 在哪里不成立
-    setText(dom.paperBoundary, conclusion.boundary_condition || '');
-    toggleEmpty(dom.sectionBoundary, !conclusion.boundary_condition);
-
-    // §4 收敛的几条 — bullet list of minimum_viable_answer from closed subs
-    const findings = subs
-      .filter(function (sq) { return sq.status === 'closed' && sq.minimum_viable_answer; })
-      .map(function (sq) { return sq.minimum_viable_answer; });
-    clear(dom.paperFindings);
-    findings.forEach(function (text) {
-      dom.paperFindings.appendChild(el('li', { textContent: text }));
-    });
-    toggleEmpty(dom.sectionFindings, findings.length === 0);
-
-    // §5 意外发现 — unexpected evidence, deduplicated
-    const seen = new Set();
-    const unexpected = [];
-    subs.forEach(function (sq) {
-      (sq.top_evidence || []).forEach(function (e) {
-        if (e.is_unexpected && !seen.has(e.content)) {
-          seen.add(e.content);
-          unexpected.push(e);
-        }
-      });
-    });
-    evidence.forEach(function (e) {
-      if (e.is_unexpected && !seen.has(e.content)) {
-        seen.add(e.content);
-        unexpected.push(e);
-      }
-    });
-    clear(dom.paperUnexpected);
-    unexpected.forEach(function (e) {
-      dom.paperUnexpected.appendChild(el('li', { textContent: e.content }));
-    });
-    toggleEmpty(dom.sectionUnexpected, unexpected.length === 0);
-
-    // §6 可证伪预判
-    clear(dom.paperPredictions);
-    predictions.forEach(function (p) {
-      dom.paperPredictions.appendChild(buildPredictionCard(p));
-    });
-    toggleEmpty(dom.sectionPredictions, predictions.length === 0);
-
-    // §7 还没回答清楚的
-    setText(dom.paperUnresolved, conclusion.unresolved || '');
-    toggleEmpty(dom.sectionUnresolved, !conclusion.unresolved);
-
-    // §8 所以你应该
-    setText(dom.paperImplication, conclusion.implication || '');
-    toggleEmpty(dom.sectionImplication, !conclusion.implication);
-  }
-
-  function buildPredictionCard(p) {
-    const card = el('div', { class: 'prediction-card' });
-
-    const head = el('div', { class: 'prediction-card__head' }, [
-      el('div', { class: 'prediction-card__claim', textContent: p.claim || '' }),
-      el('span', {
-        class: 'prediction-card__status',
-        dataset: { status: p.status || 'pending' },
-        textContent: predictionStatusLabel(p.status),
-      }),
-    ]);
-    card.appendChild(head);
-
-    const detail = el('div', { class: 'prediction-card__detail' });
-    let hasDetail = false;
-    function addRow(label, value) {
-      if (!value) return;
-      hasDetail = true;
-      detail.appendChild(el('div', { class: 'prediction-card__detail-row' }, [
-        el('span', { class: 'prediction-card__detail-label', textContent: label }),
-        el('span', { textContent: value }),
-      ]));
-    }
-    addRow('Killer 证据', p.killer_evidence);
-    addRow('如果成立', p.if_true_we_should_see);
-    addRow('如果不成立', p.if_false_we_should_see);
-
-    if (hasDetail) card.appendChild(detail);
-    return card;
-  }
-
-  function predictionStatusLabel(status) {
-    switch (status) {
-      case 'supported': return '被支持';
-      case 'refuted': return '被驳斥';
-      case 'modified': return '已修正';
-      case 'pending': return '待验';
-      default: return status || '待验';
-    }
-  }
-
-  // ---------- Journey block: lens chains ----------
-
-  function renderLensTimeline(chains) {
-    clear(dom.lensChains);
-    if (!chains.length) {
-      dom.lensChains.appendChild(el('div', {
-        class: 'empty-line', textContent: '这次没换过角度，或者换得太少没看出来。',
-      }));
+  function renderCaseIndex(evidence) {
+    clear(dom.caseIndex);
+    setText(dom.caseIndexMeta, evidence.length + ' 条案例 · 按 方向 × 层级 索引');
+    if (!evidence.length) {
+      dom.caseIndex.appendChild(
+        el('div', { class: 'case-index__empty' }, '本次没有收集到案例。')
+      );
       return;
     }
-    chains.forEach(function (entry) {
-      const chain = entry.chain || [];
-      if (!chain.length) return;
-      const block = el('div', { class: 'lens-chain' });
-      chain.forEach(function (lens, i) {
-        const version = el('div', {
-          class: 'lens-version' + (i === 0 ? ' is-initial' : ' is-evolved'),
+
+    const directions = ['lateral', 'vertical'];
+    const layers = ['structure', 'mechanism', 'phenomenon'];
+    directions.forEach(function (dir) {
+      const row = el('div', { class: 'case-index__row' });
+      row.appendChild(
+        el('div', { class: 'case-index__rowhead' }, [
+          el('span', { class: 'case-index__rowname' }, DIRECTION_LABEL[dir] || dir),
+          el('span', { class: 'case-index__rowdesc' },
+            dir === 'lateral' ? '跨领域 · 当代' : '跨时期 · 历史'),
+        ])
+      );
+      const cells = el('div', { class: 'case-index__cells' });
+      layers.forEach(function (layer) {
+        const matches = evidence.filter(function (e) {
+          return e.search_direction === dir && e.layer === layer;
         });
-        version.appendChild(el('div', {
-          class: 'lens-version__tag',
-          textContent: 'v' + (i + 1) + (i === 0 ? ' · 起点' : ' · 改一稿'),
-        }));
-        version.appendChild(el('div', { class: 'lens-version__name', textContent: lens.name || '' }));
-        if (lens.rationale) {
-          version.appendChild(el('div', {
-            class: 'lens-version__rationale', textContent: lens.rationale,
-          }));
-        }
-        block.appendChild(version);
+        const cell = el('div', { class: 'case-index__cell' }, [
+          el('div', { class: 'case-index__layer' }, [
+            el('span', { class: 'case-index__layer-marker' }, LAYER_MARKER[layer]),
+            el('span', { class: 'case-index__layer-name' }, LAYER_LABEL[layer]),
+          ]),
+          buildCaseIndexList(matches),
+        ]);
+        cells.appendChild(cell);
       });
-      dom.lensChains.appendChild(block);
+      row.appendChild(cells);
+      dom.caseIndex.appendChild(row);
     });
   }
 
-  // ---------- Journey block: sub-question cards ----------
-
-  function renderSubList(subs) {
-    clear(dom.subList);
-    if (!subs.length) {
-      dom.subList.appendChild(el('div', {
-        class: 'empty-line', textContent: '这次还没拆出小问题。',
-      }));
-      return;
+  function buildCaseIndexList(items) {
+    if (!items.length) {
+      return el('div', { class: 'case-index__none' }, '（无）');
     }
-    subs.forEach(function (sq) {
-      dom.subList.appendChild(buildSubCard(sq));
+    const list = el('ul', { class: 'case-index__list' });
+    items.forEach(function (e) {
+      list.appendChild(
+        el('li', { class: 'case-index__item' + (e.is_unexpected ? ' is-unexpected' : '') }, [
+          el('span', { class: 'case-index__item-name' }, e.case_name || '（未命名）'),
+          el('span', { class: 'case-index__item-conf' }, CONFIDENCE_LABEL[e.confidence] || e.confidence),
+        ])
+      );
     });
+    return list;
   }
 
-  function buildSubCard(sq) {
-    const card = el('article', {
-      class: 'sub-card',
-      dataset: { status: sq.status || 'untouched', id: sq.id || '' },
-    });
+  // ============================== Demo ===============================
 
-    const header = el('button', { class: 'sub-card__header', type: 'button' }, [
-      el('span', { class: 'sub-card__status-dot' }),
-      el('span', { class: 'sub-card__question', textContent: sq.content || '' }),
-      el('span', { class: 'pill', textContent: statusLabel(sq.status) }),
-      el('span', { class: 'sub-card__chevron', textContent: '▾' }),
-    ]);
-    header.addEventListener('click', function () {
-      card.classList.toggle('is-expanded');
-    });
-    card.appendChild(header);
-
-    const body = el('div', { class: 'sub-card__body' });
-
-    if (sq.minimum_viable_answer) {
-      body.appendChild(el('div', { class: 'sub-card__answer' }, [
-        el('span', { class: 'sub-card__answer-label', textContent: '最少够用的答案' }),
-        el('span', { textContent: sq.minimum_viable_answer }),
-      ]));
-    }
-
-    const stats = el('div', { class: 'sub-card__stats' });
-    stats.appendChild(buildStat(sq.structure_layer_count, '底层规律'));
-    stats.appendChild(buildStat(sq.mechanism_layer_count, '怎么运作'));
-    stats.appendChild(buildStat(sq.unexpected_count, '意外发现', 'unexpected'));
-    stats.appendChild(buildStat(sq.evidence_count, '找到的证据'));
-    body.appendChild(stats);
-
-    if (sq.conclusion) {
-      body.appendChild(buildSubConclusion(sq.conclusion));
-    }
-
-    if (sq.top_evidence && sq.top_evidence.length) {
-      body.appendChild(el('div', {
-        class: 'sub-card__evidence-heading', textContent: '最有分量的几条',
-      }));
-      const list = el('div', { class: 'sub-card__evidence-list' });
-      sq.top_evidence.forEach(function (ev) {
-        list.appendChild(buildEvidenceItem(ev));
-      });
-      body.appendChild(list);
-    }
-
-    if (sq.status === 'stuck') {
-      body.appendChild(el('div', {
-        class: 'sub-card__stuck-note',
-        textContent: '这个小问题试了几次没能想清楚。一般是材料没找够、看的角度还不对路，或者问题本身要换个问法。',
-      }));
-    }
-
-    card.appendChild(body);
-    return card;
-  }
-
-  function buildStat(count, label, emphasis) {
-    const stat = el('div', { class: 'sub-card__stat' });
-    if (emphasis) stat.dataset.emphasis = emphasis;
-    stat.appendChild(el('strong', { textContent: String(count || 0) }));
-    stat.appendChild(el('span', { textContent: label }));
-    return stat;
-  }
-
-  function buildSubConclusion(c) {
-    const block = el('div', { class: 'sub-card__conclusion' });
-    if (c.convergent_finding) {
-      block.appendChild(el('div', { class: 'sub-card__conclusion-row is-finding' }, [
-        el('span', { class: 'sub-card__conclusion-label', textContent: '小结' }),
-        el('span', { textContent: c.convergent_finding }),
-      ]));
-    }
-    if (c.tension) {
-      block.appendChild(el('div', { class: 'sub-card__conclusion-row is-tension' }, [
-        el('span', { class: 'sub-card__conclusion-label', textContent: '张力' }),
-        el('span', { textContent: c.tension }),
-      ]));
-    }
-    if (c.boundary_condition) {
-      block.appendChild(el('div', { class: 'sub-card__conclusion-row' }, [
-        el('span', { class: 'sub-card__conclusion-label', textContent: '不成立' }),
-        el('span', { textContent: c.boundary_condition }),
-      ]));
-    }
-    if (c.unresolved) {
-      block.appendChild(el('div', { class: 'sub-card__conclusion-row' }, [
-        el('span', { class: 'sub-card__conclusion-label', textContent: '未尽' }),
-        el('span', { textContent: c.unresolved }),
-      ]));
-    }
-    return block;
-  }
-
-  function buildEvidenceItem(ev) {
-    const item = el('div', {
-      class: 'evidence-item',
-      dataset: {
-        confidence: ev.is_unexpected ? 'unexpected' : (ev.confidence || 'medium'),
-        layer: ev.layer || 'phenomenon',
+  function loadDemoResult() {
+    const demo = {
+      question: 'AI 时代人们的 AI 焦虑',
+      mode: 'balance',
+      language: '中文',
+      lateral_count: 7,
+      vertical_count: 5,
+      lateral_rounds: 2,
+      vertical_rounds: 2,
+      token_spent: 9420,
+      lenses: [{
+        name: '新生产力对主体意义领地的渗透',
+        rationale: '当一种新生产力把某类认知劳动的边际成本压向零，承载这类劳动的主体的功能与意义就会被重新分配。焦虑不是对工具的反应，而是对意义领地被重新划界的反应。',
+        entities: [
+          { surface: 'AI', structural_role: '崛起中的、能力可外溢的新型生产力' },
+          { surface: '人们', structural_role: '其价值与身份正被新生产力冲击的主流主体' },
+          { surface: '焦虑', structural_role: '主体面对外部不可控变化时的存在论反应' },
+        ],
+        relationships: [
+          { surface: 'AI → 让 → 人们 → 产生焦虑', structural: '新生产力 → 渗透主体的功能与意义领地 → 触发存在论焦虑' },
+        ],
+      }],
+      evidence: [
+        { id: '1', case_name: '卢德运动 1810s', content: '英国织布工人破坏机器，并非反对技术本身，而是抵制技术对其手工技艺所承载的社会身份的剥夺。', search_direction: 'vertical', layer: 'mechanism', confidence: 'strong', is_unexpected: false },
+        { id: '2', case_name: '印刷术革命 1450s', content: '抄写员行业终结。但更深的震动在于：知识的权威从教会与抄写员的"持有"，转向了印刷术使得知识"可复制、可传播"。', search_direction: 'vertical', layer: 'structure', confidence: 'strong', is_unexpected: false },
+        { id: '3', case_name: '基因编辑伦理争议', content: '社会对 CRISPR 的恐慌不只是关于安全性，而是对"什么是自然人"的界定权被技术重新拿走的存在论不安。', search_direction: 'lateral', layer: 'structure', confidence: 'medium', is_unexpected: false },
+        { id: '4', case_name: '社交媒体焦虑', content: '注意力被算法定价，自我表达被指标量化。焦虑来自于"我是谁"的判定权从内部转移到了平台。', search_direction: 'lateral', layer: 'mechanism', confidence: 'strong', is_unexpected: false },
+        { id: '5', case_name: '电报革命 1840s', content: '空间被压平，远距离通讯不再是特权。但与今天 AI 的差异在于：电报扩张了人的能力，未取代人的判断。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: true },
+        { id: '6', case_name: '电脑普及 1980s', content: '"会用电脑"成为新的识字能力。许多原本以人脑为唯一载体的认知任务被外包。', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false },
+        { id: '7', case_name: '石油行业抵制电动车', content: '既有生产力的承载者抵制新生产力，不只是经济利益问题，更是"我们决定能源未来"的权力领地被剥夺。', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false },
+        { id: '8', case_name: '工业革命的女工抗议', content: '机器并未完全取代女工，而是把劳动重组到工厂体制下。抗议焦点是工作节奏与身体节奏被剥离了协商权。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false },
+        { id: '9', case_name: '医生面对 AI 诊断', content: '医生焦虑的不是"AI 比我准"，而是临床判断权从个人专业被重新分配到"AI + 医保 + 监管"的三方系统。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false },
+        { id: '10', case_name: '艺术家面对生成式 AI', content: '焦虑来自"风格作为劳动结果"被消解 — 风格的独占性被算法的可复用性瓦解。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false },
+        { id: '11', case_name: '律师面对法律检索 AI', content: '一部分初级案件的"思考"被外包，但责任仍归律师承担。义务领地未变，能力领地被压缩。', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false },
+        { id: '12', case_name: '汽车取代马车 1900s', content: '马车夫并未消失，转岗到出租车司机。但今天 AI 的差异在于：替代不是水平迁移，而是垂直挤压判断密度。', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true },
+      ],
+      conclusion: {
+        core_finding: 'AI 焦虑的结构性根源不是"AI 会取代我做什么"，而是"AI 让我对「我是谁」的判定权被重新分配"。这种重分配把意义、专业身份、责任归属拆解到了一个由人、模型、机构共同构成的混合系统里。',
+        temporal_trajectory: '在最初的几年，AI 焦虑表现为对失业的直接恐惧；随着应用深入，焦虑转向身份与意义的重组——"我做的事还算专业吗"取代了"我会不会被裁"。再往后，焦虑可能稳态化为一种"与系统协商的日常张力"，就像电报和电脑的焦虑最终被吸收进新的工作样态。但 AI 与前者不同：它压缩的是"判断"，而非"执行"。这意味着稳态化所需的时间会更长，且新的协商对象不再仅是雇主，而是包含模型、平台、监管的混合系统。',
+        tension: '新生产力的扩展性与主体意义领地的稳定性互斥又共存：扩展性意味着能力可被复制、可外溢，这恰恰削弱了"专业身份"赖以成立的稀缺与边界；但主体又必须有稳定的意义边界才能产生焦虑——所以张力不是 AI vs 人，而是"能力可复制" vs "身份必须不可复制"。',
+        boundary_condition: '在那些"能力的稀缺即身份"的领域（艺术家、医生、律师），焦虑最强。在"能力本就被工具中介"的领域（如会计、翻译），焦虑反而较弱——因为意义领地早已与具体技能解耦。',
+        unresolved: '当 AI 同时降低了"产出"和"判断"的边际成本，是否仍有不可被复制的领域？我们没有找到结构上对应"判断本身被外包"的成熟历史案例——这是一个真正的新情境。',
+        implication: '与其问"AI 会不会取代我"，更值得问的是"我的意义领地是建立在能力的稀缺上，还是建立在判断的承担上"。前者会被持续侵蚀，后者反而可能在 AI 时代被放大。',
+        taglines: {
+          core_finding: 'AI 焦虑的根源是判定权被重新分配',
+          temporal_trajectory: '从失业恐惧 → 身份重组 → 与系统的日常协商',
+          tension: '能力可复制 vs 身份必须不可复制',
+          boundary_condition: '能力即身份的领域，焦虑最强',
+          unresolved: '没有"判断本身被外包"的历史对应',
+          implication: '问"判断的承担"，不是"能力的稀缺"',
+        },
       },
-    });
-    item.appendChild(el('span', {
-      class: 'evidence-item__layer', textContent: layerLabel(ev.layer),
-    }));
-    item.appendChild(el('span', {
-      class: 'evidence-item__text', textContent: ev.content || '',
-    }));
-    return item;
-  }
-
-  function layerLabel(layer) {
-    return ({
-      structure: '底层规律',
-      mechanism: '怎么运作',
-      phenomenon: '表面',
-    }[layer]) || (layer || '—');
+      schedule_log: [
+        { author: 'inception', decision: 'inception_complete', reason: "abstracted to pattern '新生产力对主体意义领地的渗透', 3 entities, 1 relationships", is_degradation: false },
+        { author: 'search_lateral', decision: 'search_complete', reason: 'found 4 cases (lateral) via lens', is_degradation: false },
+        { author: 'search_vertical', decision: 'search_complete', reason: 'found 3 cases (vertical) via lens', is_degradation: false },
+      ],
+    };
+    state.result = demo;
+    renderResult(demo);
+    showScreen('result');
   }
 
   // ============================== Boot ===============================

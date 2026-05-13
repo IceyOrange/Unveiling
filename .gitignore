@@ -28,3 +28,6 @@ tmp/
 # OS
 .DS_Store
 Thumbs.db
+
+# Frontend API config (generated at build time for Vercel)
+frontend/static/js/api-config.js

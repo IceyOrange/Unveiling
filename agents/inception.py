@@ -10,40 +10,18 @@ import json
 
 from llm.client import LLMClient, LLMJSONError
 from llm.degradation import DegradationLogger
+from llm.prompt_loader import load_lab_prompt
 from models._enums import Phase
 from models.blackboard import (
     AbstractedEntity,
     AbstractedRelation,
+    CrossDomainAnalogue,
+    HiddenDynamic,
     LensRecord,
+    RootCauseLevel,
     ScheduleLogEntry,
 )
 from models.state import State
-
-_SYSTEM_PROMPT = """\
-You are a structural analyst.  Given a user's question, identify the key \
-entities and relationships it involves, then abstract each one to a \
-structural level that enables cross-temporal and cross-spatial comparison.
-"""
-
-_USER_PROMPT_TEMPLATE = """\
-Question: {question}
-
-Identify every meaningful entity and relationship in this question and \
-abstract them to structural roles that would allow comparison with \
-analogous situations in other domains or time periods.
-
-Output valid JSON with exactly these keys:
-- "pattern_name": a short, concrete name for the structural pattern
-- "essence": 2-3 sentences explaining why this pattern holds (forces, mechanisms)
-- "entities": list of {{"surface": "<original term>", "structural_role": "<abstracted structural role>"}}
-- "relationships": list of {{"surface": "<original relationship>", "structural": "<abstracted structural relationship>"}}
-
-Rules:
-- Surface terms come directly from the question; structural roles must be \
-generic enough for cross-domain comparison but specific enough to be useful.
-- Every entity and relationship in the question must appear.
-- Output valid JSON only.  No markdown, no commentary.
-"""
 
 
 def inception_node(state: State) -> dict:
@@ -59,12 +37,16 @@ def inception_node(state: State) -> dict:
     total_tokens = 0
 
     # --- Call LLM for structural abstraction ---
+    # Prompts are reloaded from prompt_lab/ on every call so edits made via the
+    # /prompt-lab UI take effect on the next run without restarting the process.
     client = LLMClient(language=state.output_language)
     try:
+        system_prompt = load_lab_prompt("inception_system")
+        user_prompt = load_lab_prompt("inception_user").format(question=question)
         raw, tokens = client.chat(
             messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": _USER_PROMPT_TEMPLATE.format(question=question)},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             json_mode=True,
             temperature=0.7,
@@ -96,12 +78,46 @@ def inception_node(state: State) -> dict:
         if r.get("surface")
     ]
 
+    hidden_dynamics = [
+        HiddenDynamic(
+            observation=hd.get("observation", ""),
+            layers=hd.get("layers", []),
+        )
+        for hd in data.get("hidden_dynamics", [])
+        if hd.get("observation")
+    ]
+
+    cross_domain_analogues = [
+        CrossDomainAnalogue(
+            domain=a.get("domain", ""),
+            analogous_pattern=a.get("analogous_pattern", ""),
+            what_happened=a.get("what_happened", ""),
+            lesson_for_original=a.get("lesson_for_original", ""),
+        )
+        for a in data.get("cross_domain_analogues", [])
+        if a.get("domain")
+    ]
+
+    root_cause_chain = [
+        RootCauseLevel(
+            level=rc.get("level", i + 1),
+            surface_why=rc.get("surface_why", ""),
+            answer=rc.get("answer", ""),
+            structural_why=rc.get("structural_why", ""),
+        )
+        for i, rc in enumerate(data.get("root_cause_chain", []))
+        if rc.get("surface_why")
+    ]
+
     lens = LensRecord(
         author="inception",
         name=pattern_name,
         rationale=essence,
         entities=entities,
         relationships=relationships,
+        hidden_dynamics=hidden_dynamics,
+        cross_domain_analogues=cross_domain_analogues,
+        root_cause_chain=root_cause_chain,
     )
 
     log = ScheduleLogEntry(

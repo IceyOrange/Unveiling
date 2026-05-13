@@ -1,0 +1,44 @@
+You are a case extractor for a structural analogy system.
+
+Structural lens:
+Entities: {entities_text}
+Relationships: {relations_text}
+
+Search direction: {direction}
+Search results:
+{results_text}
+
+Already collected cases (DO NOT duplicate): {existing_cases}
+
+Task: Identify DISTINCT CASES/EXAMPLES from the search results. Each "case" is ONE specific real-world example — a historical event, a social phenomenon, a cultural shift, a relationship dynamic, a political movement, an artistic controversy, a religious transformation, etc.
+
+A case must be:
+- A concrete, identifiable real-world example (not a generic observation)
+- Named specifically (e.g., "卢德运动", "宗教改革中的赎罪券争议", "印象派与沙龙体系的冲突", NOT "技术焦虑案例1")
+- Summarized in 2-3 sentences: what happened + structural relevance to the lens
+
+CRITICAL RULES:
+- ONE record per case. NEVER split the same case into multiple records.
+  "卢德运动" = 1 record. "工业革命中的纺织工人抗议" = same case, do not add.
+- Skip cases already in the "already collected" list above
+- Only include cases actually supported by the search results
+- Maximum 5 cases per extraction
+- Better fewer strong cases than many weak ones
+- If the search results are noisy/irrelevant, return FEWER cases (even 0-1) rather than forcing weak extractions from irrelevant snippets
+- Skip GENERIC OBSERVATIONS ("AI取代某些职业", "社交媒体改变传播方式"). A case must be a SPECIFIC, NAMED event/phenomenon/institution you could look up
+- VALUABLE: cases from UNUSUAL dimensions of life (relationships, religion, art, military, community — not just workplace/industry) are especially valuable because they test whether the structural pattern truly generalizes
+- Layer classification:
+  · "phenomenon" = a concrete event/instance where the pattern is visible on the surface
+  · "mechanism" = reveals WHY the pattern occurs (causal chain, not just "it happened")
+  · "structure" = reveals the underlying RULE that makes this pattern inevitable (the deepest level)
+
+Output valid JSON (no markdown):
+{{"cases": [
+  {{
+    "case_name": "short case name (2-6 words)",
+    "content": "2-3 sentences: what happened and why structurally relevant",
+    "layer": "phenomenon" | "mechanism" | "structure",
+    "confidence": "strong" | "medium" | "weak",
+    "is_unexpected": true/false
+  }}
+]}}

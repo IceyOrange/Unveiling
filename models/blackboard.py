@@ -53,6 +53,40 @@ class AbstractedRelation(BaseModel):
     structural: str   # abstracted structural relationship
 
 
+class HiddenDynamic(BaseModel):
+    """A surface phenomenon with multiple parallel underlying mechanisms."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    observation: str
+    layers: list[str] = Field(default_factory=list)
+
+
+class RootCauseLevel(BaseModel):
+    """One level in a recursive why-chain tracing the phenomenon to its roots."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    level: int
+    surface_why: str
+    answer: str
+    structural_why: str
+
+
+class CrossDomainAnalogue(BaseModel):
+    """A preliminary cross-domain analogy from LLM internal knowledge.
+
+    Used as a search-direction hint, NOT as verified evidence.
+    """
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    domain: str
+    analogous_pattern: str
+    what_happened: str
+    lesson_for_original: str
+
+
 # ---------------------------------------------------------------------------
 # Blackboard zone records
 # ---------------------------------------------------------------------------
@@ -73,6 +107,9 @@ class LensRecord(BlackboardRecord):
     rationale: str
     entities: list[AbstractedEntity] = Field(default_factory=list)
     relationships: list[AbstractedRelation] = Field(default_factory=list)
+    hidden_dynamics: list[HiddenDynamic] = Field(default_factory=list)
+    cross_domain_analogues: list[CrossDomainAnalogue] = Field(default_factory=list)
+    root_cause_chain: list[RootCauseLevel] = Field(default_factory=list)
 
 
 class EvidenceRecord(BlackboardRecord):
@@ -95,6 +132,11 @@ class ConclusionRecord(BlackboardRecord):
     """结论区 record.
 
     Written during convergence phase. Tension-style output.
+
+    taglines: one-sentence crystallizations per chapter, keyed by the same
+    field names (core_finding / temporal_trajectory / tension /
+    boundary_condition / unresolved / implication). Empty dict is a valid
+    fallback — frontend uses §marker names when a key is missing.
     """
 
     core_finding: str
@@ -102,6 +144,8 @@ class ConclusionRecord(BlackboardRecord):
     boundary_condition: str
     unresolved: str
     implication: str
+    temporal_trajectory: str = ""
+    taglines: dict[str, str] = Field(default_factory=dict)
 
 
 class ScheduleLogEntry(BlackboardRecord):

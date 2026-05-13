@@ -3,392 +3,1111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prompt Lab · Unveiling</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <title>Pipeline Lab · Unveiling</title>
   <link rel="icon" href="data:,">
   <style>
-    /* --- Prompt Lab overrides --- */
-    body { background: var(--bg-cream); color: var(--ink-primary); font-family: var(--font-sans); }
-
-    .lab-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: var(--space-4) var(--space-6);
-      border-bottom: 1px solid var(--border-soft);
-      background: var(--surface-elevated);
+    :root {
+      --bg: #faf7f0;
+      --surface: #fff;
+      --ink: #1a1a2e;
+      --ink-light: #5a5a7a;
+      --accent: #ff6b35;
+      --accent-light: #fff0e8;
+      --green: #2d8a4e;
+      --green-light: #e8f5ec;
+      --amber: #c47d0e;
+      --amber-light: #fef6e4;
+      --red: #c0392b;
+      --red-light: #fceae8;
+      --border: #e8e4dc;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --radius: 10px;
     }
-    .lab-header__brand { font-family: var(--font-sans); font-weight: 700; font-size: 14px; letter-spacing: .08em; color: var(--ink-tertiary); }
-    .lab-header__back { font-size: 13px; color: var(--ink-secondary); text-decoration: none; }
-    .lab-header__back:hover { color: var(--ink-primary); }
 
-    .lab-layout {
-      display: grid; grid-template-columns: 1fr 1fr;
-      height: calc(100vh - 49px);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); line-height: 1.6; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ===== Top bar ===== */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar__brand { font-weight: 700; font-size: 14px; letter-spacing: 1px; color: var(--ink-light); }
+    .topbar__sep { color: var(--border); }
+    .topbar__title { font-size: 15px; font-weight: 600; }
+    .topbar__spacer { flex: 1; }
+    .topbar__link { font-size: 13px; }
+
+    /* ===== Pipeline header ===== */
+    .pipe-header {
+      max-width: 1100px;
+      margin: 24px auto 0;
+      padding: 0 24px;
+    }
+    .pipe-header__row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .pipe-header__field { flex: 1; }
+    .pipe-header__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-light); margin-bottom: 4px; }
+    .pipe-header__input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-family: var(--sans);
+      background: var(--surface);
+    }
+    .pipe-header__input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+    .pipe-header__select {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      background: var(--surface);
     }
 
-    /* Left panel: editor */
-    .lab-editor {
-      display: flex; flex-direction: column;
-      border-right: 1px solid var(--border-soft);
+    /* ===== Step cards ===== */
+    .pipe-body { max-width: 1100px; margin: 20px auto 40px; padding: 0 24px; }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
       overflow: hidden;
     }
-    .lab-editor__toolbar {
-      display: flex; align-items: center; gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
-      border-bottom: 1px solid var(--border-hairline);
-      background: var(--surface-card);
+    .step-card--active { border-color: var(--accent); }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+    }
+    .step-header:hover { background: var(--bg); }
+
+    .step-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--ink-light);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
-    .lab-editor__select {
-      font-size: 13px; padding: 6px 10px; border-radius: var(--radius-sm);
-      border: 1px solid var(--border-medium); background: var(--surface-elevated);
-      color: var(--ink-primary); min-width: 200px;
+    .step-card--done .step-num { background: var(--green); color: #fff; }
+    .step-card--running .step-num { background: var(--amber); color: #fff; }
+    .step-card--error .step-num { background: var(--red); color: #fff; }
+
+    .step-label { font-size: 14px; font-weight: 600; flex: 1; }
+    .step-status {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
-    .lab-editor__source {
-      font-size: 11px; color: var(--ink-tertiary); margin-left: auto;
-      font-family: var(--font-mono);
+    .step-status--pending { background: var(--bg); color: var(--ink-light); }
+    .step-status--running { background: var(--amber-light); color: var(--amber); }
+    .step-status--done { background: var(--green-light); color: var(--green); }
+    .step-status--error { background: var(--red-light); color: var(--red); }
+
+    .step-chevron { font-size: 12px; color: var(--ink-light); transition: transform .2s; }
+    .step-card--open .step-chevron { transform: rotate(90deg); }
+
+    /* Step body */
+    .step-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .step-card--open .step-body { display: block; }
+
+    /* Prompt editor */
+    .prompt-section { margin-top: 12px; }
+    .prompt-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-light);
+      cursor: pointer;
+      padding: 6px 0;
+    }
+    .prompt-toggle:hover { color: var(--accent); }
+    .prompt-toggle__arrow { font-size: 10px; transition: transform .15s; }
+    .prompt-toggle--open .prompt-toggle__arrow { transform: rotate(90deg); }
+
+    .prompt-editor { display: none; margin: 6px 0; }
+    .prompt-editor--open { display: block; }
+    .prompt-editor textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.55;
+      resize: vertical;
+      background: #fefdfb;
+    }
+    .prompt-editor textarea:focus { outline: none; border-color: var(--accent); }
+    .prompt-editor__actions { margin-top: 6px; display: flex; gap: 8px; }
+
+    /* Inputs section */
+    .inputs-section { margin-top: 12px; }
+    .inputs-section__title { font-size: 12px; font-weight: 600; color: var(--ink-light); margin-bottom: 6px; }
+    .input-grid { display: grid; grid-template-columns: 140px 1fr; gap: 6px 10px; align-items: start; }
+    .input-grid label {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--ink-light);
+      padding: 8px 0 0;
+      text-align: right;
+      word-break: break-all;
+    }
+    .input-grid textarea,
+    .input-grid input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.5;
+      resize: vertical;
+      background: var(--bg);
+    }
+    .input-grid textarea { min-height: 50px; }
+    .input-grid textarea:focus,
+    .input-grid input:focus { outline: none; border-color: var(--accent); }
+
+    /* Run button */
+    .step-run {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-run {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-run:hover { filter: brightness(1.08); }
+    .btn-run:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-save {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save:hover { background: var(--green-light); }
+    .btn-save--saved { color: var(--ink-light); pointer-events: none; }
+    .step-meta { font-size: 12px; color: var(--ink-light); }
+
+    /* Output */
+    .step-output { margin-top: 12px; }
+    .step-output__title { font-size: 12px; font-weight: 600; color: var(--ink-light); margin-bottom: 6px; }
+    .output-box {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 400px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .output-box .json-key { color: #89b4fa; }
+    .output-box .json-str { color: #a6e3a1; }
+    .output-box .json-bool { color: #fab387; }
+    .output-box .json-null { color: #6c7086; }
+    .output-box .json-num { color: #f9e2af; }
+
+    /* ===== Parallel section ===== */
+    .parallel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .parallel__col { min-width: 0; }
+    .parallel__label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      padding: 6px 14px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .parallel__label--vertical { background: #e8f0fe; color: #2b5ea7; }
+    .case-count {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--ink-light);
+    }
+    .case-count--enough { background: var(--green-light); color: var(--green); }
+    .btn-round {
+      margin-left: auto;
+      padding: 3px 10px;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+      background: transparent;
+      color: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-round:hover { background: var(--surface); }
+    .btn-round:disabled { opacity: .4; cursor: not-allowed; }
+    .parallel .step-card { border-radius: 0 0 var(--radius) var(--radius); }
+    .parallel .step-card:first-of-type { border-radius: 0; }
+    .parallel .step-card:last-of-type { border-radius: 0 0 var(--radius) var(--radius); }
+
+    @media (max-width: 800px) {
+      .parallel { grid-template-columns: 1fr; }
     }
 
-    .lab-editor__textarea {
-      flex: 1; width: 100%; resize: none; border: none; outline: none;
-      padding: var(--space-4); font-size: 13px; line-height: 1.7;
-      font-family: var(--font-mono); background: var(--bg-cream);
-      color: var(--ink-primary); tab-size: 4;
-    }
-
-    .lab-editor__actions {
-      display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4);
-      border-top: 1px solid var(--border-hairline); background: var(--surface-card);
-      flex-shrink: 0;
-    }
-
-    /* Right panel: test */
-    .lab-test {
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    .lab-test__toolbar {
-      display: flex; align-items: center; gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
-      border-bottom: 1px solid var(--border-hairline);
-      background: var(--surface-card);
-      flex-shrink: 0;
-    }
-    .lab-test__toolbar label { font-size: 12px; color: var(--ink-secondary); }
-    .lab-test__lang {
-      font-size: 12px; padding: 4px 8px; border-radius: var(--radius-sm);
-      border: 1px solid var(--border-medium); background: var(--surface-elevated);
-    }
-
-    .lab-test__inputs {
-      padding: var(--space-4); overflow-y: auto; flex-shrink: 0;
-      border-bottom: 1px solid var(--border-hairline);
-      max-height: 40vh;
-    }
-    .lab-test__field { margin-bottom: var(--space-3); }
-    .lab-test__field-label {
-      font-size: 11px; font-weight: 600; color: var(--ink-secondary);
-      margin-bottom: 2px; display: block; text-transform: uppercase; letter-spacing: .04em;
-    }
-    .lab-test__field-input {
-      width: 100%; font-size: 13px; padding: 6px 8px;
-      border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
-      background: var(--surface-elevated); font-family: var(--font-sans);
-      color: var(--ink-primary);
-    }
-    .lab-test__field-input--tall { min-height: 60px; resize: vertical; font-family: var(--font-mono); font-size: 12px; }
-
-    .lab-test__run-row {
-      display: flex; align-items: center; gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
-      border-bottom: 1px solid var(--border-hairline);
-      background: var(--surface-card); flex-shrink: 0;
-    }
-
-    .lab-test__output {
-      flex: 1; overflow-y: auto; padding: var(--space-4);
-    }
-    .lab-test__output-label {
-      font-size: 11px; font-weight: 600; color: var(--ink-secondary);
-      text-transform: uppercase; letter-spacing: .04em; margin-bottom: var(--space-2);
-    }
-    .lab-test__output-raw {
-      white-space: pre-wrap; word-break: break-word;
-      font-size: 13px; line-height: 1.6; font-family: var(--font-mono);
-      color: var(--ink-primary);
-    }
-    .lab-test__output-json {
-      font-size: 13px; line-height: 1.6; font-family: var(--font-mono);
-      color: var(--ink-primary);
-    }
-    .lab-test__output-json .json-key { color: var(--layer-structure); }
-    .lab-test__output-json .json-string { color: var(--status-closed); }
-    .lab-test__output-json .json-bool { color: var(--accent-tension); }
-
-    /* Buttons */
-    .btn {
-      font-size: 12px; font-weight: 600; padding: 6px 14px;
-      border-radius: var(--radius-sm); border: 1px solid var(--border-medium);
-      cursor: pointer; transition: all 120ms;
-    }
-    .btn--save { background: var(--status-closed); color: var(--ink-on-accent); border-color: var(--status-closed); }
-    .btn--save:hover { opacity: .85; }
-    .btn--run { background: var(--accent-tension); color: var(--ink-on-accent); border-color: var(--accent-tension); }
-    .btn--run:hover { opacity: .85; }
-    .btn--reset { background: transparent; color: var(--ink-secondary); }
-    .btn--reset:hover { color: var(--ink-primary); }
-    .btn:disabled { opacity: .4; cursor: not-allowed; }
-
-    .lab-test__tokens { font-size: 11px; color: var(--ink-tertiary); margin-left: auto; }
-
-    .lab-status {
-      font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm);
-      display: inline-block; margin-left: var(--space-2);
-    }
-    .lab-status--saved { background: var(--status-closed-soft); color: var(--status-closed); }
-    .lab-status--error { background: var(--status-stuck-soft); color: var(--status-stuck); }
-
-    /* Mobile: stack vertically */
-    @media (max-width: 768px) {
-      .lab-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-      .lab-editor { border-right: none; border-bottom: 1px solid var(--border-soft); }
-    }
+    /* ===== Spinner ===== */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
   </style>
 </head>
 <body>
 
-<div class="lab-header">
-  <span class="lab-header__brand">UNVEILING · PROMPT LAB</span>
-  <a class="lab-header__back" href="/">← 回到首页</a>
-</div>
+<!-- ===== Top bar ===== -->
+<nav class="topbar">
+  <span class="topbar__brand">UNVEILING</span>
+  <span class="topbar__sep">·</span>
+  <span class="topbar__title">Pipeline Lab</span>
+  <span class="topbar__spacer"></span>
+  <a class="topbar__link" href="/">← 分析首页</a>
+</nav>
 
-<div class="lab-layout">
-  <!-- Left: Editor -->
-  <div class="lab-editor">
-    <div class="lab-editor__toolbar">
-      <select class="lab-editor__select" id="prompt-select"></select>
-      <span class="lab-editor__source" id="prompt-source"></span>
+<!-- ===== Question input ===== -->
+<div class="pipe-header">
+  <div class="pipe-header__row">
+    <div class="pipe-header__field">
+      <div class="pipe-header__label">分析问题</div>
+      <input class="pipe-header__input" id="question" value="AI 时代人们的 AI 焦虑" placeholder="把问题写完整，类比才会锋利">
     </div>
-    <textarea class="lab-editor__textarea" id="prompt-text" spellcheck="false"
-              placeholder="选择一个 Prompt 开始编辑..."></textarea>
-    <div class="lab-editor__actions">
-      <button class="btn btn--save" id="btn-save">💾 保存</button>
-      <button class="btn btn--reset" id="btn-reset">↩ 重置</button>
-      <span id="save-status"></span>
-    </div>
-  </div>
-
-  <!-- Right: Test -->
-  <div class="lab-test">
-    <div class="lab-test__toolbar">
-      <label>语言</label>
-      <select class="lab-test__lang" id="test-language">
+    <div>
+      <div class="pipe-header__label">语言</div>
+      <select class="pipe-header__select" id="language">
         <option value="中文" selected>中文</option>
         <option value="English">English</option>
       </select>
-      <span style="margin-left:auto;font-size:11px;color:var(--ink-tertiary)" id="json-mode-badge"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Pipeline steps ===== -->
+<div class="pipe-body" id="pipe-body">
+
+  <!-- Step 1: Inception -->
+  <div class="step-card" id="step-inception">
+    <div class="step-header" onclick="toggleCard('inception')">
+      <span class="step-num">1</span>
+      <span class="step-label">抽象 · Inception</span>
+      <span class="step-status step-status--pending" id="status-inception">pending</span>
+      <span class="step-chevron">▸</span>
+    </div>
+    <div class="step-body">
+      <div class="prompt-section">
+        <div class="prompt-toggle" onclick="togglePrompt('inception_system')">
+          <span class="prompt-toggle__arrow">▸</span> System Prompt
+        </div>
+        <div class="prompt-editor" id="pe-inception_system">
+          <textarea id="pt-inception_system"></textarea>
+          <div class="prompt-editor__actions">
+            <button class="btn-save" onclick="savePrompt('inception_system')">Save</button>
+          </div>
+        </div>
+      </div>
+      <div class="prompt-section">
+        <div class="prompt-toggle" onclick="togglePrompt('inception_user')">
+          <span class="prompt-toggle__arrow">▸</span> User Prompt
+        </div>
+        <div class="prompt-editor" id="pe-inception_user">
+          <textarea id="pt-inception_user"></textarea>
+          <div class="prompt-editor__actions">
+            <button class="btn-save" onclick="savePrompt('inception_user')">Save</button>
+          </div>
+        </div>
+      </div>
+      <div class="step-run">
+        <button class="btn-run" onclick="runInception()">▶ Run</button>
+      </div>
+      <div class="step-output" id="output-wrap-inception" style="display:none">
+        <div class="step-output__title">Output</div>
+        <div class="output-box" id="output-inception"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parallel: Lateral + Vertical -->
+  <div class="parallel">
+    <div class="parallel__col">
+      <div class="parallel__label">
+        横向 · Lateral
+        <span class="case-count" id="count-lateral">0/10 案例</span>
+        <button class="btn-round" id="btn-round-lateral" onclick="runRound('lateral')">▶ 一轮搜索</button>
+      </div>
+
+      <!-- Step 2: Lateral Query Gen -->
+      <div class="step-card" id="step-lateral_query">
+        <div class="step-header" onclick="toggleCard('lateral_query')">
+          <span class="step-num">2</span>
+          <span class="step-label">查询生成</span>
+          <span class="step-status step-status--pending" id="status-lateral_query">pending</span>
+          <span class="step-chevron">▸</span>
+        </div>
+        <div class="step-body">
+          <div class="prompt-section">
+            <div class="prompt-toggle" onclick="togglePrompt('lateral_query')"><span class="prompt-toggle__arrow">▸</span> Prompt</div>
+            <div class="prompt-editor" id="pe-lateral_query">
+              <textarea id="pt-lateral_query"></textarea>
+              <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('lateral_query')">Save</button></div>
+            </div>
+          </div>
+          <div class="inputs-section">
+            <div class="inputs-section__title">Inputs</div>
+            <div class="input-grid" id="inputs-lateral_query"></div>
+          </div>
+          <div class="step-run">
+            <button class="btn-run" onclick="runLLMStep('lateral_query')">▶ Run</button>
+          </div>
+          <div class="step-output" id="output-wrap-lateral_query" style="display:none">
+            <div class="step-output__title">Output</div>
+            <div class="output-box" id="output-lateral_query"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Lateral Validate -->
+      <div class="step-card" id="step-lateral_validate">
+        <div class="step-header" onclick="toggleCard('lateral_validate')">
+          <span class="step-num">3</span>
+          <span class="step-label">查询验证</span>
+          <span class="step-status step-status--pending" id="status-lateral_validate">pending</span>
+          <span class="step-chevron">▸</span>
+        </div>
+        <div class="step-body">
+          <div class="prompt-section">
+            <div class="prompt-toggle" onclick="togglePrompt('validate_queries_lat')"><span class="prompt-toggle__arrow">▸</span> Prompt</div>
+            <div class="prompt-editor" id="pe-validate_queries_lat">
+              <textarea id="pt-validate_queries_lat"></textarea>
+              <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('validate_queries','validate_queries_lat')">Save</button></div>
+            </div>
+          </div>
+          <div class="inputs-section">
+            <div class="inputs-section__title">Inputs</div>
+            <div class="input-grid" id="inputs-lateral_validate"></div>
+          </div>
+          <div class="step-run">
+            <button class="btn-run" onclick="runLLMStep('lateral_validate')">▶ Run</button>
+          </div>
+          <div class="step-output" id="output-wrap-lateral_validate" style="display:none">
+            <div class="step-output__title">Output</div>
+            <div class="output-box" id="output-lateral_validate"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Lateral Search + Extract -->
+      <div class="step-card" id="step-lateral_extract">
+        <div class="step-header" onclick="toggleCard('lateral_extract')">
+          <span class="step-num">4</span>
+          <span class="step-label">搜索 + 案例提取</span>
+          <span class="step-status step-status--pending" id="status-lateral_extract">pending</span>
+          <span class="step-chevron">▸</span>
+        </div>
+        <div class="step-body">
+          <div class="prompt-section">
+            <div class="prompt-toggle" onclick="togglePrompt('case_extraction_lat')"><span class="prompt-toggle__arrow">▸</span> Extraction Prompt</div>
+            <div class="prompt-editor" id="pe-case_extraction_lat">
+              <textarea id="pt-case_extraction_lat"></textarea>
+              <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('case_extraction','case_extraction_lat')">Save</button></div>
+            </div>
+          </div>
+          <div class="step-run">
+            <button class="btn-run" onclick="runSearchExtract('lateral')">▶ Search &amp; Extract</button>
+          </div>
+          <div class="step-output" id="output-wrap-lateral_extract" style="display:none">
+            <div class="step-output__title">Output</div>
+            <div class="output-box" id="output-lateral_extract"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="lab-test__inputs" id="test-inputs">
-      <!-- Dynamic input fields -->
-    </div>
+    <div class="parallel__col">
+      <div class="parallel__label parallel__label--vertical">
+        纵向 · Vertical
+        <span class="case-count" id="count-vertical">0/10 案例</span>
+        <button class="btn-round" id="btn-round-vertical" onclick="runRound('vertical')">▶ 一轮搜索</button>
+      </div>
 
-    <div class="lab-test__run-row">
-      <button class="btn btn--run" id="btn-run">▶ 运行</button>
-      <span class="lab-test__tokens" id="test-tokens"></span>
-    </div>
+      <!-- Step 5: Vertical Query Gen -->
+      <div class="step-card" id="step-vertical_query">
+        <div class="step-header" onclick="toggleCard('vertical_query')">
+          <span class="step-num">5</span>
+          <span class="step-label">查询生成</span>
+          <span class="step-status step-status--pending" id="status-vertical_query">pending</span>
+          <span class="step-chevron">▸</span>
+        </div>
+        <div class="step-body">
+          <div class="prompt-section">
+            <div class="prompt-toggle" onclick="togglePrompt('vertical_query')"><span class="prompt-toggle__arrow">▸</span> Prompt</div>
+            <div class="prompt-editor" id="pe-vertical_query">
+              <textarea id="pt-vertical_query"></textarea>
+              <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('vertical_query')">Save</button></div>
+            </div>
+          </div>
+          <div class="inputs-section">
+            <div class="inputs-section__title">Inputs</div>
+            <div class="input-grid" id="inputs-vertical_query"></div>
+          </div>
+          <div class="step-run">
+            <button class="btn-run" onclick="runLLMStep('vertical_query')">▶ Run</button>
+          </div>
+          <div class="step-output" id="output-wrap-vertical_query" style="display:none">
+            <div class="step-output__title">Output</div>
+            <div class="output-box" id="output-vertical_query"></div>
+          </div>
+        </div>
+      </div>
 
-    <div class="lab-test__output">
-      <div class="lab-test__output-label">输出</div>
-      <div id="test-output"></div>
+      <!-- Step 6: Vertical Validate -->
+      <div class="step-card" id="step-vertical_validate">
+        <div class="step-header" onclick="toggleCard('vertical_validate')">
+          <span class="step-num">6</span>
+          <span class="step-label">查询验证</span>
+          <span class="step-status step-status--pending" id="status-vertical_validate">pending</span>
+          <span class="step-chevron">▸</span>
+        </div>
+        <div class="step-body">
+          <div class="prompt-section">
+            <div class="prompt-toggle" onclick="togglePrompt('validate_queries_vrt')"><span class="prompt-toggle__arrow">▸</span> Prompt</div>
+            <div class="prompt-editor" id="pe-validate_queries_vrt">
+              <textarea id="pt-validate_queries_vrt"></textarea>
+              <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('validate_queries','validate_queries_vrt')">Save</button></div>
+            </div>
+          </div>
+          <div class="inputs-section">
+            <div class="inputs-section__title">Inputs</div>
+            <div class="input-grid" id="inputs-vertical_validate"></div>
+          </div>
+          <div class="step-run">
+            <button class="btn-run" onclick="runLLMStep('vertical_validate')">▶ Run</button>
+          </div>
+          <div class="step-output" id="output-wrap-vertical_validate" style="display:none">
+            <div class="step-output__title">Output</div>
+            <div class="output-box" id="output-vertical_validate"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: Vertical Search + Extract -->
+      <div class="step-card" id="step-vertical_extract">
+        <div class="step-header" onclick="toggleCard('vertical_extract')">
+          <span class="step-num">7</span>
+          <span class="step-label">搜索 + 案例提取</span>
+          <span class="step-status step-status--pending" id="status-vertical_extract">pending</span>
+          <span class="step-chevron">▸</span>
+        </div>
+        <div class="step-body">
+          <div class="prompt-section">
+            <div class="prompt-toggle" onclick="togglePrompt('case_extraction_vrt')"><span class="prompt-toggle__arrow">▸</span> Extraction Prompt</div>
+            <div class="prompt-editor" id="pe-case_extraction_vrt">
+              <textarea id="pt-case_extraction_vrt"></textarea>
+              <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('case_extraction','case_extraction_vrt')">Save</button></div>
+            </div>
+          </div>
+          <div class="step-run">
+            <button class="btn-run" onclick="runSearchExtract('vertical')">▶ Search &amp; Extract</button>
+          </div>
+          <div class="step-output" id="output-wrap-vertical_extract" style="display:none">
+            <div class="step-output__title">Output</div>
+            <div class="output-box" id="output-vertical_extract"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 8: Convergence -->
+  <div class="step-card" id="step-convergence">
+    <div class="step-header" onclick="toggleCard('convergence')">
+      <span class="step-num">8</span>
+      <span class="step-label">收拢 · Convergence</span>
+      <span class="step-status step-status--pending" id="status-convergence">pending</span>
+      <span class="step-chevron">▸</span>
+    </div>
+    <div class="step-body">
+      <div class="prompt-section">
+        <div class="prompt-toggle" onclick="togglePrompt('convergence_synthesize')"><span class="prompt-toggle__arrow">▸</span> Prompt</div>
+        <div class="prompt-editor" id="pe-convergence_synthesize">
+          <textarea id="pt-convergence_synthesize"></textarea>
+          <div class="prompt-editor__actions"><button class="btn-save" onclick="savePrompt('convergence_synthesize')">Save</button></div>
+        </div>
+      </div>
+      <div class="inputs-section">
+        <div class="inputs-section__title">Inputs (auto-filled from evidence)</div>
+        <div class="input-grid" id="inputs-convergence"></div>
+      </div>
+      <div class="step-run">
+        <button class="btn-run" onclick="runLLMStep('convergence')">▶ Run</button>
+      </div>
+      <div class="step-output" id="output-wrap-convergence" style="display:none">
+        <div class="step-output__title">Output</div>
+        <div class="output-box" id="output-convergence"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const $ = (s) => document.querySelector(s);
-const promptSelect = $('#prompt-select');
-const promptText = $('#prompt-text');
-const promptSource = $('#prompt-source');
-const testInputs = $('#test-inputs');
-const testOutput = $('#test-output');
-const saveStatus = $('#save-status');
-const jsonModeBadge = $('#json-mode-badge');
+// ==========================================================================
+// State
+// ==========================================================================
+const state = {
+  question: document.getElementById('question').value,
+  language: document.getElementById('language').value,
+  prompts: {},
+  outputs: {},
+  serperResults: {},
+  // Accumulated cases per direction (survives re-runs)
+  lateralCases: [],
+  verticalCases: [],
+};
 
-let promptsMeta = {};  // name -> metadata
-let currentPrompt = null;
-let originalText = '';
-
-// --- Load prompt list ---
-async function loadPrompts() {
-  const res = await fetch('/api/prompts');
-  const list = await res.json();
-  promptSelect.innerHTML = '';
-  for (const p of list) {
-    const opt = document.createElement('option');
-    opt.value = p.name;
-    opt.textContent = `${p.label} (${p.name})`;
-    promptSelect.appendChild(opt);
-  }
-  if (list.length > 0) {
-    loadPrompt(list[0].name);
+// ==========================================================================
+// Format helpers (mirrors Python agents/search.py)
+// ==========================================================================
+function formatEntities(entities) {
+  if (!entities?.length) return '(none)';
+  return entities.map(e => '- [' + (e.structural_role || '') + '] (surface: ' + (e.surface || '') + ')').join('\n');
+}
+function formatRelations(rels) {
+  if (!rels?.length) return '(none)';
+  return rels.map(r => '- [' + (r.structural || '') + '] (surface: ' + (r.surface || '') + ')').join('\n');
+}
+function formatHiddenDynamics(hd) {
+  if (!hd?.length) return '(none detected)';
+  return hd.map(function(d) {
+    return '- "' + (d.observation || '') + '"\n' + (d.layers || []).map(function(l) { return '  · ' + l; }).join('\n');
+  }).join('\n');
+}
+function formatAnalogueHints(a) {
+  if (!a?.length) return '(none)';
+  return a.map(function(x) {
+    return '- [' + x.domain + '] ' + x.analogous_pattern + '\n  What happened: ' + x.what_happened + '\n  Potential lesson: ' + x.lesson_for_original;
+  }).join('\n');
+}
+function formatSearchResults(results) {
+  if (!results?.length) return '(no results)';
+  return results.slice(0, 8).map(function(r, i) {
+    return '[' + (i + 1) + '] ' + (r.title || '') + '\n' + (r.snippet || '');
+  }).join('\n\n');
+}
+function formatExistingCases(cases) {
+  if (!cases?.length) return '(none yet)';
+  return cases.map(function(c) {
+    return '- [' + (c.direction || '?') + '] ' + (c.case_name || '') + ': ' + (c.content || '').slice(0, 80);
+  }).join('\n');
+}
+function formatLensSummary(lens) {
+  if (!lens) return '(no lens)';
+  var s = 'Lens: ' + (lens.pattern_name || lens.name || '') + '\nRationale: ' + (lens.essence || lens.rationale || '');
+  if (lens.entities?.length) s += '\nEntities: ' + lens.entities.map(function(e) { return e.surface + '→' + e.structural_role; }).join(' / ');
+  if (lens.relationships?.length) s += '\nRelationships: ' + lens.relationships.map(function(r) { return r.surface + '→' + r.structural; }).join(' / ');
+  return s;
+}
+function formatEvidenceDetail(allCases) {
+  if (!allCases?.length) return '(no evidence)';
+  return allCases.map(function(c, i) {
+    var dir = c.direction || c.search_direction || '?';
+    var conf = c.confidence || '?';
+    var layer = c.layer || '?';
+    return '[case ' + (i + 1) + ' / ' + dir + ' / ' + conf + ' / ' + layer + '] ' + (c.case_name || '') + ': ' + (c.content || '');
+  }).join('\n\n');
+}
+function getAllCases() {
+  return state.lateralCases.concat(state.verticalCases);
+}
+function getCaseCount(direction) {
+  return direction === 'lateral' ? state.lateralCases.length : state.verticalCases.length;
+}
+function updateCaseCounts() {
+  ['lateral', 'vertical'].forEach(function(d) {
+    var el = document.getElementById('count-' + d);
+    if (!el) return;
+    var n = getCaseCount(d);
+    el.textContent = n + '/10 案例';
+    if (n >= 10) el.classList.add('case-count--enough');
+    else el.classList.remove('case-count--enough');
+  });
+}
+function mergeCases(direction, newCases) {
+  var arr = direction === 'lateral' ? state.lateralCases : state.verticalCases;
+  var existingNames = {};
+  for (var i = 0; i < arr.length; i++) existingNames[arr[i].case_name] = true;
+  for (var j = 0; j < newCases.length; j++) {
+    if (newCases[j].case_name && !existingNames[newCases[j].case_name]) {
+      arr.push(Object.assign({}, newCases[j], {direction: direction}));
+    }
   }
 }
 
-// --- Load a specific prompt ---
-async function loadPrompt(name) {
-  const res = await fetch(`/api/prompts/${name}`);
-  const data = await res.json();
-  currentPrompt = data;
-  originalText = data.text;
-  promptText.value = data.text;
-  promptSource.textContent = data.source;
-  jsonModeBadge.textContent = data.json_mode ? 'JSON mode' : 'Text mode';
+// ==========================================================================
+// Input builders
+// ==========================================================================
+function buildInputs(stepId) {
+  var lens = state.outputs.inception?.parsed;
+  var allCases = getAllCases();
 
-  // Build input fields
-  testInputs.innerHTML = '';
-  for (const varName of (data.variables || [])) {
-    const label = (data.var_labels || {})[varName] || varName;
-    const defaultVal = (data.defaults || {})[varName] || '';
-    const isLong = defaultVal.length > 60 || defaultVal.includes('\n');
-
-    const field = document.createElement('div');
-    field.className = 'lab-test__field';
-    const lbl = document.createElement('label');
-    lbl.className = 'lab-test__field-label';
-    lbl.textContent = label;
-    lbl.setAttribute('for', `input-${varName}`);
-
-    let input;
-    if (isLong) {
-      input = document.createElement('textarea');
-      input.className = 'lab-test__field-input lab-test__field-input--tall';
-      input.rows = 4;
-    } else {
-      input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'lab-test__field-input';
+  switch (stepId) {
+    case 'lateral_query':
+    case 'vertical_query': {
+      return {
+        lens_name: lens?.pattern_name || lens?.name || '',
+        lens_rationale: lens?.essence || lens?.rationale || '',
+        entities_text: formatEntities(lens?.entities),
+        relations_text: formatRelations(lens?.relationships),
+        existing_cases_text: formatExistingCases(allCases),
+        hidden_dynamics_text: formatHiddenDynamics(lens?.hidden_dynamics),
+        analogue_hints_text: formatAnalogueHints(lens?.cross_domain_analogues),
+      };
     }
-    input.id = `input-${varName}`;
-    input.value = defaultVal;
-    input.placeholder = varName;
-
-    field.appendChild(lbl);
-    field.appendChild(input);
-    testInputs.appendChild(field);
+    case 'lateral_validate':
+    case 'vertical_validate': {
+      var queryStep = stepId.replace('_validate', '_query');
+      var queries = state.outputs[queryStep]?.parsed?.queries || [];
+      var direction = stepId.startsWith('lateral') ? 'lateral' : 'vertical';
+      return {
+        direction: direction,
+        existing_cases_text: formatExistingCases(allCases),
+        queries_text: queries.map(function(q, i) { return (i + 1) + '. ' + (typeof q === 'string' ? q : q.text || JSON.stringify(q)); }).join('\n'),
+      };
+    }
+    case 'convergence': {
+      return {
+        question: state.question,
+        lens_summary: formatLensSummary(lens),
+        evidence_count: String(allCases.length),
+        evidence_detail: formatEvidenceDetail(allCases),
+      };
+    }
+    default: return {};
   }
-
-  testOutput.innerHTML = '';
-  $('#test-tokens').textContent = '';
 }
 
-promptSelect.addEventListener('change', () => loadPrompt(promptSelect.value));
-
-// --- Save ---
-$('#btn-save').addEventListener('click', async () => {
-  if (!currentPrompt) return;
-  saveStatus.textContent = '保存中...';
-  saveStatus.className = '';
-  try {
-    const res = await fetch(`/api/prompts/${currentPrompt.name}`, {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text: promptText.value}),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      originalText = promptText.value;
-      saveStatus.textContent = '已保存 ✓';
-      saveStatus.className = 'lab-status lab-status--saved';
-    } else {
-      saveStatus.textContent = '保存失败';
-      saveStatus.className = 'lab-status lab-status--error';
-    }
-  } catch (e) {
-    saveStatus.textContent = '网络错误';
-    saveStatus.className = 'lab-status lab-status--error';
+function renderInputGrid(stepId) {
+  var el = document.getElementById('inputs-' + stepId);
+  if (!el) return;
+  var inputs = buildInputs(stepId);
+  el.innerHTML = '';
+  var keys = Object.keys(inputs);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var val = inputs[key];
+    var lbl = document.createElement('label');
+    lbl.textContent = key;
+    lbl.setAttribute('for', 'iv-' + stepId + '-' + key);
+    var inp = document.createElement('textarea');
+    inp.id = 'iv-' + stepId + '-' + key;
+    inp.value = val;
+    el.appendChild(lbl);
+    el.appendChild(inp);
   }
-  setTimeout(() => { saveStatus.textContent = ''; saveStatus.className = ''; }, 2000);
-});
+}
 
-// --- Reset ---
-$('#btn-reset').addEventListener('click', () => {
-  if (currentPrompt) promptText.value = originalText;
-});
-
-// --- Run ---
-$('#btn-run').addEventListener('click', async () => {
-  if (!currentPrompt) return;
-  const btn = $('#btn-run');
-  btn.disabled = true;
-  btn.textContent = '⏳ 运行中...';
-  testOutput.innerHTML = '<div style="color:var(--ink-tertiary)">调用 LLM 中...</div>';
-
-  // Collect inputs
-  const inputs = {};
-  for (const varName of (currentPrompt.variables || [])) {
-    const el = document.getElementById(`input-${varName}`);
-    if (el) inputs[varName] = el.value;
+function readInputs(stepId) {
+  var el = document.getElementById('inputs-' + stepId);
+  if (!el) return {};
+  var textareas = el.querySelectorAll('textarea');
+  var result = {};
+  for (var i = 0; i < textareas.length; i++) {
+    var ta = textareas[i];
+    var key = ta.id.replace('iv-' + stepId + '-', '');
+    result[key] = ta.value;
   }
+  return result;
+}
 
-  try {
-    const res = await fetch(`/api/prompts/${currentPrompt.name}/run`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        text: promptText.value,
-        inputs: inputs,
-        language: $('#test-language').value,
-      }),
-    });
-    const data = await res.json();
-    if (data.error) {
-      testOutput.innerHTML = `<div class="lab-test__output-raw" style="color:var(--status-stuck)">Error: ${data.error}</div>`;
-    } else if (data.parsed) {
-      testOutput.innerHTML = `<div class="lab-test__output-json">${syntaxHighlight(JSON.stringify(data.parsed, null, 2))}</div>`;
-    } else {
-      testOutput.innerHTML = `<div class="lab-test__output-raw">${escapeHtml(data.output)}</div>`;
-    }
-    $('#test-tokens').textContent = data.tokens ? `${data.tokens} tokens` : '';
-  } catch (e) {
-    testOutput.innerHTML = `<div style="color:var(--status-stuck)">请求失败: ${e.message}</div>`;
+// ==========================================================================
+// UI helpers
+// ==========================================================================
+function toggleCard(stepId) {
+  var card = document.getElementById('step-' + stepId);
+  card.classList.toggle('step-card--open');
+  // Render inputs when opening a card for the first time
+  if (card.classList.contains('step-card--open') && document.getElementById('inputs-' + stepId)) {
+    renderInputGrid(stepId);
   }
+}
 
-  btn.disabled = false;
-  btn.textContent = '▶ 运行';
-});
+function togglePrompt(editorId) {
+  var editor = document.getElementById('pe-' + editorId);
+  var toggle = editor ? editor.previousElementSibling : null;
+  if (editor) editor.classList.toggle('prompt-editor--open');
+  if (toggle) toggle.classList.toggle('prompt-toggle--open');
+}
 
-// --- Helpers ---
-function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function setStatus(stepId, status) {
+  var el = document.getElementById('status-' + stepId);
+  if (!el) return;
+  el.textContent = status;
+  el.className = 'step-status step-status--' + status;
+  var card = el.closest('.step-card');
+  // Remove old status classes, keep structural classes
+  card.classList.remove('step-card--done', 'step-card--running', 'step-card--error', 'step-card--active');
+  if (status === 'done') card.classList.add('step-card--done');
+  else if (status === 'running') card.classList.add('step-card--running');
+  else if (status === 'error') card.classList.add('step-card--error');
+}
+
+function showOutput(stepId, data) {
+  document.getElementById('output-wrap-' + stepId).style.display = '';
+  document.getElementById('output-' + stepId).innerHTML = syntaxHighlight(
+    typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+  );
 }
 
 function syntaxHighlight(json) {
-  json = escapeHtml(json);
-  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
-    let cls = 'json-bool';
-    if (/^"/.test(match)) {
-      if (/:$/.test(match)) {
-        cls = 'json-key';
-      } else {
-        cls = 'json-string';
-      }
-    }
-    return `<span class="${cls}">${match}</span>`;
-  });
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+    .replace(/: "((?:[^"\\]|\\.)*)"/g, ': <span class="json-str">"$1"</span>')
+    .replace(/: (true|false)/g, ': <span class="json-bool">$1</span>')
+    .replace(/: null/g, ': <span class="json-null">null</span>')
+    .replace(/: (\d+(\.\d+)?)/g, ': <span class="json-num">$1</span>');
 }
 
-// --- Init ---
-loadPrompts();
+// ==========================================================================
+// API calls
+// ==========================================================================
+async function apiPipelineRun(messages, opts) {
+  opts = opts || {};
+  var res = await fetch('/api/pipeline/run', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      messages: messages,
+      json_mode: opts.json_mode !== undefined ? opts.json_mode : true,
+      temperature: opts.temperature !== undefined ? opts.temperature : 0.7,
+      language: state.language,
+    }),
+  });
+  return res.json();
+}
 
-// Tab key support in textarea
-promptText.addEventListener('keydown', (e) => {
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const start = promptText.selectionStart;
-    const end = promptText.selectionEnd;
-    promptText.value = promptText.value.substring(0, start) + '    ' + promptText.value.substring(end);
-    promptText.selectionStart = promptText.selectionEnd = start + 4;
+async function apiSerperSearch(queries) {
+  var res = await fetch('/api/serper/search', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({queries: queries}),
+  });
+  return res.json();
+}
+
+async function loadPrompt(name) {
+  var res = await fetch('/api/prompts/' + name);
+  var data = await res.json();
+  return data.text || '';
+}
+
+async function savePrompt(promptName, textareaId) {
+  textareaId = textareaId || promptName;
+  var text = document.getElementById('pt-' + textareaId).value;
+  await fetch('/api/prompts/' + promptName, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: text}),
+  });
+  state.prompts[promptName] = text;
+  var btn = document.getElementById('pt-' + textareaId);
+  if (btn) btn = btn.closest('.prompt-editor');
+  if (btn) btn = btn.querySelector('.btn-save');
+  if (btn) {
+    btn.textContent = 'Saved ✓';
+    btn.classList.add('btn-save--saved');
+    setTimeout(function() { btn.textContent = 'Save'; btn.classList.remove('btn-save--saved'); }, 1500);
   }
-});
+}
+
+// ==========================================================================
+// Step runners
+// ==========================================================================
+async function runInception() {
+  var stepId = 'inception';
+  setStatus(stepId, 'running');
+  try {
+    var systemPrompt = document.getElementById('pt-inception_system').value;
+    var userPrompt = document.getElementById('pt-inception_user').value;
+    // Substitute {question}
+    userPrompt = userPrompt.split('{question}').join(state.question);
+
+    var result = await apiPipelineRun([
+      {role: 'system', content: systemPrompt},
+      {role: 'user', content: userPrompt},
+    ], {temperature: 0.7});
+
+    if (result.error) { setStatus(stepId, 'error'); showOutput(stepId, result); return; }
+    state.outputs[stepId] = {parsed: result.parsed || null, raw: result.output};
+    setStatus(stepId, 'done');
+    showOutput(stepId, result.parsed || result.output);
+    // Reset accumulated cases when inception re-runs
+    state.lateralCases = [];
+    state.verticalCases = [];
+    updateCaseCounts();
+    // Refresh downstream inputs
+    renderInputGrid('lateral_query');
+    renderInputGrid('vertical_query');
+  } catch (e) {
+    setStatus(stepId, 'error');
+    showOutput(stepId, {error: e.message});
+  }
+}
+
+async function runLLMStep(stepId) {
+  setStatus(stepId, 'running');
+  try {
+    var inputs = readInputs(stepId);
+    var promptName, textareaId, temperature;
+
+    if (stepId === 'convergence') {
+      promptName = 'convergence_synthesize';
+      textareaId = 'convergence_synthesize';
+      temperature = 0.4;
+    } else if (stepId.includes('validate')) {
+      promptName = 'validate_queries';
+      textareaId = stepId === 'lateral_validate' ? 'validate_queries_lat' : 'validate_queries_vrt';
+      temperature = 0.3;
+    } else {
+      promptName = stepId;
+      textareaId = stepId;
+      temperature = 0.7;
+    }
+
+    var template = document.getElementById('pt-' + textareaId);
+    template = template ? template.value : (state.prompts[promptName] || '');
+
+    // Substitute {var} placeholders
+    var keys = Object.keys(inputs);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var v = (inputs[k] || '').replace(/\$/g, '$$$$');
+      template = template.split('{' + k + '}').join(v);
+    }
+
+    var result = await apiPipelineRun(
+      [{role: 'user', content: template}],
+      {temperature: temperature}
+    );
+
+    if (result.error) { setStatus(stepId, 'error'); showOutput(stepId, result); return; }
+    state.outputs[stepId] = {parsed: result.parsed || null, raw: result.output};
+    setStatus(stepId, 'done');
+    showOutput(stepId, result.parsed || result.output);
+
+    // Refresh downstream inputs
+    if (stepId.includes('query') && !stepId.includes('validate')) {
+      renderInputGrid(stepId.replace('_query', '_validate'));
+    }
+    renderInputGrid('convergence');
+    if (stepId === 'lateral_extract') renderInputGrid('vertical_query');
+  } catch (e) {
+    setStatus(stepId, 'error');
+    showOutput(stepId, {error: e.message});
+  }
+}
+
+async function runSearchExtract(direction) {
+  var stepId = direction + '_extract';
+  setStatus(stepId, 'running');
+  try {
+    // 1. Get validated queries
+    var validateStep = direction + '_validate';
+    var queries = state.outputs[validateStep]?.parsed?.queries || [];
+    if (!queries.length) {
+      setStatus(stepId, 'error');
+      showOutput(stepId, {error: 'No queries from validation step. Run steps 2→3 or 5→6 first.'});
+      return;
+    }
+    var queryStrings = queries.map(function(q) { return typeof q === 'string' ? q : q.text || JSON.stringify(q); });
+
+    // 2. Serper search
+    var serperResult = await apiSerperSearch(queryStrings);
+    if (serperResult.error) { setStatus(stepId, 'error'); showOutput(stepId, serperResult); return; }
+    state.serperResults[direction] = serperResult.results || [];
+
+    // 3. Case extraction
+    var lens = state.outputs.inception?.parsed;
+    var textareaId = direction === 'lateral' ? 'case_extraction_lat' : 'case_extraction_vrt';
+    var template = document.getElementById('pt-' + textareaId);
+    template = template ? template.value : (state.prompts['case_extraction'] || '');
+
+    var existingCaseNames = getAllCases().map(function(c) { return c.case_name || ''; }).filter(Boolean);
+    var vars = {
+      entities_text: formatEntities(lens?.entities),
+      relations_text: formatRelations(lens?.relationships),
+      direction: direction,
+      results_text: formatSearchResults(state.serperResults[direction]),
+      existing_cases: existingCaseNames.length ? existingCaseNames.join(', ') : '(none)',
+    };
+    var vkeys = Object.keys(vars);
+    for (var i = 0; i < vkeys.length; i++) {
+      var vk = vkeys[i];
+      var vv = (vars[vk] || '').replace(/\$/g, '$$$$');
+      template = template.split('{' + vk + '}').join(vv);
+    }
+
+    var result = await apiPipelineRun(
+      [{role: 'user', content: template}],
+      {temperature: 0.3}
+    );
+
+    if (result.error) { setStatus(stepId, 'error'); showOutput(stepId, result); return; }
+    var newCases = result.parsed?.cases || [];
+    mergeCases(direction, newCases);
+    state.outputs[stepId] = {
+      parsed: {cases: direction === 'lateral' ? state.lateralCases : state.verticalCases},
+      raw: result.output
+    };
+    setStatus(stepId, 'done');
+    showOutput(stepId, state.outputs[stepId].parsed);
+    updateCaseCounts();
+
+    // Refresh convergence and vertical query inputs
+    renderInputGrid('convergence');
+    if (direction === 'lateral') renderInputGrid('vertical_query');
+  } catch (e) {
+    setStatus(stepId, 'error');
+    showOutput(stepId, {error: e.message});
+  }
+}
+
+// ==========================================================================
+// Run full round: query gen → validate → search & extract
+// ==========================================================================
+async function runRound(direction) {
+  var btn = document.getElementById('btn-round-' + direction);
+  if (btn) btn.disabled = true;
+
+  var queryStep = direction + '_query';
+  var validateStep = direction + '_validate';
+  var extractStep = direction + '_extract';
+
+  try {
+    // Step A: Query generation
+    await runLLMStep(queryStep);
+    if (!state.outputs[queryStep]?.parsed?.queries?.length) {
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    // Step B: Validation
+    renderInputGrid(validateStep);
+    await runLLMStep(validateStep);
+    if (!state.outputs[validateStep]?.parsed?.queries?.length) {
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    // Step C: Search + Extract
+    await runSearchExtract(direction);
+  } catch (e) {
+    console.error('runRound error:', e);
+  }
+
+  if (btn) btn.disabled = false;
+}
+
+// ==========================================================================
+// Init: load all prompts
+// ==========================================================================
+async function init() {
+  var promptMap = {
+    'inception_system': 'pt-inception_system',
+    'inception_user': 'pt-inception_user',
+    'lateral_query': 'pt-lateral_query',
+    'validate_queries': ['pt-validate_queries_lat', 'pt-validate_queries_vrt'],
+    'vertical_query': 'pt-vertical_query',
+    'case_extraction': ['pt-case_extraction_lat', 'pt-case_extraction_vrt'],
+    'convergence_synthesize': 'pt-convergence_synthesize',
+  };
+
+  var names = Object.keys(promptMap);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    var elIds = promptMap[name];
+    try {
+      var text = await loadPrompt(name);
+      state.prompts[name] = text;
+      var ids = Array.isArray(elIds) ? elIds : [elIds];
+      for (var j = 0; j < ids.length; j++) {
+        var el = document.getElementById(ids[j]);
+        if (el) el.value = text;
+      }
+    } catch (e) { console.warn('Failed to load prompt:', name, e); }
+  }
+
+  // Auto-open inception
+  toggleCard('inception');
+
+  document.getElementById('question').addEventListener('input', function(e) { state.question = e.target.value; });
+  document.getElementById('language').addEventListener('change', function(e) { state.language = e.target.value; });
+}
+
+init();
 </script>
 </body>
 </html>

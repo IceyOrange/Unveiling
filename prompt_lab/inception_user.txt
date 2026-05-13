@@ -1,0 +1,80 @@
+Question: {question}
+
+Your task has TWO phases: FIRST deeply understand WHY this phenomenon exists in its full real-world context, THEN abstract that understanding into a structural pattern for cross-domain analogy.
+
+═══════════════════════════════════════
+PHASE A: DEEP UNDERSTANDING (concrete, specific — NO abstraction yet)
+═══════════════════════════════════════
+
+Step 1: Recursive Why-Chain
+
+Starting from the surface phenomenon in the question, ask "WHY?" repeatedly — at least 5-6 levels deep. The goal is to reach a condition so fundamental that it explains not just THIS phenomenon but many others in the same society or system.
+
+At EVERY level of the chain, explicitly consider MULTIPLE dimensions:
+· ECONOMIC: market cycles, supply/demand, cost structures, capital flows, industry lifecycle
+· POLITICAL/POLICY: government decisions, regulations, institutional incentives, policy side-effects
+· CULTURAL: social norms, values, collective behavioral patterns — especially things everyone in that society takes for granted (e.g., a cultural tendency to over-invest in credentials, a norm of defining success narrowly, a habit of competing on visible metrics)
+· DEMOGRAPHIC: population structure, generational shifts, urbanization, migration
+· TECHNOLOGICAL: how technology reshapes the landscape, enables or constrains behavior
+
+Rules for the why-chain:
+- Answer in CONCRETE, SPECIFIC terms — real events, real policies, real conditions. NOT abstractions.
+- If the question mentions a country, industry, or time period, TALK ABOUT THAT SPECIFIC CONTEXT. Do not generalize prematurely.
+- At each level, ask: "is there a CULTURAL or SYSTEMIC factor here that people inside the system might not see?" Things like: cultural assumptions about what counts as success, institutional inertia, feedback loops that amplify the problem, policies designed for a different era.
+- Do NOT stop at "it's competitive" or "there's a mismatch" — that's a description, not a cause. Keep asking WHY until you hit something that feels like a root truth about how the system works.
+- The final level should identify the deepest structural driver and classify it as [cyclical], [structural_shift], or [lag_effect].
+
+Step 2: Temporal Dynamics
+
+Using the why-chain as grounding:
+1. Is this phenomenon NEW, or has it existed before at similar intensity?
+2. If it's new or worsening: WHAT SPECIFICALLY CHANGED and WHEN? Identify the turning point.
+3. What would need to happen for the trajectory to reverse?
+4. FORWARD PROJECTION: Based on the deep causes, is this cyclical (will self-correct), a structural shift (permanent without external intervention), or transitional (will resolve as conditions adapt)?
+
+═══════════════════════════════════════
+PHASE B: STRUCTURAL ABSTRACTION (now abstract the deep understanding)
+═══════════════════════════════════════
+
+Step 3: Abstract the Pattern
+
+Take the deep understanding from Phase A and abstract it into a structural pattern that can serve as a "lens" for finding analogous situations across different domains, time periods, and dimensions of human experience.
+
+Identify every meaningful entity and relationship. For each, strip away surface-level labels to reveal the structural role. Prioritize:
+- Functional position over definitional description (what role does it play, not what it is)
+- Mechanism over phenomenon (what force drives it, not what it looks like)
+- System-level dynamics over individual-level attributes
+
+Calibration principle: Abstract to the level that is just high enough to enable cross-domain analogy, but no higher. The abstraction should still feel like it is "about" the original question.
+
+DIMENSIONAL BREADTH TEST: Each structural_role must work in at least 3 of these dimensions: work, relationships, politics, religion, art, military, community, health, nature. If it only works in one dimension, widen it.
+
+Step 4: Cross-Domain Search
+
+Using the structural pattern as a search lens, find 2-3 analogous situations from other domains or time periods where the same structural forces played out. CRITICAL: your analogues must NOT all come from the same dimension of life. If the original question is about technology and work, at most ONE analogue should be about work/industry.
+
+Prioritize analogues from the furthest dimension while still maintaining structural fidelity.
+
+Step 5: Analogue-Informed Insight
+
+For each analogue, extract what actually happened, what worked, what failed, or what was learned. Then map those lessons back to the original question to generate concrete insights that would not have been visible from analyzing the original question alone.
+
+═══════════════════════════════════════
+OUTPUT FORMAT
+═══════════════════════════════════════
+
+Output valid JSON with exactly these keys:
+- "pattern_name": a short, concrete name for the structural pattern
+- "essence": 2-3 sentences explaining the core forces and mechanisms — not a description of the surface phenomenon
+- "entities": list of {{"surface": "<original term>", "structural_role": "<abstracted structural role — must pass dimensional breadth test>"}}
+- "relationships": list of {{"surface": "<original relationship>", "structural": "<abstracted structural relationship>"}}
+- "hidden_dynamics": list of {{"observation": "<surface phenomenon that seems singular>", "layers": ["<underlying cause at layer 1>", "<underlying cause at layer 2>", "..."]}} — only include if multiple parallel mechanisms are detected
+- "root_cause_chain": list of {{"level": <int starting from 1>, "surface_why": "<the concrete question asked at this level, in everyday language>", "answer": "<concrete answer, grounded in specific facts — name real policies, events, conditions>", "structural_why": "<the same answer abstracted to structural level>"}} — MUST be at least 5 levels deep. The final level's structural_why must include a classification: [cyclical], [structural_shift], or [lag_effect]
+- "cross_domain_analogues": list of {{"domain": "<another domain or time period — must span different life dimensions>", "analogous_pattern": "<how the same structure manifests there>", "what_happened": "<what actually played out in that situation>", "lesson_for_original": "<concrete insight mapped back to the original question>"}}
+
+Rules:
+- root_cause_chain must be at least 5 levels deep and must include cultural, economic, and policy dimensions — not just one axis.
+- "essence" must explain the mechanism, not merely re-describe the phenomenon.
+- "lesson_for_original" must be a concrete insight, not a generic platitude.
+- cross_domain_analogues must span at least 2 different life dimensions.
+- Output valid JSON only. No markdown, no commentary.

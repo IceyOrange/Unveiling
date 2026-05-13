@@ -1,0 +1,141 @@
+{
+  "inception_system": {
+    "label": "阶段一·抽象 · 系统提示",
+    "source": "agents/inception.py",
+    "phase": "inception",
+    "variables": [],
+    "var_labels": {},
+    "defaults": {},
+    "json_mode": true,
+    "temperature": 0.7,
+    "description": "阶段一 inception agent 的 system role。无变量，调用时与 inception_user 组合成 chat 消息。"
+  },
+  "inception_user": {
+    "label": "阶段一·抽象 · 用户模板",
+    "source": "agents/inception.py",
+    "phase": "inception",
+    "variables": ["question"],
+    "var_labels": {
+      "question": "用户原始问题"
+    },
+    "defaults": {
+      "question": "AI 时代人们的 AI 焦虑"
+    },
+    "json_mode": true,
+    "temperature": 0.7,
+    "description": "把用户问题渲染进抽象指令的用户模板。期望 LLM 返回 lens JSON（含 name/rationale/entities/relationships）。"
+  },
+  "lateral_query": {
+    "label": "阶段二·搜索 · 横向查询生成（当代跨领域）",
+    "source": "agents/search.py",
+    "phase": "exploration",
+    "variables": ["lens_name", "lens_rationale", "entities_text", "relations_text", "existing_cases_text", "hidden_dynamics_text", "analogue_hints_text"],
+    "var_labels": {
+      "lens_name": "透镜名称",
+      "lens_rationale": "透镜成立的理由",
+      "entities_text": "结构性主体列表（多行）",
+      "relations_text": "结构性关系列表（多行）",
+      "existing_cases_text": "已收集案例列表（用于去重）",
+      "hidden_dynamics_text": "隐藏动态（多层并行机制）",
+      "analogue_hints_text": "预类比方向提示（未验证）"
+    },
+    "defaults": {
+      "lens_name": "前卫生产力引发的群体替代焦虑",
+      "lens_rationale": "AI 作为新型生产力改变了知识生产的成本结构，触发了原有从业群体对自身价值被替代的集体焦虑",
+      "entities_text": "- AI（surface）→ 前卫生产力（structural role）\n- 人们（surface）→ 原有生产力承担者（structural role）\n- 焦虑（surface）→ 群体性身份与价值不确定感（structural role）",
+      "relations_text": "- AI 替代人 → 新生产力侵入既有岗位\n- 人对 AI 焦虑 → 既得群体对价值重估的抵抗",
+      "existing_cases_text": "(暂无)"
+    },
+    "json_mode": true,
+    "temperature": 0.7,
+    "description": "为横向（当代、跨领域）搜索生成 3 个查询。严禁出现历史事件。"
+  },
+  "vertical_query": {
+    "label": "阶段二·搜索 · 纵向查询生成（跨时期）",
+    "source": "agents/search.py",
+    "phase": "exploration",
+    "variables": ["lens_name", "lens_rationale", "entities_text", "relations_text", "existing_cases_text", "hidden_dynamics_text", "analogue_hints_text"],
+    "var_labels": {
+      "lens_name": "透镜名称",
+      "lens_rationale": "透镜成立的理由",
+      "entities_text": "结构性主体列表（多行）",
+      "relations_text": "结构性关系列表（多行）",
+      "existing_cases_text": "已收集案例列表（用于去重）",
+      "hidden_dynamics_text": "隐藏动态（多层并行机制）",
+      "analogue_hints_text": "预类比方向提示（未验证）"
+    },
+    "defaults": {
+      "lens_name": "前卫生产力引发的群体替代焦虑",
+      "lens_rationale": "AI 作为新型生产力改变了知识生产的成本结构，触发了原有从业群体对自身价值被替代的集体焦虑",
+      "entities_text": "- AI（surface）→ 前卫生产力（structural role）\n- 人们（surface）→ 原有生产力承担者（structural role）\n- 焦虑（surface）→ 群体性身份与价值不确定感（structural role）",
+      "relations_text": "- AI 替代人 → 新生产力侵入既有岗位\n- 人对 AI 焦虑 → 既得群体对价值重估的抵抗",
+      "existing_cases_text": "(暂无)"
+    },
+    "json_mode": true,
+    "temperature": 0.7,
+    "description": "为纵向（不同历史时期）搜索生成 3 个查询，每个针对不同年代。"
+  },
+  "validate_queries": {
+    "label": "阶段二·搜索 · 查询验证（搜前 LLM 把关）",
+    "source": "agents/search.py",
+    "phase": "exploration",
+    "variables": ["direction", "existing_cases_text", "queries_text"],
+    "var_labels": {
+      "direction": "方向：lateral 或 vertical",
+      "existing_cases_text": "全部已收集案例（两个方向合并）",
+      "queries_text": "候选查询（每行一个）"
+    },
+    "defaults": {
+      "direction": "lateral",
+      "existing_cases_text": "(暂无)",
+      "queries_text": "1. 工业革命纺织工人对机器化的反应\n2. ChatGPT 对程序员职业焦虑的影响\n3. 自动驾驶引发的卡车司机职业重塑"
+    },
+    "json_mode": true,
+    "temperature": 0.3,
+    "description": "在花钱调 Serper 之前过一遍候选查询：去重 + 方向校验。返回同等数量的查询（可能是替换后的）。"
+  },
+  "case_extraction": {
+    "label": "阶段二·搜索 · 案例提取（搜后结构化）",
+    "source": "agents/search.py",
+    "phase": "exploration",
+    "variables": ["entities_text", "relations_text", "direction", "results_text", "existing_cases"],
+    "var_labels": {
+      "entities_text": "结构性主体（多行）",
+      "relations_text": "结构性关系（多行）",
+      "direction": "本批搜索方向 lateral/vertical",
+      "results_text": "Serper 返回的标题+摘要文本",
+      "existing_cases": "本方向已收集案例名称（逗号分隔）"
+    },
+    "defaults": {
+      "entities_text": "- AI → 前卫生产力\n- 人们 → 原有生产力承担者\n- 焦虑 → 群体性身份与价值不确定感",
+      "relations_text": "- AI 替代人 → 新生产力侵入既有岗位\n- 人对 AI 焦虑 → 既得群体对价值重估的抵抗",
+      "direction": "vertical",
+      "results_text": "[1] 卢德运动与工业革命\n19 世纪初期英国纺织工人组织起来破坏机器，反对机械化生产对他们生计的威胁。\n[2] 19 世纪的卢德分子\n虽然今天'卢德'用作贬义，但当年的纺织工人面对的是真实的失业与社会地位下降。",
+      "existing_cases": "(暂无)"
+    },
+    "json_mode": true,
+    "temperature": 0.3,
+    "description": "把 Serper 返回的原始结果蒸馏成结构化案例记录，每个案例一条，去重严格。"
+  },
+  "convergence_synthesize": {
+    "label": "阶段三·收拢 · 张力式综合",
+    "source": "agents/convergence.py",
+    "phase": "convergence",
+    "variables": ["question", "lens_summary", "evidence_count", "evidence_detail"],
+    "var_labels": {
+      "question": "用户原始问题",
+      "lens_summary": "当前最新透镜的摘要（名称 + rationale + entities + relationships）",
+      "evidence_count": "已提交证据数（数字）",
+      "evidence_detail": "全部证据的详细记录（每条一段）"
+    },
+    "defaults": {
+      "question": "AI 时代人们的 AI 焦虑",
+      "lens_summary": "Lens: 前卫生产力引发的群体替代焦虑\nRationale: AI 改变了知识生产成本结构，触发既有从业群体的价值重估恐惧\nEntities: AI→前卫生产力 / 人们→原有生产力承担者 / 焦虑→群体性身份不确定感\nRelationships: AI 替代人→新生产力侵入既有岗位 / 人对 AI 焦虑→既得群体对价值重估的抵抗",
+      "evidence_count": "8",
+      "evidence_detail": "[case 1 / lateral / strong / mechanism] 自动驾驶与卡车司机：美国 350 万卡车司机面对全自动驾驶技术化时的职业身份焦虑。结构相关：新型生产力对既有岗位群体的替代压力。\n\n[case 2 / vertical / strong / structure] 卢德运动：19 世纪初英国纺织工人组织起来破坏机械织布机。结构相关：前卫生产力出现时既得群体的集体抵抗模式。\n\n[case 3 / vertical / medium / mechanism] 电力普及与煤气工人：20 世纪初电力替代煤气照明，引发煤气工人群体焦虑。结构相关：能源代际更迭中的群体价值重估。\n\n[case 4 / lateral / medium / phenomenon] 自媒体冲击传统媒体：内容生产成本骤降，记者群体面对身份重塑。结构相关：知识生产工具民主化下的既有专业群体焦虑。\n\n[case 5 / vertical / strong / structure] 印刷术与抄写员行会：15 世纪古登堡印刷术普及后欧洲抄写员行会瓦解。结构相关：信息生产成本剧变与既有知识工作者的失位。\n\n[case 6 / lateral / weak / phenomenon] 短视频对长视频创作者的冲击：注意力经济下短视频崛起，长视频博主面对流量焦虑。结构相关：注意力分发机制改变下的创作者群体焦虑。\n\n[case 7 / vertical / medium / mechanism] 19 世纪美国铁路工人与汽车业：铁路工人面对汽车业崛起的就业转移。结构相关：交通生产力代际更迭。\n\n[case 8 / lateral / weak / phenomenon] 数字货币与传统银行从业者：加密货币兴起触发部分金融业焦虑。结构相关：金融基础设施层的替代潜力。"
+    },
+    "json_mode": true,
+    "temperature": 0.4,
+    "description": "把 ~20 个案例蒸馏成张力式洞察。要求输出 core_finding/tension/boundary_condition/unresolved/implication。"
+  }
+}

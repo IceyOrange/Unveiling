@@ -1,0 +1,16 @@
+{
+  "buildCommand": "echo \"window.UNVEILING_API = '${UNVEILING_API_URL}';\" > frontend/static/js/api-config.js",
+  "outputDirectory": "frontend",
+  "rewrites": [
+    { "source": "/", "destination": "/templates/index.html" },
+    { "source": "/prompt-lab", "destination": "/templates/prompt-lab.html" }
+  ],
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ]
+}

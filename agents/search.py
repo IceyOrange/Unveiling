@@ -25,147 +25,15 @@ from models.blackboard import (
 from models.state import State
 from llm.client import LLMClient, LLMJSONError
 from llm.degradation import DegradationLogger
+from llm.prompt_loader import load_lab_prompt
 from search.serper import search
 
 
 # ---------------------------------------------------------------------------
-# Prompt templates — strongly differentiated by direction
+# Prompt templates live in prompt_lab/*.txt and are reloaded from disk on
+# every call so edits saved via the /prompt-lab UI take effect on the next
+# pipeline run without restarting the server.
 # ---------------------------------------------------------------------------
-
-_LATERAL_QUERY_PROMPT = """\
-You generate search queries for CONTEMPORARY CROSS-DOMAIN analogies.
-
-A structural lens has abstracted a question into universal patterns. Your task \
-is to find CURRENT-DAY, PRESENT-ERA cases from DIFFERENT domains that exhibit \
-the same structural pattern RIGHT NOW.
-
-Lens: {lens_name}
-Rationale: {lens_rationale}
-Structural entities: {entities_text}
-Structural relationships: {relations_text}
-
-CASES ALREADY FOUND (use these as insight — do NOT search for similar ones):
-{existing_cases_text}
-
-CRITICAL DISTINCTION — lateral searches ONLY for contemporary/present-day cases:
-- ✅ Different industries/fields experiencing the SAME structural pattern TODAY
-- ✅ Current debates, ongoing controversies, present-day phenomena
-- ❌ NO historical cases — those belong to vertical search
-- ❌ NO "工业革命", "卢德运动", "20世纪初" or any past-era references
-
-DOMAINS to explore: energy, agriculture, medicine, biotech, social media, \
-finance, education, sports, entertainment, military, urban planning, etc.
-
-Each query: 5-15 words, in the same language as the lens rationale.
-
-Generate 3 queries, each targeting a DIFFERENT current-era domain.
-Output valid JSON only: {{"queries": ["q1", "q2", "q3"]}}
-"""
-
-_VERTICAL_QUERY_PROMPT = """\
-You generate search queries for CROSS-PERIOD cases spanning different eras.
-
-A structural lens has abstracted a question into universal patterns. Your task \
-is to find cases from DIFFERENT TIME PERIODS that exhibit the same structural \
-pattern. These cases can be from ANY domain — cross-domain is welcome here.
-
-Lens: {lens_name}
-Rationale: {lens_rationale}
-Structural entities: {entities_text}
-Structural relationships: {relations_text}
-
-CASES ALREADY FOUND (use these as insight — do NOT search for similar ones):
-{existing_cases_text}
-
-APPROACH:
-- Each query must target a DIFFERENT historical era/period
-- Any domain is fine: technology, politics, religion, economics, military, \
-culture, science, etc.
-- Think chronologically: ancient world → medieval → early modern → industrial \
-revolution → 20th century → late 20th century → 2000s → 2010s
-- Use specific time periods, events, movements — not generic terms
-- Do NOT repeat time periods already covered by existing cases
-
-Each query: 5-15 words, in the same language as the lens rationale.
-
-Generate 3 queries, each targeting a DIFFERENT time period.
-Output valid JSON only: {{"queries": ["q1", "q2", "q3"]}}
-"""
-
-_VALIDATE_QUERIES_PROMPT = """\
-You are a search query validator. Catch problems BEFORE expensive web searches.
-
-Direction: {direction}
-- "lateral" = CONTEMPORARY cross-domain cases ONLY. Must be current-era \
-phenomena from DIFFERENT fields. ABSOLUTELY NO historical events or past eras.
-- "vertical" = Cross-PERIOD cases from DIFFERENT historical eras. Any domain \
-is fine. Can be cross-domain within vertical.
-
-Cases already collected (both directions):
-{existing_cases_text}
-
-Candidate queries:
-{queries_text}
-
-For EACH query, judge:
-1. DUPLICATE RISK: Would this find essentially the SAME case as one already \
-collected? (e.g., "工业革命纺织工人" finds the same event as "卢德运动")
-2. DIRECTION FIT:
-   - If direction is "lateral": REJECT any query about historical/past events \
-     (工业革命, 20世纪初, 中世纪, etc.). Lateral = current-era ONLY.
-   - If direction is "vertical": REJECT any query about current/present-day \
-     phenomena without a specific historical period.
-3. DOMAIN COVERAGE: If a domain/period is already covered by existing cases, \
-   the query should target a DIFFERENT one.
-
-For problematic queries, provide a REPLACEMENT. Keep fine queries unchanged.
-
-Output valid JSON with the SAME number of queries:
-{{"queries": ["q1_or_replacement", "q2_or_replacement", "q3_or_replacement"]}}
-"""
-
-
-_CASE_EXTRACTION_PROMPT = """\
-You are a case extractor for a structural analogy system.
-
-Structural lens:
-Entities: {entities_text}
-Relationships: {relations_text}
-
-Search direction: {direction}
-Search results:
-{results_text}
-
-Already collected cases (DO NOT duplicate): {existing_cases}
-
-Task: Identify DISTINCT CASES/EXAMPLES from the search results. Each "case" is \
-ONE specific historical event, industry phenomenon, or real-world example.
-
-A case must be:
-- A concrete, identifiable real-world example (not a generic observation)
-- Named specifically (e.g., "卢德运动", "核能争议", "互联网泡沫", \
-NOT "技术焦虑案例1")
-- Summarized in 2-3 sentences: what happened + structural relevance to the lens
-
-CRITICAL RULES:
-- ONE record per case. NEVER split the same case into multiple records.
-  "卢德运动" = 1 record. "工业革命中的纺织工人抗议" = same case, do not add.
-- Skip cases already in the "already collected" list above
-- Only include cases actually supported by the search results
-- Maximum 5 cases per extraction
-- Better fewer strong cases than many weak ones
-
-Output valid JSON (no markdown):
-{{"cases": [
-  {{
-    "case_name": "short case name (2-6 words)",
-    "content": "2-3 sentences: what happened and why structurally relevant",
-    "layer": "phenomenon" | "mechanism" | "structure",
-    "confidence": "strong" | "medium" | "weak",
-    "is_unexpected": true/false
-  }}
-]}}
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +62,30 @@ def _format_relations(relations: list) -> str:
     )
 
 
+def _format_hidden_dynamics(dynamics: list) -> str:
+    if not dynamics:
+        return "(none detected)"
+    lines: list[str] = []
+    for d in dynamics:
+        lines.append(f"- \"{d.observation}\"")
+        for layer in d.layers:
+            lines.append(f"  · {layer}")
+    return "\n".join(lines)
+
+
+def _format_analogue_hints(analogues: list) -> str:
+    if not analogues:
+        return "(none)"
+    lines: list[str] = []
+    for a in analogues:
+        lines.append(
+            f"- [{a.domain}] {a.analogous_pattern}\n"
+            f"  What happened: {a.what_happened}\n"
+            f"  Potential lesson: {a.lesson_for_original}"
+        )
+    return "\n".join(lines)
+
+
 def _get_existing_case_names(state: State) -> list[str]:
     return [e.case_name for e in state.evidence_zone if e.case_name]
 
@@ -215,13 +107,16 @@ def _generate_queries(
     direction: Literal["lateral", "vertical"],
     existing_cases_text: str,
 ) -> list[str]:
-    template = _LATERAL_QUERY_PROMPT if direction == "lateral" else _VERTICAL_QUERY_PROMPT
+    prompt_name = "lateral_query" if direction == "lateral" else "vertical_query"
+    template = load_lab_prompt(prompt_name)
     prompt = template.format(
         lens_name=lens.name,
         lens_rationale=lens.rationale,
         entities_text=_format_entities(lens.entities),
         relations_text=_format_relations(lens.relationships),
         existing_cases_text=existing_cases_text,
+        hidden_dynamics_text=_format_hidden_dynamics(lens.hidden_dynamics),
+        analogue_hints_text=_format_analogue_hints(lens.cross_domain_analogues),
     )
     try:
         content, _ = client.chat(
@@ -252,7 +147,7 @@ def _validate_queries(
 ) -> list[str]:
     """LLM pre-search validation: catch duplicates and direction mismatches."""
     queries_text = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(queries))
-    prompt = _VALIDATE_QUERIES_PROMPT.format(
+    prompt = load_lab_prompt("validate_queries").format(
         direction=direction,
         existing_cases_text=existing_cases_text,
         queries_text=queries_text,
@@ -303,7 +198,7 @@ def _extract_cases(
         ", ".join(existing_case_names) if existing_case_names else "(none)"
     )
 
-    prompt = _CASE_EXTRACTION_PROMPT.format(
+    prompt = load_lab_prompt("case_extraction").format(
         entities_text=_format_entities(lens.entities),
         relations_text=_format_relations(lens.relationships),
         direction=direction,

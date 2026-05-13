@@ -129,12 +129,20 @@ class LLMClient:
 
     @staticmethod
     def _inject_language(messages: list[dict], language: str) -> list[dict]:
+        # NOTE: do not name a specific "fallback" language here. The previous wording
+        # hard-coded "English" as the structural fallback, which made the instruction
+        # self-contradicting when the user picked English ("write in English ...
+        # do NOT use English") and the model fell back to mirroring the input.
+        # Also avoid the word "structural" — it collides with the inception prompt's
+        # field names ``structural_role`` / ``structural``, and the model interpreted
+        # "preserve structural identifiers" as "keep those VALUES in English".
         instruction = (
-            f"IMPORTANT: Write ALL text content in {language}. "
-            f"This includes names, descriptions, explanations, findings, questions, "
-            f"and any other natural-language text. "
-            f"Only keep JSON keys and structural formatting in English. "
-            f"Do NOT use English for content that should be in {language}."
+            f"IMPORTANT: Write ALL natural-language content in {language}. "
+            f"Every JSON value that is a name, description, role, explanation, "
+            f"finding, or any other natural-language text must be written in "
+            f"{language} — including abstracted role labels and category names. "
+            f"Only JSON field names (the keys) stay in English, exactly as shown "
+            f"in the prompt."
         )
 
         if messages and messages[0].get("role") == "system":

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: unveiling
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -k gevent -w 1 -b 0.0.0.0:$PORT --timeout 300 frontend.app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_API_BASE
+        sync: false
+      - key: OPENAI_MODEL_NAME
+        sync: false
+      - key: SERPER_API_KEY
+        sync: false
