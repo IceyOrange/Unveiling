@@ -28,12 +28,10 @@ sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, render_template, request
-from flask_cors import CORS
 
 load_dotenv()
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
-CORS(app, resources={r"/*": {"origins": "*"}})
 
 _PROMPT_LAB_DIR = project_root / "prompt_lab"
 

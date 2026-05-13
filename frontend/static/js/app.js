@@ -20,9 +20,6 @@
 
 (function () {
 
-  // API base URL — empty for local dev (same-origin), set via api-config.js for production
-  var API = window.UNVEILING_API || '';
-
   // ============================== State ==============================
 
   const TARGET_PER_DIRECTION = 10;
@@ -386,7 +383,7 @@
     setText(dom.paperQuestion, question);
     showScreen('analysis');
 
-    fetch(API + '/analyze', {
+    fetch('/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: question, mode: mode, language: language }),
@@ -406,7 +403,7 @@
   }
 
   function openEventSource(taskId) {
-    const es = new EventSource(API + '/progress/' + encodeURIComponent(taskId));
+    const es = new EventSource('/progress/' + encodeURIComponent(taskId));
     state.eventSource = es;
 
     es.onmessage = function (e) {
