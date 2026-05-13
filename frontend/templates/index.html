@@ -124,7 +124,7 @@
           <span class="phases__step-dot"></span>
         </span>
         <span class="phases__step-name">抽象</span>
-        <span class="phases__step-desc">把问题翻译成结构</span>
+        <span class="phases__step-desc">提炼问题的骨架</span>
       </div>
       <span class="phases__rail" aria-hidden="true"></span>
       <div class="phases__step" data-phase="exploration">
@@ -132,7 +132,7 @@
           <span class="phases__step-dot"></span>
         </span>
         <span class="phases__step-name">搜集</span>
-        <span class="phases__step-desc">横向 × 纵向 找类比</span>
+        <span class="phases__step-desc">跨领域 × 跨时期 找类比</span>
       </div>
       <span class="phases__rail" aria-hidden="true"></span>
       <div class="phases__step" data-phase="convergence">
@@ -140,7 +140,7 @@
           <span class="phases__step-dot"></span>
         </span>
         <span class="phases__step-name">收拢</span>
-        <span class="phases__step-desc">归纳 · 找张力</span>
+        <span class="phases__step-desc">归纳 · 找矛盾</span>
       </div>
     </nav>
 
@@ -154,21 +154,20 @@
       <span class="now__text" id="narration-text">正在准备分析……</span>
     </div>
 
-    <!-- Lens reveal: shows after Phase 1 lands a LensRecord on the blackboard.
-         The surface → structural map IS the payoff of inception. -->
+    <!-- Lens reveal: shows after Phase 1 identifies the structural pattern. -->
     <section class="lens-reveal" id="lens-reveal" hidden>
       <header class="lens-reveal__head">
-        <span class="lens-reveal__tag">透镜</span>
+        <span class="lens-reveal__tag">观察角度</span>
         <h3 class="lens-reveal__name" id="lens-name"></h3>
       </header>
       <p class="lens-reveal__rationale" id="lens-rationale"></p>
       <div class="lens-reveal__map">
         <div class="lens-reveal__col">
-          <div class="lens-reveal__col-head">主体</div>
+          <div class="lens-reveal__col-head">参与的角色</div>
           <ul class="lens-reveal__list" id="lens-entities"></ul>
         </div>
         <div class="lens-reveal__col">
-          <div class="lens-reveal__col-head">关系</div>
+          <div class="lens-reveal__col-head">角色之间的关系</div>
           <ul class="lens-reveal__list" id="lens-relations"></ul>
         </div>
       </div>
@@ -178,14 +177,14 @@
          Each direction converges independently. -->
     <section class="rails" id="rails" hidden>
       <header class="rails__head">
-        <span class="rails__title">搜集进度</span>
-        <span class="rails__subtitle">两个方向各自收敛 — 找到 10 个 或 跑满 3 轮</span>
+        <span class="rails__title">搜索进度</span>
+        <span class="rails__subtitle">两个方向各找 10 个类比，或跑满 3 轮</span>
       </header>
       <div class="rails__grid">
         <div class="rail" data-direction="lateral" id="rail-lateral">
           <div class="rail__head">
-            <span class="rail__name">横向</span>
-            <span class="rail__desc">跨领域 · 当代</span>
+            <span class="rail__name">跨领域</span>
+            <span class="rail__desc">找当代其他行业</span>
             <span class="rail__counter">
               <span class="rail__count" id="lateral-count">0</span>
               <span class="rail__count-divider">/</span>
@@ -202,8 +201,8 @@
         </div>
         <div class="rail" data-direction="vertical" id="rail-vertical">
           <div class="rail__head">
-            <span class="rail__name">纵向</span>
-            <span class="rail__desc">跨时期 · 历史</span>
+            <span class="rail__name">跨时期</span>
+            <span class="rail__desc">找历史上的先例</span>
             <span class="rail__counter">
               <span class="rail__count" id="vertical-count">0</span>
               <span class="rail__count-divider">/</span>
@@ -224,7 +223,7 @@
     <!-- Recent cases: chronological feed of evidence as it lands. -->
     <section class="cases" id="cases" hidden>
       <header class="cases__head">
-        <span class="cases__title">刚找到的</span>
+        <span class="cases__title">找到的类比</span>
         <span class="cases__counter" id="cases-counter">0 条</span>
       </header>
       <ol class="cases__list" id="cases-list" aria-live="polite"></ol>
@@ -242,36 +241,24 @@
       </div>
     </aside>
 
-  </article>
-</section>
+    <!-- ====== Below: conclusion zone, revealed after analysis completes ====== -->
 
+    <hr class="analysis__transition" id="analysis-transition" hidden aria-hidden="true">
 
-<!-- ============================= RESULT ============================= -->
-<section class="screen screen--result" data-screen="result">
-  <article class="paper">
-
-    <header class="paper__mast">
-      <span class="paper__brand">UNVEILING</span>
-      <span class="paper__brand-dot" aria-hidden="true"></span>
-      <span class="paper__edition" id="paper-edition">a closing reading</span>
-    </header>
-
-    <h1 class="paper__question" id="paper-question"></h1>
-
-    <!-- Integrity strip: how broad was the search, did anything degrade? -->
-    <aside class="integrity" id="integrity">
+    <!-- Integrity strip: how broad was the search -->
+    <aside class="integrity" id="integrity" hidden>
       <div class="integrity__cell">
-        <span class="integrity__label">横向</span>
+        <span class="integrity__label">跨领域</span>
         <span class="integrity__value" id="integrity-lateral">0</span>
         <span class="integrity__unit">个案例</span>
       </div>
       <div class="integrity__cell">
-        <span class="integrity__label">纵向</span>
+        <span class="integrity__label">跨时期</span>
         <span class="integrity__value" id="integrity-vertical">0</span>
         <span class="integrity__unit">个案例</span>
       </div>
       <div class="integrity__cell">
-        <span class="integrity__label">降级</span>
+        <span class="integrity__label">走了捷径</span>
         <span class="integrity__value" id="integrity-degradation">0</span>
         <span class="integrity__unit">处</span>
       </div>
@@ -281,149 +268,117 @@
       </div>
     </aside>
 
-    <!-- Sticky chapter nav: highlights the chapter currently in view. -->
-    <nav class="paper__nav" id="paper-nav" aria-label="章节导航">
-      <a href="#chapter-core_finding" class="paper__nav-item is-active" data-anchor="core_finding">
-        <span class="paper__nav-no">1</span>
-        <span class="paper__nav-name">核心</span>
-      </a>
-      <a href="#chapter-temporal_trajectory" class="paper__nav-item" data-anchor="temporal_trajectory">
-        <span class="paper__nav-no">2</span>
-        <span class="paper__nav-name">走向</span>
-      </a>
-      <a href="#chapter-tension" class="paper__nav-item" data-anchor="tension">
-        <span class="paper__nav-no">3</span>
-        <span class="paper__nav-name">张力</span>
-      </a>
-      <a href="#chapter-boundary_condition" class="paper__nav-item" data-anchor="boundary_condition">
-        <span class="paper__nav-no">4</span>
-        <span class="paper__nav-name">边界</span>
-      </a>
-      <a href="#chapter-unresolved" class="paper__nav-item" data-anchor="unresolved">
-        <span class="paper__nav-no">5</span>
-        <span class="paper__nav-name">未解决</span>
-      </a>
-      <a href="#chapter-implication" class="paper__nav-item" data-anchor="implication">
-        <span class="paper__nav-no">6</span>
-        <span class="paper__nav-name">启示</span>
-      </a>
-    </nav>
-
-    <!-- §1 核心结论 — core_finding -->
-    <section class="paper__chapter" id="chapter-core_finding" data-key="core_finding">
-      <header class="paper__chapter-marker paper__marker">
-        <span class="paper__marker-no">§ 1</span>
-        <span class="paper__marker-name">核心结论</span>
+    <!-- Conclusions: six chapters, compact inline -->
+    <section class="conclusions" id="conclusions" hidden>
+      <header class="conclusions__head">
+        <span class="conclusions__title">结论</span>
+        <span class="conclusions__subtitle">标题为主，展开看完整推理</span>
       </header>
-      <p class="paper__chapter-tagline" id="tagline-core_finding"></p>
-      <div class="paper__chapter-body" id="body-core_finding" aria-hidden="true"></div>
-      <button class="paper__chapter-toggle" type="button" data-target="core_finding" aria-expanded="false" aria-controls="body-core_finding">
-        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
-        <span class="paper__chapter-toggle-close">↑ 收起</span>
-      </button>
+
+      <section class="conclusion" id="chapter-core_finding" data-key="core_finding">
+        <header class="conclusion__marker">
+          <span class="conclusion__marker-no">§ 1</span>
+          <span class="conclusion__marker-name">核心结论</span>
+        </header>
+        <p class="conclusion__tagline" id="tagline-core_finding"></p>
+        <div class="conclusion__body" id="body-core_finding" aria-hidden="true"></div>
+        <button class="conclusion__toggle" type="button" data-target="core_finding" aria-expanded="false" aria-controls="body-core_finding">
+          <span class="conclusion__toggle-open">↓ 展开看推理</span>
+          <span class="conclusion__toggle-close">↑ 收起</span>
+        </button>
+      </section>
+
+      <section class="conclusion" id="chapter-temporal_trajectory" data-key="temporal_trajectory">
+        <header class="conclusion__marker">
+          <span class="conclusion__marker-no">§ 2</span>
+          <span class="conclusion__marker-name">这件事的走向</span>
+        </header>
+        <p class="conclusion__tagline" id="tagline-temporal_trajectory"></p>
+        <div class="conclusion__body" id="body-temporal_trajectory" aria-hidden="true"></div>
+        <button class="conclusion__toggle" type="button" data-target="temporal_trajectory" aria-expanded="false" aria-controls="body-temporal_trajectory">
+          <span class="conclusion__toggle-open">↓ 展开看推理</span>
+          <span class="conclusion__toggle-close">↑ 收起</span>
+        </button>
+      </section>
+
+      <section class="conclusion conclusion--tension" id="chapter-tension" data-key="tension">
+        <header class="conclusion__marker conclusion__marker--accent">
+          <span class="conclusion__marker-no">§ 3</span>
+          <span class="conclusion__marker-name">难处在哪</span>
+        </header>
+        <p class="conclusion__tagline" id="tagline-tension"></p>
+        <div class="conclusion__body" id="body-tension" aria-hidden="true"></div>
+        <button class="conclusion__toggle" type="button" data-target="tension" aria-expanded="false" aria-controls="body-tension">
+          <span class="conclusion__toggle-open">↓ 展开看推理</span>
+          <span class="conclusion__toggle-close">↑ 收起</span>
+        </button>
+      </section>
+
+      <section class="conclusion" id="chapter-boundary_condition" data-key="boundary_condition">
+        <header class="conclusion__marker">
+          <span class="conclusion__marker-no">§ 4</span>
+          <span class="conclusion__marker-name">这话在哪里不成立</span>
+        </header>
+        <p class="conclusion__tagline" id="tagline-boundary_condition"></p>
+        <div class="conclusion__body" id="body-boundary_condition" aria-hidden="true"></div>
+        <button class="conclusion__toggle" type="button" data-target="boundary_condition" aria-expanded="false" aria-controls="body-boundary_condition">
+          <span class="conclusion__toggle-open">↓ 展开看推理</span>
+          <span class="conclusion__toggle-close">↑ 收起</span>
+        </button>
+      </section>
+
+      <section class="conclusion" id="chapter-unresolved" data-key="unresolved">
+        <header class="conclusion__marker">
+          <span class="conclusion__marker-no">§ 5</span>
+          <span class="conclusion__marker-name">还没回答清楚的</span>
+        </header>
+        <p class="conclusion__tagline" id="tagline-unresolved"></p>
+        <div class="conclusion__body" id="body-unresolved" aria-hidden="true"></div>
+        <button class="conclusion__toggle" type="button" data-target="unresolved" aria-expanded="false" aria-controls="body-unresolved">
+          <span class="conclusion__toggle-open">↓ 展开看推理</span>
+          <span class="conclusion__toggle-close">↑ 收起</span>
+        </button>
+      </section>
+
+      <section class="conclusion" id="chapter-implication" data-key="implication">
+        <header class="conclusion__marker">
+          <span class="conclusion__marker-no">§ 6</span>
+          <span class="conclusion__marker-name">所以你应该</span>
+        </header>
+        <p class="conclusion__tagline" id="tagline-implication"></p>
+        <div class="conclusion__body" id="body-implication" aria-hidden="true"></div>
+        <button class="conclusion__toggle" type="button" data-target="implication" aria-expanded="false" aria-controls="body-implication">
+          <span class="conclusion__toggle-open">↓ 展开看推理</span>
+          <span class="conclusion__toggle-close">↑ 收起</span>
+        </button>
+      </section>
     </section>
 
-    <!-- §2 走向 — temporal_trajectory -->
-    <section class="paper__chapter" id="chapter-temporal_trajectory" data-key="temporal_trajectory">
-      <header class="paper__chapter-marker paper__marker">
-        <span class="paper__marker-no">§ 2</span>
-        <span class="paper__marker-name">这件事的走向</span>
-      </header>
-      <p class="paper__chapter-tagline" id="tagline-temporal_trajectory"></p>
-      <div class="paper__chapter-body" id="body-temporal_trajectory" aria-hidden="true"></div>
-      <button class="paper__chapter-toggle" type="button" data-target="temporal_trajectory" aria-expanded="false" aria-controls="body-temporal_trajectory">
-        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
-        <span class="paper__chapter-toggle-close">↑ 收起</span>
-      </button>
-    </section>
-
-    <!-- §3 张力 — tension (the rare orange chapter) -->
-    <section class="paper__chapter paper__chapter--tension" id="chapter-tension" data-key="tension">
-      <header class="paper__chapter-marker paper__marker paper__marker--accent">
-        <span class="paper__marker-no">§ 3</span>
-        <span class="paper__marker-name">张力 — 难处在哪</span>
-      </header>
-      <p class="paper__chapter-tagline" id="tagline-tension"></p>
-      <div class="paper__chapter-body" id="body-tension" aria-hidden="true"></div>
-      <button class="paper__chapter-toggle" type="button" data-target="tension" aria-expanded="false" aria-controls="body-tension">
-        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
-        <span class="paper__chapter-toggle-close">↑ 收起</span>
-      </button>
-    </section>
-
-    <!-- §4 边界条件 — boundary_condition -->
-    <section class="paper__chapter" id="chapter-boundary_condition" data-key="boundary_condition">
-      <header class="paper__chapter-marker paper__marker">
-        <span class="paper__marker-no">§ 4</span>
-        <span class="paper__marker-name">这话在哪里不成立</span>
-      </header>
-      <p class="paper__chapter-tagline" id="tagline-boundary_condition"></p>
-      <div class="paper__chapter-body" id="body-boundary_condition" aria-hidden="true"></div>
-      <button class="paper__chapter-toggle" type="button" data-target="boundary_condition" aria-expanded="false" aria-controls="body-boundary_condition">
-        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
-        <span class="paper__chapter-toggle-close">↑ 收起</span>
-      </button>
-    </section>
-
-    <!-- §5 未解决 — unresolved -->
-    <section class="paper__chapter" id="chapter-unresolved" data-key="unresolved">
-      <header class="paper__chapter-marker paper__marker">
-        <span class="paper__marker-no">§ 5</span>
-        <span class="paper__marker-name">还没回答清楚的</span>
-      </header>
-      <p class="paper__chapter-tagline" id="tagline-unresolved"></p>
-      <div class="paper__chapter-body" id="body-unresolved" aria-hidden="true"></div>
-      <button class="paper__chapter-toggle" type="button" data-target="unresolved" aria-expanded="false" aria-controls="body-unresolved">
-        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
-        <span class="paper__chapter-toggle-close">↑ 收起</span>
-      </button>
-    </section>
-
-    <!-- §6 启示 — implication -->
-    <section class="paper__chapter" id="chapter-implication" data-key="implication">
-      <header class="paper__chapter-marker paper__marker">
-        <span class="paper__marker-no">§ 6</span>
-        <span class="paper__marker-name">所以你应该</span>
-      </header>
-      <p class="paper__chapter-tagline" id="tagline-implication"></p>
-      <div class="paper__chapter-body" id="body-implication" aria-hidden="true"></div>
-      <button class="paper__chapter-toggle" type="button" data-target="implication" aria-expanded="false" aria-controls="body-implication">
-        <span class="paper__chapter-toggle-open">↓ 展开看推理</span>
-        <span class="paper__chapter-toggle-close">↑ 收起</span>
-      </button>
-    </section>
-
-    <hr class="paper__divider" aria-hidden="true">
-
-    <!-- Recap drawer: replay the reasoning trail on demand. -->
-    <aside class="recap" id="recap">
+    <!-- Recap drawer: reasoning trail on demand -->
+    <aside class="recap" id="recap" hidden>
       <button class="recap__toggle" type="button" id="recap-toggle" aria-expanded="false" aria-controls="recap-content">
         <span class="recap__toggle-label">分析过程速览</span>
-        <span class="recap__toggle-meta" id="recap-meta">透镜 · 案例索引</span>
+        <span class="recap__toggle-meta" id="recap-meta">观察角度 · 案例索引</span>
         <span class="recap__toggle-chevron" aria-hidden="true">+</span>
       </button>
       <div class="recap__content" id="recap-content">
-
-        <!-- 透镜 — the abstraction map produced by Phase 1 -->
         <section class="recap__section" id="section-lens">
           <header class="recap__section-head">
-            <h2 class="recap__section-title">透镜 — 我们用什么角度看</h2>
+            <h2 class="recap__section-title">我们用什么角度看</h2>
             <span class="recap__section-sub" id="lens-result-name"></span>
           </header>
           <p class="recap__section-body" id="lens-result-rationale"></p>
           <div class="lens-map">
             <div class="lens-map__col">
-              <div class="lens-map__col-head">主体</div>
+              <div class="lens-map__col-head">参与的角色</div>
               <ul class="lens-map__list" id="lens-result-entities"></ul>
             </div>
             <div class="lens-map__col">
-              <div class="lens-map__col-head">关系</div>
+              <div class="lens-map__col-head">角色之间的关系</div>
               <ul class="lens-map__list" id="lens-result-relations"></ul>
             </div>
           </div>
         </section>
-
-        <!-- 案例索引: direction × layer grid -->
         <section class="recap__section" id="section-case-index">
           <header class="recap__section-head">
             <h2 class="recap__section-title">案例索引</h2>
@@ -431,8 +386,6 @@
           </header>
           <div class="case-index" id="case-index"></div>
         </section>
-
-        <!-- 降级与跳过: shown only when something interesting happened -->
         <section class="recap__section" id="section-degradation" hidden>
           <header class="recap__section-head">
             <h2 class="recap__section-title">降级与跳过</h2>
@@ -440,16 +393,15 @@
           </header>
           <ul class="degradation-list" id="degradation-list"></ul>
         </section>
-
       </div>
     </aside>
 
-    <footer class="paper__foot">
-      <button class="paper__back" type="button" id="result-back">
+    <footer class="analysis__foot" id="analysis-foot" hidden>
+      <button class="analysis__back" type="button" id="result-back">
         <span aria-hidden="true">←</span>
         <span>重新开始</span>
       </button>
-      <span class="paper__meta" id="result-meta"></span>
+      <span class="analysis__meta" id="result-meta"></span>
     </footer>
 
   </article>

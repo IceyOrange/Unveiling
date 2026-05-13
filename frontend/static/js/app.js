@@ -1,13 +1,12 @@
 'use strict';
 
 // =====================================================================
-// Unveiling frontend controller — three screens, one column each.
+// Unveiling frontend controller — two screens, unified analysis → result.
 //
 //   • home      — manifesto + question form
 //   • analysis  — phase ribbon + lens reveal + dual progress rails +
-//                 chronological case feed + machine-view drawer
-//   • result    — five-section paper (核心结论 → 张力 → 边界 → 未解决 →
-//                 启示), lens map, case index, degradation log
+//                 chronological case feed + machine-view drawer +
+//                 conclusion chapters (revealed after analysis completes)
 //
 // Backed by:
 //   POST /analyze                  → { task_id }
@@ -22,68 +21,64 @@
 
   // ============================== State ==============================
 
-  const TARGET_PER_DIRECTION = 10;
-  const MAX_ROUNDS = 3;
+  var TARGET_PER_DIRECTION = 10;
+  var MAX_ROUNDS = 3;
 
-  const PHASE_ORDER = ['inception', 'exploration', 'convergence'];
-  const PHASE_LABEL = {
+  var PHASE_ORDER = ['inception', 'exploration', 'convergence'];
+  var PHASE_LABEL = {
     inception: '抽象',
     exploration: '搜集',
     convergence: '收拢',
   };
 
-  const DIRECTION_LABEL = { lateral: '横向', vertical: '纵向' };
-  const LAYER_LABEL = {
+  var DIRECTION_LABEL = { lateral: '跨领域', vertical: '跨时期' };
+  var LAYER_LABEL = {
     phenomenon: '现象',
     mechanism: '机制',
     structure: '结构',
   };
-  const CONFIDENCE_LABEL = {
+  var CONFIDENCE_LABEL = {
     strong: '强',
     medium: '中',
     weak: '弱',
     unexpected: '意外',
   };
-  // ■■■ / ■■□ / ■□□ — layer marker by depth
-  const LAYER_MARKER = {
+  var LAYER_MARKER = {
     structure: '■■■',
     mechanism: '■■□',
     phenomenon: '■□□',
   };
 
-  // Result-page chapters. Each chapter binds a conclusion key to its visual
-  // body class (so the existing typography is reused) and a fallback label
-  // (used when the LLM did not emit a tagline for this chapter).
-  const CHAPTERS = [
-    { key: 'core_finding',        fallback: '核心结论',         bodyClass: 'paper__takeaway' },
-    { key: 'temporal_trajectory', fallback: '这件事的走向',     bodyClass: 'paper__trajectory' },
-    { key: 'tension',             fallback: '难处在哪',         bodyClass: 'paper__tension' },
-    { key: 'boundary_condition',  fallback: '这话在哪里不成立', bodyClass: 'paper__boundary' },
-    { key: 'unresolved',          fallback: '还没回答清楚的',   bodyClass: 'paper__unresolved' },
-    { key: 'implication',         fallback: '所以你应该',       bodyClass: 'paper__implication' },
+  var CHAPTERS = [
+    { key: 'core_finding',        fallback: '核心结论',         bodyClass: 'body-takeaway' },
+    { key: 'temporal_trajectory', fallback: '这件事的走向',     bodyClass: 'body-trajectory' },
+    { key: 'tension',             fallback: '难处在哪',         bodyClass: 'body-tension' },
+    { key: 'boundary_condition',  fallback: '这话在哪里不成立', bodyClass: 'body-boundary' },
+    { key: 'unresolved',          fallback: '还没回答清楚的',   bodyClass: 'body-unresolved' },
+    { key: 'implication',         fallback: '所以你应该',       bodyClass: 'body-implication' },
   ];
 
-  const state = {
+  var state = {
     screen: 'home',
     mode: 'balance',
     language: '中文',
     taskId: null,
     eventSource: null,
     phase: 'inception',
-    lens: null,                          // most recent LensRecord (analysis screen)
-    evidence: [],                        // running list of all evidence
-    schedule: [],                        // running schedule log
+    lens: null,
+    evidence: [],
+    schedule: [],
     tokens: 0,
     lateral: { count: 0, rounds: 0, done: false },
     vertical: { count: 0, rounds: 0, done: false },
     degradationCount: 0,
     conclusion: null,
-    result: null,                        // final payload from `done` event
+    result: null,
   };
 
   // ============================ DOM refs =============================
 
-  let dom = {};
+  var dom = {};
 
   function resolveDom() {
     dom = {
@@ -127,18 +122,15 @@
       machineMeta: document.getElementById('machine-view-meta'),
       scheduleLogList: document.getElementById('schedule-log-list'),
 
-      // Result
-      paperEdition: document.getElementById('paper-edition'),
-      paperQuestion: document.getElementById('paper-question'),
-
+      // Unified: conclusion zone
+      analysisTransition: document.getElementById('analysis-transition'),
+      integrity: document.getElementById('integrity'),
       integrityLateral: document.getElementById('integrity-lateral'),
       integrityVertical: document.getElementById('integrity-vertical'),
       integrityDegradation: document.getElementById('integrity-degradation'),
       integrityTokens: document.getElementById('integrity-tokens'),
-
-      paperNav: document.getElementById('paper-nav'),
-      paperChapters: document.querySelectorAll('.paper__chapter'),
-      paperNavItems: document.querySelectorAll('.paper__nav-item'),
+      conclusions: document.getElementById('conclusions'),
+      conclusionChapters: document.querySelectorAll('.conclusion'),
 
       recap: document.getElementById('recap'),
       recapToggle: document.getElementById('recap-toggle'),
@@ -155,6 +147,7 @@
       sectionDegradation: document.getElementById('section-degradation'),
       degradationList: document.getElementById('degradation-list'),
 
+      analysisFoot: document.getElementById('analysis-foot'),
       resultBack: document.getElementById('result-back'),
       resultMeta: document.getElementById('result-meta'),
     };
@@ -167,7 +160,7 @@
   }
 
   function el(tag, attrs, children) {
-    const node = document.createElement(tag);
+    var node = document.createElement(tag);
     if (attrs) {
       Object.keys(attrs).forEach(function (k) {
         if (k === 'class') node.className = attrs[k];
@@ -232,9 +225,9 @@
     resolveDom();
     bindHome();
     bindAnalysisControls();
-    bindResultControls();
+    bindConclusionControls();
 
-    const params = new URLSearchParams(window.location.search);
+    var params = new URLSearchParams(window.location.search);
     if (params.get('demo') === '1') {
       loadDemoResult();
     }
@@ -245,7 +238,7 @@
       opt.addEventListener('click', function () {
         state.mode = opt.dataset.mode;
         dom.modeOptions.forEach(function (o) {
-          const selected = o === opt;
+          var selected = o === opt;
           o.classList.toggle('is-selected', selected);
           o.setAttribute('aria-checked', selected ? 'true' : 'false');
         });
@@ -256,7 +249,7 @@
       opt.addEventListener('click', function () {
         state.language = opt.dataset.lang;
         dom.langOptions.forEach(function (o) {
-          const selected = o === opt;
+          var selected = o === opt;
           o.classList.toggle('is-selected', selected);
           o.setAttribute('aria-checked', selected ? 'true' : 'false');
         });
@@ -272,7 +265,7 @@
 
     dom.homeForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      const q = (dom.homeQuestion.value || '').trim();
+      var q = (dom.homeQuestion.value || '').trim();
       if (!q) return;
       startAnalysis(q, state.mode, state.language);
     });
@@ -280,12 +273,13 @@
 
   function bindAnalysisControls() {
     dom.machineToggle.addEventListener('click', function () {
-      const expanded = dom.machineView.classList.toggle('is-expanded');
+      var expanded = dom.machineView.classList.toggle('is-expanded');
       dom.machineToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     });
   }
 
-  function bindResultControls() {
+  function bindConclusionControls() {
+    // Back to home
     dom.resultBack.addEventListener('click', function () {
       if (state.eventSource) {
         state.eventSource.close();
@@ -295,54 +289,25 @@
       showScreen('home');
     });
 
-    // Chapter toggle — event delegated on each chapter.
-    Array.prototype.forEach.call(dom.paperChapters, function (chapter) {
-      const toggle = chapter.querySelector('.paper__chapter-toggle');
+    // Chapter toggle — delegated on each conclusion
+    Array.prototype.forEach.call(dom.conclusionChapters, function (chapter) {
+      var toggle = chapter.querySelector('.conclusion__toggle');
       if (!toggle) return;
       toggle.addEventListener('click', function () {
-        const expanded = chapter.classList.toggle('is-expanded');
+        var expanded = chapter.classList.toggle('is-expanded');
         toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        const body = chapter.querySelector('.paper__chapter-body');
+        var body = chapter.querySelector('.conclusion__body');
         if (body) body.setAttribute('aria-hidden', expanded ? 'false' : 'true');
       });
     });
 
-    // Recap drawer toggle.
+    // Recap drawer toggle
     if (dom.recapToggle && dom.recap) {
       dom.recapToggle.addEventListener('click', function () {
-        const open = dom.recap.classList.toggle('is-open');
+        var open = dom.recap.classList.toggle('is-open');
         dom.recapToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       });
     }
-
-    // Sticky nav highlight: mark the chapter currently dominating the viewport.
-    setupChapterNav();
-  }
-
-  function setupChapterNav() {
-    if (!('IntersectionObserver' in window)) return;
-    const navByKey = {};
-    Array.prototype.forEach.call(dom.paperNavItems, function (item) {
-      navByKey[item.dataset.anchor] = item;
-    });
-    if (!Object.keys(navByKey).length) return;
-
-    const io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        const key = entry.target.dataset.key;
-        const item = navByKey[key];
-        if (!item) return;
-        Array.prototype.forEach.call(dom.paperNavItems, function (n) {
-          n.classList.remove('is-active');
-        });
-        item.classList.add('is-active');
-      });
-    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
-
-    Array.prototype.forEach.call(dom.paperChapters, function (chapter) {
-      io.observe(chapter);
-    });
   }
 
   // ======================== Reset between runs =======================
@@ -373,6 +338,28 @@
     setPhase('inception');
     updateRailUI('lateral');
     updateRailUI('vertical');
+
+    // Reset conclusion zone
+    hide(dom.analysisTransition);
+    hide(dom.integrity);
+    hide(dom.conclusions);
+    hide(dom.recap);
+    hide(dom.analysisFoot);
+    dom.casesSection.classList.remove('is-complete');
+    dom.rails.classList.remove('is-complete');
+    dom.lensReveal.classList.remove('is-complete');
+
+    CHAPTERS.forEach(function (chap) {
+      var el = document.getElementById('chapter-' + chap.key);
+      if (el) {
+        el.classList.remove('is-empty', 'is-revealed', 'is-expanded');
+        el.style.animationDelay = '';
+      }
+      var body = document.getElementById('body-' + chap.key);
+      if (body) clear(body);
+      var tagline = document.getElementById('tagline-' + chap.key);
+      if (tagline) setText(tagline, '');
+    });
   }
 
   // ========================== Start a run ============================
@@ -380,7 +367,6 @@
   function startAnalysis(question, mode, language) {
     resetAnalysisState();
     setText(dom.analysisQuestion, question);
-    setText(dom.paperQuestion, question);
     showScreen('analysis');
 
     fetch('/analyze', {
@@ -403,11 +389,11 @@
   }
 
   function openEventSource(taskId) {
-    const es = new EventSource('/progress/' + encodeURIComponent(taskId));
+    var es = new EventSource('/progress/' + encodeURIComponent(taskId));
     state.eventSource = es;
 
     es.onmessage = function (e) {
-      let payload;
+      var payload;
       try { payload = JSON.parse(e.data); }
       catch (_) { return; }
       if (!payload || !payload.kind) return;
@@ -418,14 +404,12 @@
       es.close();
       state.eventSource = null;
       if (state.result) {
-        renderResult(state.result);
-        showScreen('result');
+        transitionToResult(state.result);
       }
     });
 
     es.onerror = function () {
-      // Browser will reconnect on its own; surface a soft note.
-      // If the worker emitted a `done` already, nothing more to do.
+      // Browser will reconnect on its own.
     };
   }
 
@@ -433,7 +417,7 @@
 
   function handleEvent(ev) {
     switch (ev.kind) {
-      case 'meta':         return; // already wired from form submit
+      case 'meta':         return;
       case 'phase':        return onPhase(ev);
       case 'lens':         return onLens(ev);
       case 'evidence_batch': return onEvidenceBatch(ev);
@@ -451,11 +435,11 @@
     if (ev.phase === 'exploration') {
       show(dom.rails);
       show(dom.casesSection);
-      setText(dom.narrationText, '横向与纵向并行搜索 — 找跨时空的结构匹配案例');
+      setText(dom.narrationText, '跨领域与跨时期并行搜索 — 找结构相似的类比案例');
     } else if (ev.phase === 'convergence') {
-      setText(dom.narrationText, '正在跨案例归纳共性 · 找张力 · 写结论');
+      setText(dom.narrationText, '正在跨案例归纳共性 · 找矛盾 · 写结论');
     } else if (ev.phase === 'inception') {
-      setText(dom.narrationText, '正在抽象问题 — 把表面术语翻译成结构角色');
+      setText(dom.narrationText, '正在拆解问题 — 提炼核心结构');
     }
   }
 
@@ -463,11 +447,11 @@
     state.lens = ev.lens;
     renderLens(ev.lens);
     show(dom.lensReveal);
-    setText(dom.narrationText, '透镜已就位：' + (ev.lens.name || '未命名'));
+    setText(dom.narrationText, '观察角度已就位：' + (ev.lens.name || '未命名'));
   }
 
   function onEvidenceBatch(ev) {
-    const items = ev.evidence || [];
+    var items = ev.evidence || [];
     items.forEach(function (e) { state.evidence.push(e); });
 
     state.lateral.count = ev.lateral_count != null ? ev.lateral_count : state.lateral.count;
@@ -480,9 +464,9 @@
     appendCases(items);
 
     if (items.length) {
-      const first = items[0];
-      const dirLabel = DIRECTION_LABEL[first.search_direction] || first.search_direction;
-      const moreNote = items.length > 1 ? '（共 ' + items.length + ' 条）' : '';
+      var first = items[0];
+      var dirLabel = DIRECTION_LABEL[first.search_direction] || first.search_direction;
+      var moreNote = items.length > 1 ? '（共 ' + items.length + ' 条）' : '';
       setText(dom.narrationText, '刚刚找到 [' + dirLabel + '] ' + (first.case_name || '一条案例') + moreNote);
     }
   }
@@ -497,7 +481,7 @@
 
   function onConclusion(ev) {
     state.conclusion = ev.conclusion;
-    setText(dom.narrationText, '结论已写入黑板，准备渲染……');
+    setText(dom.narrationText, '结论已写入，准备呈现……');
   }
 
   function onTokens(ev) {
@@ -516,7 +500,6 @@
 
   function onDone(ev) {
     state.result = ev.result;
-    // The `end` handler will switch screens after the stream closes.
   }
 
   function onError(ev) {
@@ -527,18 +510,26 @@
 
   function setPhase(phaseKey) {
     state.phase = phaseKey;
-    const idx = PHASE_ORDER.indexOf(phaseKey);
+    var idx = PHASE_ORDER.indexOf(phaseKey);
     $$('.phases__step', dom.phaseIndicator).forEach(function (step, i) {
-      step.classList.remove('is-active', 'is-done', 'is-future');
-      if (i < idx) step.classList.add('is-done');
+      step.classList.remove('is-active', 'is-complete', 'is-future');
+      if (i < idx) step.classList.add('is-complete');
       else if (i === idx) step.classList.add('is-active');
       else step.classList.add('is-future');
     });
     setText(dom.analysisEdition, '一份正在进行的分析 · ' + (PHASE_LABEL[phaseKey] || phaseKey));
   }
 
+  function setPhaseAllComplete() {
+    $$('.phases__step', dom.phaseIndicator).forEach(function (step) {
+      step.classList.remove('is-active', 'is-future');
+      step.classList.add('is-complete');
+    });
+    setText(dom.analysisEdition, '分析完成');
+  }
+
   function renderLens(lens) {
-    setText(dom.lensName, lens.name || '未命名透镜');
+    setText(dom.lensName, lens.name || '未命名');
     setText(dom.lensRationale, lens.rationale || '');
     clear(dom.lensEntities);
     (lens.entities || []).forEach(function (e) {
@@ -559,25 +550,25 @@
   }
 
   function updateRailUI(direction) {
-    const rec = state[direction];
-    const isLateral = direction === 'lateral';
-    const countEl = isLateral ? dom.lateralCount : dom.verticalCount;
-    const roundsEl = isLateral ? dom.lateralRounds : dom.verticalRounds;
-    const fillEl = isLateral ? dom.lateralFill : dom.verticalFill;
-    const statusEl = isLateral ? dom.lateralStatus : dom.verticalStatus;
+    var rec = state[direction];
+    var isLateral = direction === 'lateral';
+    var countEl = isLateral ? dom.lateralCount : dom.verticalCount;
+    var roundsEl = isLateral ? dom.lateralRounds : dom.verticalRounds;
+    var fillEl = isLateral ? dom.lateralFill : dom.verticalFill;
+    var statusEl = isLateral ? dom.lateralStatus : dom.verticalStatus;
     if (!countEl) return;
 
     setText(countEl, rec.count);
     setText(roundsEl, rec.rounds);
-    const fillPct = pct(rec.count, TARGET_PER_DIRECTION);
+    var fillPct = pct(rec.count, TARGET_PER_DIRECTION);
     fillEl.style.width = fillPct + '%';
 
-    let label = '进行中';
+    var label = '进行中';
     if (rec.count >= TARGET_PER_DIRECTION) {
-      label = '已收敛 — 找到 ' + rec.count + ' 条';
+      label = '已完成 — 找到 ' + rec.count + ' 条';
       fillEl.classList.add('rail__fill--done');
     } else if (rec.rounds >= MAX_ROUNDS) {
-      label = '已用完轮次 — 带 ' + rec.count + ' 条收敛';
+      label = '轮次用完 — 带 ' + rec.count + ' 条结束';
       fillEl.classList.add('rail__fill--stuck');
     } else if (rec.rounds === 0 && rec.count === 0) {
       label = '尚未开始';
@@ -593,21 +584,21 @@
   }
 
   function buildCaseRow(e) {
-    const direction = e.search_direction;
-    const layer = e.layer;
-    const conf = e.confidence;
-    const isUnexpected = !!e.is_unexpected;
-    const dirChip = el('span', {
+    var direction = e.search_direction;
+    var layer = e.layer;
+    var conf = e.confidence;
+    var isUnexpected = !!e.is_unexpected;
+    var dirChip = el('span', {
       class: 'case__chip case__chip--dir case__chip--' + direction,
     }, DIRECTION_LABEL[direction] || direction);
-    const layerMark = el('span', {
+    var layerMark = el('span', {
       class: 'case__layer',
       title: '层级：' + (LAYER_LABEL[layer] || layer),
     }, LAYER_MARKER[layer] || '■□□');
-    const confChip = el('span', {
+    var confChip = el('span', {
       class: 'case__chip case__chip--conf case__chip--conf-' + conf,
     }, CONFIDENCE_LABEL[conf] || conf);
-    const meta = el('div', { class: 'case__meta' }, [dirChip, layerMark, confChip]);
+    var meta = el('div', { class: 'case__meta' }, [dirChip, layerMark, confChip]);
     if (isUnexpected) {
       meta.appendChild(el('span', {
         class: 'case__chip case__chip--unexpected',
@@ -622,10 +613,10 @@
   }
 
   function appendScheduleLog(entry) {
-    const klass = 'log' + (entry.is_degradation ? ' log--degraded' : '');
-    const author = el('span', { class: 'log__author' }, entry.author || 'system');
-    const decision = el('span', { class: 'log__decision' }, entry.decision || '');
-    const reason = el('span', { class: 'log__reason' }, entry.reason || '');
+    var klass = 'log' + (entry.is_degradation ? ' log--degraded' : '');
+    var author = el('span', { class: 'log__author' }, entry.author || 'system');
+    var decision = el('span', { class: 'log__decision' }, entry.decision || '');
+    var reason = el('span', { class: 'log__reason' }, entry.reason || '');
     dom.scheduleLogList.appendChild(
       el('li', { class: klass }, [author, decision, reason])
     );
@@ -638,32 +629,98 @@
     );
   }
 
-  // ============================ Result page ==========================
+  // =================== Transition to result (no screen switch) ==========
 
-  function renderResult(result) {
+  function transitionToResult(result) {
     if (!result) return;
-    setText(dom.paperQuestion, result.question || '');
 
-    // Integrity strip
+    // 1. All phases complete
+    setPhaseAllComplete();
+
+    // 2. Narration wraps up
+    setText(dom.narrationText, '分析完成');
+
+    // 3. Process elements get "completed" visual treatment
+    dom.casesSection.classList.add('is-complete');
+    dom.rails.classList.add('is-complete');
+    dom.lensReveal.classList.add('is-complete');
+
+    // 4. Show transition marker
+    show(dom.analysisTransition);
+
+    // 5. Integrity strip
+    renderIntegrity(result);
+    show(dom.integrity);
+
+    // 6. Render and show conclusions
+    renderConclusions(result);
+    show(dom.conclusions);
+
+    // 7. Recap drawer
+    renderRecap(result);
+    show(dom.recap);
+
+    // 8. Footer
+    renderResultMeta(result);
+    show(dom.analysisFoot);
+
+    // 9. Smooth scroll to conclusions (only if near bottom)
+    var nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 400;
+    if (nearBottom && dom.analysisTransition) {
+      dom.analysisTransition.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // ======================== Result sub-renderers ========================
+
+  function renderIntegrity(result) {
     setText(dom.integrityLateral, result.lateral_count || 0);
     setText(dom.integrityVertical, result.vertical_count || 0);
-    const degCount = (result.schedule_log || []).filter(function (l) {
+    var degCount = (result.schedule_log || []).filter(function (l) {
       return l.is_degradation;
     }).length;
     setText(dom.integrityDegradation, degCount);
     setText(dom.integrityTokens, formatTokens(result.token_spent || 0));
+  }
 
-    // Six chapters — taglines on top, full body inside the collapsible.
-    const c = result.conclusion || {};
-    const taglines = (c.taglines && typeof c.taglines === 'object') ? c.taglines : {};
-    CHAPTERS.forEach(function (chap) {
-      renderChapter(chap, taglines[chap.key], c[chap.key]);
+  function renderConclusions(result) {
+    var c = result.conclusion || {};
+    var taglines = (c.taglines && typeof c.taglines === 'object') ? c.taglines : {};
+    CHAPTERS.forEach(function (chap, index) {
+      renderConclusion(chap, taglines[chap.key], c[chap.key], index);
     });
+  }
 
-    // Lens snapshot — show the most recent lens
-    const lenses = result.lenses || [];
+  function renderConclusion(chap, tagline, body, index) {
+    var chapterEl = document.getElementById('chapter-' + chap.key);
+    var taglineEl = document.getElementById('tagline-' + chap.key);
+    var bodyEl = document.getElementById('body-' + chap.key);
+
+    var text = (body == null ? '' : String(body)).trim();
+    var taglineText = (tagline == null ? '' : String(tagline)).trim() || chap.fallback;
+
+    if (taglineEl) setText(taglineEl, taglineText);
+
+    if (bodyEl) {
+      clear(bodyEl);
+      var bodyClass = chap.bodyClass + (text ? '' : ' is-empty');
+      bodyEl.appendChild(
+        el('p', { class: bodyClass }, text || '（系统未给出此项）')
+      );
+    }
+
+    if (chapterEl) {
+      chapterEl.classList.toggle('is-empty', !text);
+      chapterEl.style.animationDelay = (index * 120) + 'ms';
+      chapterEl.classList.add('is-revealed');
+    }
+  }
+
+  function renderRecap(result) {
+    // Lens snapshot
+    var lenses = result.lenses || [];
     if (lenses.length) {
-      const lens = lenses[lenses.length - 1];
+      var lens = lenses[lenses.length - 1];
       setText(dom.lensResultName, lens.name || '');
       setText(dom.lensResultRationale, lens.rationale || '');
       clear(dom.lensResultEntities);
@@ -676,11 +733,11 @@
       });
     }
 
-    // Case index: direction × layer grid
+    // Case index
     renderCaseIndex(result.evidence || []);
 
-    // Degradation list (only shown if any)
-    const degraded = (result.schedule_log || []).filter(function (l) {
+    // Degradation list
+    var degraded = (result.schedule_log || []).filter(function (l) {
       return l.is_degradation;
     });
     if (degraded.length) {
@@ -699,53 +756,35 @@
       hide(dom.sectionDegradation);
     }
 
-    setText(dom.resultMeta,
-      '横向 ' + (result.lateral_count || 0) +
-      ' · 纵向 ' + (result.vertical_count || 0) +
-      ' · ' + formatTokens(result.token_spent || 0) + ' token' +
-      (degCount ? ' · ' + degCount + ' 处降级' : '')
-    );
-
-    // Recap drawer meta — tell the reader what's inside before they open it.
+    // Recap drawer meta
     if (dom.recapMeta) {
-      const bits = [];
-      if ((result.lenses || []).length) bits.push('透镜');
-      const evCount = (result.evidence || []).length;
+      var bits = [];
+      if (lenses.length) bits.push('观察角度');
+      var evCount = (result.evidence || []).length;
       if (evCount) bits.push(evCount + ' 个案例');
+      var degCount = degraded.length;
       if (degCount) bits.push(degCount + ' 处降级');
       setText(dom.recapMeta, bits.length ? bits.join(' · ') : '本次没有可回顾的过程材料');
     }
   }
 
-  // Render one chapter: tagline on top, full reasoning inside the
-  // collapsible body. When the LLM omits a tagline we fall back to the
-  // §marker name so the chapter still reads as a real heading.
-  function renderChapter(chap, tagline, body) {
-    const chapterEl = document.getElementById('chapter-' + chap.key);
-    const taglineEl = document.getElementById('tagline-' + chap.key);
-    const bodyEl = document.getElementById('body-' + chap.key);
-
-    const text = (body == null ? '' : String(body)).trim();
-    const taglineText = (tagline == null ? '' : String(tagline)).trim() || chap.fallback;
-
-    if (taglineEl) setText(taglineEl, taglineText);
-
-    if (bodyEl) {
-      clear(bodyEl);
-      const bodyClass = chap.bodyClass + (text ? '' : ' is-empty');
-      bodyEl.appendChild(
-        el('p', { class: bodyClass }, text || '（系统未给出此项）')
-      );
-    }
-
-    if (chapterEl) {
-      chapterEl.classList.toggle('is-empty', !text);
-    }
+  function renderResultMeta(result) {
+    var degCount = (result.schedule_log || []).filter(function (l) {
+      return l.is_degradation;
+    }).length;
+    setText(dom.resultMeta,
+      '跨领域 ' + (result.lateral_count || 0) +
+      ' · 跨时期 ' + (result.vertical_count || 0) +
+      ' · ' + formatTokens(result.token_spent || 0) + ' token' +
+      (degCount ? ' · ' + degCount + ' 处降级' : '')
+    );
   }
+
+  // ========================== Case index ==============================
 
   function renderCaseIndex(evidence) {
     clear(dom.caseIndex);
-    setText(dom.caseIndexMeta, evidence.length + ' 条案例 · 按 方向 × 层级 索引');
+    setText(dom.caseIndexMeta, evidence.length + ' 条案例');
     if (!evidence.length) {
       dom.caseIndex.appendChild(
         el('div', { class: 'case-index__empty' }, '本次没有收集到案例。')
@@ -753,23 +792,23 @@
       return;
     }
 
-    const directions = ['lateral', 'vertical'];
-    const layers = ['structure', 'mechanism', 'phenomenon'];
+    var directions = ['lateral', 'vertical'];
+    var layers = ['structure', 'mechanism', 'phenomenon'];
     directions.forEach(function (dir) {
-      const row = el('div', { class: 'case-index__row' });
+      var row = el('div', { class: 'case-index__row' });
       row.appendChild(
         el('div', { class: 'case-index__rowhead' }, [
           el('span', { class: 'case-index__rowname' }, DIRECTION_LABEL[dir] || dir),
           el('span', { class: 'case-index__rowdesc' },
-            dir === 'lateral' ? '跨领域 · 当代' : '跨时期 · 历史'),
+            dir === 'lateral' ? '当代其他行业' : '历史上的先例'),
         ])
       );
-      const cells = el('div', { class: 'case-index__cells' });
+      var cells = el('div', { class: 'case-index__cells' });
       layers.forEach(function (layer) {
-        const matches = evidence.filter(function (e) {
+        var matches = evidence.filter(function (e) {
           return e.search_direction === dir && e.layer === layer;
         });
-        const cell = el('div', { class: 'case-index__cell' }, [
+        var cell = el('div', { class: 'case-index__cell' }, [
           el('div', { class: 'case-index__layer' }, [
             el('span', { class: 'case-index__layer-marker' }, LAYER_MARKER[layer]),
             el('span', { class: 'case-index__layer-name' }, LAYER_LABEL[layer]),
@@ -787,7 +826,7 @@
     if (!items.length) {
       return el('div', { class: 'case-index__none' }, '（无）');
     }
-    const list = el('ul', { class: 'case-index__list' });
+    var list = el('ul', { class: 'case-index__list' });
     items.forEach(function (e) {
       list.appendChild(
         el('li', { class: 'case-index__item' + (e.is_unexpected ? ' is-unexpected' : '') }, [
@@ -802,7 +841,7 @@
   // ============================== Demo ===============================
 
   function loadDemoResult() {
-    const demo = {
+    var demo = {
       question: 'AI 时代人们的 AI 焦虑',
       mode: 'balance',
       language: '中文',
@@ -859,9 +898,44 @@
         { author: 'search_vertical', decision: 'search_complete', reason: 'found 3 cases (vertical) via lens', is_degradation: false },
       ],
     };
+
+    // Render process elements as if SSE had streamed them
+    setText(dom.analysisQuestion, demo.question);
+
+    // Lens
+    if (demo.lenses && demo.lenses.length) {
+      state.lens = demo.lenses[demo.lenses.length - 1];
+      renderLens(state.lens);
+      show(dom.lensReveal);
+    }
+
+    // Rails
+    state.lateral = { count: demo.lateral_count || 0, rounds: demo.lateral_rounds || 0, done: true };
+    state.vertical = { count: demo.vertical_count || 0, rounds: demo.vertical_rounds || 0, done: true };
+    updateRailUI('lateral');
+    updateRailUI('vertical');
+    show(dom.rails);
+
+    // Cases
+    state.evidence = demo.evidence || [];
+    appendCases(demo.evidence);
+    show(dom.casesSection);
+
+    // Schedule log
+    state.schedule = demo.schedule_log || [];
+    state.tokens = demo.token_spent || 0;
+    demo.schedule_log.forEach(function (entry) {
+      appendScheduleLog(entry);
+    });
+    updateMachineMeta();
+
+    // Phase to last known
+    setPhase('convergence');
+
+    // Now transition to result
     state.result = demo;
-    renderResult(demo);
-    showScreen('result');
+    transitionToResult(demo);
+    showScreen('analysis');
   }
 
   // ============================== Boot ===============================
