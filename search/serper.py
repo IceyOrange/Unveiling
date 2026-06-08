@@ -11,7 +11,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
     wait=wait_exponential(multiplier=1, min=2, max=10),
     reraise=True,
 )
-def search(query: str, num: int = 8, far_search_hint: str = "") -> list[dict]:
+def search(query: str, num: int = 8, far_search_hint: str = "", lang: str = "") -> list[dict]:
     """Search Google via Serper API.
 
     Args:

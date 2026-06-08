@@ -424,5 +424,5 @@ python app.py  # http://localhost:5001
 配置在 `.env` 中：
 - `OPENAI_API_KEY` — DeepSeek API key
 - `OPENAI_API_BASE` — https://api.deepseek.com
-- `OPENAI_MODEL_NAME` — deepseek-chat
+- `OPENAI_MODEL_NAME` — deepseek-v4-flash（deepseek-v4-pro 可选，质量更高）
 - `SERPER_API_KEY` — Serper API key

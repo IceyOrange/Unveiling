@@ -1,7 +1,7 @@
 """Phase 2 search agents: parallel lateral + vertical evidence collection.
 
 Reads the latest lens from hypothesis_zone, derives search queries from
-structural roles (not surface terms), calls Serper, then has the LLM extract
+structural roles (not surface terms), calls the configured search engine, then has the LLM extract
 distinct CASES/EXAMPLES as EvidenceRecords.
 
 Key invariant: one evidence record = one distinct case (e.g., "卢德运动" = 1 record).
@@ -26,7 +26,7 @@ from models.state import State
 from llm.client import LLMClient, LLMJSONError
 from llm.degradation import DegradationLogger
 from llm.prompt_loader import load_lab_prompt
-from search.serper import search
+from search.engine import search
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ def _generate_queries(
         data = json.loads(content)
         queries = data.get("queries", [])
         if isinstance(queries, list):
-            return [str(q) for q in queries[:4]]
+            return [str(q) for q in queries[:2]]
     except (LLMJSONError, json.JSONDecodeError, Exception):
         pass
 
@@ -167,11 +167,11 @@ def _validate_queries(
     return queries
 
 
-def _run_serper_queries(queries: list[str]) -> list[dict]:
+def _run_search_queries(queries: list[str], lang: str = "") -> list[dict]:
     all_results: list[dict] = []
     for q in queries:
         try:
-            results = search(q, num=5)
+            results = search(q, num=5, lang=lang)
             all_results.extend(results)
         except Exception as exc:
             all_results.append({
@@ -213,6 +213,59 @@ def _extract_cases(
     )
     data = json.loads(content)
     return data.get("cases", []), tokens
+
+
+def _enrich_cases_with_wiki(cases: list[dict], lang: str) -> list[dict]:
+    """Enrich each case with authoritative knowledge.
+
+    Step 1: Try Wikipedia first (free, structured, authoritative).
+    Step 2: If Wikipedia returns empty, fallback to the default search
+    engine chain (Exa → Serper) for broader web coverage.
+
+    Only one source is appended per case: Wikipedia wins when available.
+    Failures are silently skipped so the main pipeline never breaks.
+    """
+    from search.wikipedia import search as wiki_search
+
+    for case in cases:
+        case_name = case.get("case_name", "")
+        if not case_name:
+            continue
+
+        # Step 1: Wikipedia
+        wiki_results: list[dict] = []
+        try:
+            wiki_results = wiki_search(case_name, num=1, lang=lang)
+        except Exception:
+            pass
+
+        if wiki_results:
+            wiki = wiki_results[0]
+            existing = case.get("content", "")
+            block = (
+                f"\n\n[知识补充] {wiki['title']}\n"
+                f"摘要: {wiki['snippet'][:400]}\n"
+                f"链接: {wiki['link']}"
+            )
+            case["content"] = (existing + block).strip()
+            continue
+
+        # Step 2: Fallback to web search (Exa → Serper via engine default)
+        try:
+            web_results = search(case_name, num=1, lang=lang)
+            if web_results:
+                web = web_results[0]
+                existing = case.get("content", "")
+                block = (
+                    f"\n\n[知识补充] {web['title']}\n"
+                    f"摘要: {web['snippet'][:400]}\n"
+                    f"链接: {web['link']}"
+                )
+                case["content"] = (existing + block).strip()
+        except Exception:
+            continue
+
+    return cases
 
 
 def _build_records(
@@ -309,7 +362,7 @@ def _search_node(
             ],
         }
 
-    all_results = _run_serper_queries(queries)
+    all_results = _run_search_queries(queries, lang=state.output_language)
 
     if not all_results:
         return {
@@ -317,7 +370,7 @@ def _search_node(
                 ScheduleLogEntry(
                     author=agent_name,
                     decision="search_empty",
-                    reason=f"Serper returned no results for {len(queries)} queries",
+                    reason=f"Search returned no results for {len(queries)} queries",
                 )
             ],
         }
@@ -349,6 +402,9 @@ def _search_node(
             "schedule_log": [deg],
             "token_spent": state.token_spent + tokens,
         }
+
+    # Enrich discovered cases with Wikipedia summaries for depth.
+    cases = _enrich_cases_with_wiki(cases, state.output_language)
 
     evidence_records = _build_records(cases, lens, direction, agent_name)
 

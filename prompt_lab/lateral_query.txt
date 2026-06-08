@@ -1,61 +1,35 @@
-You generate search queries for CONTEMPORARY CROSS-DOMAIN analogies.
+You translate a structural lens into an ABSTRACT search query for semantic search.
 
-A structural lens has abstracted a question into universal patterns. Your task is to generate queries that can find CURRENT-DAY cases where the same structural forces are playing out RIGHT NOW — across MANY dimensions of human experience, not just the most obvious one.
+A structural lens captures the universal pattern behind a specific question. Your task is to describe this pattern in a way that a semantic search engine can understand — WITHOUT naming any specific domain, industry, technology, or contemporary case.
+
+The search engine (Exa) will DISCOVER the actual cases. Your job is ONLY to describe the pattern clearly.
 
 Lens: {lens_name}
 Rationale: {lens_rationale}
 Structural entities: {entities_text}
 Structural relationships: {relations_text}
 
-CASES ALREADY FOUND (understand what structural angle they already cover, then deliberately search in a DIFFERENT direction):
-{existing_cases_text}
-
-HIDDEN DYNAMICS (surface phenomena with multiple parallel underlying layers — use each layer as a separate search angle):
-{hidden_dynamics_text}
-
-PRE-ANALOGY DIRECTIONS (from structural analysis, NOT web-searched — use as inspiration for search DIRECTIONS, do NOT search for these exact analogues):
-{analogue_hints_text}
-
 SEARCH PRINCIPLES:
 
-1. LEAVE THE ORIGINAL TOPIC COMPLETELY.
-   The point of lateral search is to find cases where the same STRUCTURAL FORCE is at work but wearing entirely different clothes. If the original question is about AI, your queries must NOT contain "AI", "自动化", "智能", "算法" or any synonym. You must find domains where the same pattern exists for COMPLETELY DIFFERENT surface reasons.
+1. DESCRIBE THE PATTERN, NOT THE CASE.
+   - ❌ BAD: "chefs facing competition from chain restaurants" (names a specific industry case)
+   - ❌ BAD: "traditional doctors losing authority to AI diagnosis" (names specific technology)
+   - ✅ GOOD: "contemporary cases across different domains where established experts lose authority to new capabilities" (describes pattern only)
 
-2. SPAN MULTIPLE LIFE DIMENSIONS — THIS IS CRITICAL.
-   The structural pattern does NOT only manifest in workplace/industry contexts. It operates across many dimensions of human experience. Your 3 queries MUST NOT all target the same dimension.
+2. NO SPECIFIC NAMES.
+   Your query must NOT contain:
+   - Proper nouns (names of people, places, institutions)
+   - Specific industries (banking, healthcare, education)
+   - Specific technologies (AI, blockchain, social media)
+   - Specific domains (art, sports, religion)
 
-   Life dimensions (not exhaustive):
-   - Work/occupation (industries, professions, labor markets)
-   - Intimate relationships (trust, jealousy, commitment, infidelity)
-   - Politics/governance (legitimacy, authority, representation, resistance)
-   - Religion/belief (faith, doubt, conversion, secularization)
-   - Art/creation (taste, originality, cultural value, movements)
-   - Military/conflict (strategy, deterrence, asymmetric warfare)
-   - Community/belonging (identity, immigration, assimilation, exclusion)
-   - Health/body (diagnosis, treatment paradigm, patient autonomy)
-   - Nature/ecology (invasive species, ecosystem disruption, adaptation)
-   - Education/pedagogy (authority of knowledge, self-directed learning)
-   - Sports/competition (coaching, talent evaluation, performance metrics)
-   - Law/justice (precedent, evidence standards, judicial authority)
+   Use only generic structural terms: "established group", "new capability", "authority erosion", "status challenge", etc.
 
-   RULE: At most 1 of your 4 queries may target the work/industry dimension. At least 3 must come from NON-WORK dimensions.
+3. Include the domain scope.
+   Add "across different domains" or "in various fields" to signal the search engine to look broadly.
 
-   Example — if the structural pattern is "an established node's certainty is destabilized by a newly capable external force":
-   - ❌ ALL about jobs: "chefs vs chain restaurants", "bankers vs fintech", "drivers vs autonomous vehicles" (all work dimension — FAIL)
-   - ✅ DIMENSIONALLY DIVERSE: "long-term partners facing sudden trust erosion from social media" (relationships) + "traditional religious communities facing scientific discoveries" (belief) + "experienced coaches facing AI-driven athlete analytics" (sports)
+4. The query should be ONE SENTENCE, 10-30 words, in the same language as the lens rationale.
 
-3. Each query should target a domain where people would NOT spontaneously think of the original question as related. That is where the most valuable analogies hide.
+5. Generate only 1-2 queries. More is not better — a single clear abstract query lets the semantic engine explore freely.
 
-4. Write queries using vocabulary NATIVE to the target domain. No structural jargon, no abstract terms — you are writing for a search engine.
-
-BOUNDARIES:
-- ✅ Different dimensions of human experience experiencing the SAME structural pattern TODAY
-- ✅ Current debates, ongoing controversies, present-day phenomena
-- ❌ NO historical cases — those belong to vertical search
-- ❌ NO surface-level vocabulary from the original question (including synonyms and translations)
-
-Each query: 5-15 words, in the same language as the lens rationale.
-
-Generate 4 queries, each targeting a DIFFERENT life dimension. Before writing each query, verify: (a) does this query contain ANY word that is a synonym of the original question's key terms? If yes, rewrite it. (b) does this query target a different dimension than the others? If not, change it. (c) does it avoid finding the same case as one already collected? If yes, change it.
-
-Output valid JSON only: {{"queries": ["q1", "q2", "q3", "q4"]}}
+Output valid JSON only: {{"queries": ["q1"]}}

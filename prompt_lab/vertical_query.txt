@@ -1,70 +1,35 @@
-You generate search queries for CROSS-PERIOD analogies spanning different eras.
+You translate a structural lens into an ABSTRACT search query for semantic search.
 
-A structural lens has abstracted a question into universal patterns. Your task is to generate queries that can find cases from DIFFERENT TIME PERIODS where the same structural forces played out — with emphasis on spanning DIFFERENT dimensions of human experience and DIFFERENT narrative templates, not the same story in different centuries.
+A structural lens captures the universal pattern behind a specific question. Your task is to describe this pattern in a way that a semantic search engine can understand — WITHOUT naming any specific historical case, event, person, or era.
+
+The search engine (Exa) will DISCOVER the actual cases. Your job is ONLY to describe the pattern clearly.
 
 Lens: {lens_name}
 Rationale: {lens_rationale}
 Structural entities: {entities_text}
 Structural relationships: {relations_text}
 
-CASES ALREADY FOUND (understand what structural angle AND what narrative template AND what life dimension they already cover, then deliberately search for a DIFFERENT combination):
-{existing_cases_text}
-
-HIDDEN DYNAMICS (surface phenomena with multiple parallel underlying layers — use each layer as a separate search angle):
-{hidden_dynamics_text}
-
-PRE-ANALOGY DIRECTIONS (from structural analysis, NOT web-searched — use as inspiration for search DIRECTIONS, do NOT search for these exact analogues):
-{analogue_hints_text}
-
 SEARCH PRINCIPLES:
 
-1. VARY THE NARRATIVE TEMPLATE, not just the era.
-   If existing cases all follow "new technology → old practitioners resist", your queries must explore DIFFERENT manifestations of the same structural force:
-   - How did institutions/systems ADAPT (not just resist)?
-   - What happened to the people who SUCCESSFULLY navigated the transition?
-   - Were there cases where the "threatened" group actually GAINED power from the disruption?
-   - Did the disruption create entirely NEW roles/positions that no one anticipated?
+1. DESCRIBE THE PATTERN, NOT THE CASE.
+   - ❌ BAD: "Qing dynasty abolition of imperial examination and scholar adaptation" (names a specific case)
+   - ❌ BAD: "printing press vs scribes in medieval Europe" (names specific technology and era)
+   - ✅ GOOD: "historical cases where established skilled monopolies lost status due to technological or institutional disruption" (describes pattern only)
 
-2. SPAN MULTIPLE LIFE DIMENSIONS — THIS IS CRITICAL.
-   The structural pattern does NOT only manifest in economic/technological contexts. It operates across many dimensions. Your 3 queries MUST NOT all target the same dimension.
+2. NO SPECIFIC NAMES.
+   Your query must NOT contain:
+   - Proper nouns (names of people, places, institutions)
+   - Specific events (wars, revolutions, movements)
+   - Specific technologies (printing press, steam engine, internet)
+   - Specific eras (Renaissance, Industrial Revolution, Ming dynasty)
 
-   Life dimensions (not exhaustive):
-   - Work/economy (industries, labor, trade)
-   - Intimate relationships (marriage customs, fidelity norms, courtship)
-   - Politics/governance (dynasties, revolutions, legitimacy crises)
-   - Religion/belief (reformation, schism, prophecy, secularization)
-   - Art/creation (aesthetic movements, patronage, censorship)
-   - Military/conflict (tactics revolution, deterrence, espionage)
-   - Community/belonging (migration, assimilation, diaspora)
-   - Health/medicine (disease paradigm, treatment revolution)
-   - Nature/ecology (species introduction, agricultural revolution)
-   - Education/knowledge (literacy spread, university formation)
-   - Law/justice (legal revolution, rights expansion)
+   Use only generic structural terms: "established group", "new capability", "status disruption", "identity crisis", etc.
 
-   RULE: At most 1 of your 4 queries may target the economic/technological dimension. At least 3 must come from NON-WORK dimensions.
+3. Include the temporal scope.
+   Add "historical" or "across different eras" to signal the search engine to look through time.
 
-   Example — if the structural pattern is "established certainty destabilized by new capability":
-   - ❌ ALL tech/economy: "printing press vs scribes", "steam engine vs artisans", "internet vs newspapers" (same dimension — FAIL)
-   - ✅ DIMENSIONALLY DIVERSE: "Martin Luther's 95 theses and the Catholic Church's legitimacy crisis" (religion) + "Ming dynasty examination reform and scholar-official identity crisis" (politics/education) + "impressionist painters rejected by the Salon academy" (art)
+4. The query should be ONE SENTENCE, 10-30 words, in the same language as the lens rationale.
 
-3. Prioritize cases where the structural pattern RESOLVED or reached a clear outcome. "What eventually happened" is the insight you are searching for.
+5. Generate only 1-2 queries. More is not better — a single clear abstract query lets the semantic engine explore freely.
 
-4. Query using era-specific concrete terms: names, events, institutions, technologies native to that period. Not abstract structural language.
-
-5. Push into non-obvious eras. If the pattern screams "Industrial Revolution", spend at most ONE query there and push the rest to eras where the connection is less obvious but structurally valid.
-
-TEMPORAL EXPLORATION SPACE:
-ancient civilizations → classical period → medieval → Renaissance/early modern → Enlightenment → industrial revolution → late 19th century → early 20th century → post-WWII → late 20th century → 2000s → 2010s
-
-BOUNDARIES:
-- ✅ Cases from any historical period and any dimension of life
-- ✅ Specific events, movements, transitions, cultural shifts, institutional changes
-- ❌ Do NOT repeat time periods already covered by existing cases
-- ❌ Do NOT repeat the same narrative template across all 3 queries
-- ❌ Do NOT have all 4 queries target the same life dimension
-
-Each query: 5-15 words, in the same language as the lens rationale.
-
-Generate 4 queries, each targeting a DIFFERENT time period AND a DIFFERENT life dimension AND a DIFFERENT narrative angle on the structural pattern.
-
-Output valid JSON only: {{"queries": ["q1", "q2", "q3", "q4"]}}
+Output valid JSON only: {{"queries": ["q1"]}}

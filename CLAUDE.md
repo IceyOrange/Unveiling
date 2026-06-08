@@ -208,7 +208,7 @@ LangGraph 节点函数应该返回 dict 表示 State 更新，由框架合并。
 
 ### 6. 模型名注意
 
-`OPENAI_MODEL_NAME` 在 `.env` 里。DeepSeek 当前可用的型号是 `deepseek-chat`（默认）和 `deepseek-reasoner`（关键判断点可选）。不要写不存在的型号。
+`OPENAI_MODEL_NAME` 在 `.env` 里。DeepSeek 当前可用的型号是 `deepseek-v4-flash`（默认，速度快）和 `deepseek-v4-pro`（质量高，关键判断点可选）。`deepseek-chat` 与 `deepseek-reasoner` 已于 2026/07/24 弃用，不要继续使用。
 
 ## 开发工作流
 

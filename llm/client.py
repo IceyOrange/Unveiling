@@ -41,7 +41,7 @@ class LLMClient:
             api_key=os.environ.get("OPENAI_API_KEY", ""),
             base_url=os.environ.get("OPENAI_API_BASE", "https://api.deepseek.com"),
         )
-        self.model = model or os.environ.get("OPENAI_MODEL_NAME", "deepseek-chat")
+        self.model = model or os.environ.get("OPENAI_MODEL_NAME", "deepseek-v4-flash")
         self.language = language
 
     def chat(
