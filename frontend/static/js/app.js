@@ -19,6 +19,430 @@
 
 (function () {
 
+  // ============================== i18n ===============================
+
+  var I18N = {
+    '中文': {
+      pageTitle: 'Unveiling · 万事曾在别处发生，本质总在深处相通',
+      manifesto: '万事曾在<em class="manifesto__em">别处</em>发生，本质总在<em class="manifesto__em">深处</em>相通',
+      lead: '写一个问题。我们去别的行业、别的时代里，看看它曾经怎么发生过。',
+      formLabel: '你想搞清楚什么',
+      placeholder: '把它完整地写下来。越具体，类比越准。',
+      submit: '开始分析',
+      demoLink: '看一份示例',
+      promptsHeading: '也可以从这些问题开始',
+      prompt1q: '大学生实习难找',
+      prompt1l: '也许会聊：医师执照 · 师徒制 · 城市的入场券',
+      prompt2q: '街上看到越来越多低头族',
+      prompt2l: '也许会聊：街边咖啡馆 · 火车上的报纸 · 早年的电视',
+      prompt3q: '社交平台的劣化趋势',
+      prompt3l: '也许会聊：购物中心 · 公共绿地 · 殖民地小镇',
+      prompt4q: '养小猫还是养小狗',
+      prompt4l: '也许会聊：合伙人 · 房客 · 一段长期友谊',
+      footLine1: '不是给答案。',
+      footLine2: '是给一个看法的支点。',
+      editionPrefix: '一份正在进行的分析',
+      editionComplete: '分析完成',
+      phaseInception: '抽象',
+      phaseInceptionDesc: '提炼问题的骨架',
+      phaseExploration: '搜集',
+      phaseExplorationDesc: '跨领域、跨时期 找类比',
+      phaseConvergence: '收拢',
+      phaseConvergenceDesc: '归纳 · 找矛盾',
+      nowLabel: '现在',
+      narrationInit: '正在准备分析……',
+      narrationInception: '正在拆解问题 — 提炼核心结构',
+      narrationExploration: '跨领域与跨时期并行搜索 — 找结构相似的类比案例',
+      narrationConvergence: '正在跨案例归纳共性 · 找矛盾 · 写结论',
+      narrationFoundCase: '刚刚找到 [{dir}] {name}{more}',
+      narrationConclusionReady: '结论已写入，准备呈现……',
+      narrationComplete: '分析完成',
+      narrationStartFailed: '启动分析失败：',
+      lensTag: '观察角度',
+      lensUnnamed: '未命名',
+      lensEntities: '参与的角色',
+      lensRelations: '角色之间的关系',
+      railsTitle: '搜索进度',
+      railsSubtitle: '两个方向 · 各找 10 个 · 最多 3 轮',
+      railLateral: '跨领域',
+      railLateralDesc: '找当代其他行业',
+      railVertical: '跨时期',
+      railVerticalDesc: '找历史上的先例',
+      statusNotStarted: '尚未开始',
+      statusInProgress: '进行中',
+      statusComplete: '已完成 — 找到 {count} 条',
+      statusRoundsExhausted: '轮次用完 — 带 {count} 条结束',
+      casesTitle: '找到的类比',
+      casesEmpty: '等系统找到第一个案例……',
+      caseUnnamed: '（未命名案例）',
+      caseUnexpected: '意外',
+      caseUnexpectedTitle: '系统标注为意外发现',
+      directionLateral: '跨领域',
+      directionVertical: '跨时期',
+      layerPhenomenon: '现象',
+      layerMechanism: '机制',
+      layerStructure: '结构',
+      confStrong: '强',
+      confMedium: '中',
+      confWeak: '弱',
+      confUnexpected: '意外',
+      machineView: '机器视角',
+      transitionLabel: '结论',
+      integrityLateralLabel: '跨领域',
+      integrityVerticalLabel: '跨时期',
+      integrityDegradationLabel: '降级处理',
+      integrityDegradationTitle: 'LLM 调用失败时启用的备用方案次数',
+      integrityTokensLabel: 'token',
+      unitCases: '个案例',
+      unitIssues: '处',
+      conclusionsTitle: '结论',
+      conclusionsSubtitle: '标题为主，展开看完整推理',
+      chapterCoreFinding: '核心结论',
+      chapterTrajectory: '这件事的走向',
+      chapterTension: '难处在哪',
+      chapterBoundary: '这话在哪里不成立',
+      chapterUnresolved: '还没回答清楚的',
+      chapterImplication: '所以你应该',
+      expandReasoning: '↓ 展开看推理',
+      collapse: '↑ 收起',
+      recapTitle: '分析过程速览',
+      recapLensTitle: '我们用什么角度看',
+      recapCaseIndex: '案例索引',
+      recapDegradation: '降级与跳过',
+      recapDegradationSubtitle: '系统在分析中遇到的失败点',
+      recapMetaLens: '观察角度',
+      recapMetaCases: '{count} 个案例',
+      recapMetaDegradations: '{count} 处降级',
+      recapMetaEmpty: '本次没有可回顾的过程材料',
+      backBtn: '重新开始',
+      resultMeta: '跨领域 {lateral} · 跨时期 {vertical} · {tokens} token{degradations}',
+      logEntries: '条调度',
+      tokensUnit: 'token',
+      casesCounter: '{count} 条',
+      layerTip: '层级：{layer}',
+      outlineTitle: '这次分析',
+      outlineLens: '观察角度',
+      outlineRails: '搜索进度',
+      outlineCases: '找到的类比',
+      outlineSection: '§ {num}',
+      emptyBody: '（系统未给出此项）',
+      caseIndexEmpty: '本次没有收集到案例。',
+      caseIndexNone: '（无）',
+    },
+    'English': {
+      pageTitle: 'Unveiling · Everything happened elsewhere; essences always connect in the depths',
+      manifesto: 'Everything happened <em class="manifesto__em">elsewhere</em>; essences always connect in the <em class="manifesto__em">depths</em>',
+      lead: 'Write a question. We\'ll look across other industries and other eras to see how it happened before.',
+      formLabel: 'What do you want to figure out',
+      placeholder: 'Write it out in full. The more specific, the sharper the analogy.',
+      submit: 'Start Analysis',
+      demoLink: 'See an example',
+      promptsHeading: 'Or start with one of these',
+      prompt1q: 'College internships are hard to find',
+      prompt1l: 'Might explore: medical licenses · apprenticeship · urban entry passes',
+      prompt2q: 'More people staring at phones',
+      prompt2l: 'Might explore: sidewalk cafés · newspapers on trains · early television',
+      prompt3q: 'Social platforms degrading',
+      prompt3l: 'Might explore: shopping malls · public greens · colonial towns',
+      prompt4q: 'Get a cat or a dog',
+      prompt4l: 'Might explore: partners · tenants · a long friendship',
+      footLine1: 'Not answers.',
+      footLine2: 'A pivot for perspective.',
+      editionPrefix: 'An analysis in progress',
+      editionComplete: 'Analysis complete',
+      phaseInception: 'Abstraction',
+      phaseInceptionDesc: 'Distill the question\'s skeleton',
+      phaseExploration: 'Exploration',
+      phaseExplorationDesc: 'Find analogies across domains & eras',
+      phaseConvergence: 'Convergence',
+      phaseConvergenceDesc: 'Synthesize · Find tension',
+      nowLabel: 'Now',
+      narrationInit: 'Preparing analysis…',
+      narrationInception: 'Deconstructing the question — distilling core structure',
+      narrationExploration: 'Parallel search across domains & eras — finding structurally similar cases',
+      narrationConvergence: 'Synthesizing across cases · finding tension · writing conclusions',
+      narrationFoundCase: 'Just found [{dir}] {name}{more}',
+      narrationConclusionReady: 'Conclusions written, preparing to present…',
+      narrationComplete: 'Analysis complete',
+      narrationStartFailed: 'Failed to start analysis: ',
+      lensTag: 'Lens',
+      lensUnnamed: 'Unnamed',
+      lensEntities: 'Entities',
+      lensRelations: 'Relations',
+      railsTitle: 'Search Progress',
+      railsSubtitle: 'Two directions · 10 each · max 3 rounds',
+      railLateral: 'Cross-domain',
+      railLateralDesc: 'Find contemporary industries',
+      railVertical: 'Cross-era',
+      railVerticalDesc: 'Find historical precedents',
+      statusNotStarted: 'Not started',
+      statusInProgress: 'In progress',
+      statusComplete: 'Complete — {count} found',
+      statusRoundsExhausted: 'Rounds exhausted — ended with {count}',
+      casesTitle: 'Analogies Found',
+      casesEmpty: 'Waiting for the first case…',
+      caseUnnamed: '(Unnamed case)',
+      caseUnexpected: 'Unexpected',
+      caseUnexpectedTitle: 'System flagged as unexpected discovery',
+      directionLateral: 'Cross-domain',
+      directionVertical: 'Cross-era',
+      layerPhenomenon: 'Phenomenon',
+      layerMechanism: 'Mechanism',
+      layerStructure: 'Structure',
+      confStrong: 'Strong',
+      confMedium: 'Medium',
+      confWeak: 'Weak',
+      confUnexpected: 'Unexpected',
+      machineView: 'Machine View',
+      transitionLabel: 'Conclusions',
+      integrityLateralLabel: 'Cross-domain',
+      integrityVerticalLabel: 'Cross-era',
+      integrityDegradationLabel: 'Degradations',
+      integrityDegradationTitle: 'Fallback activations when LLM calls failed',
+      integrityTokensLabel: 'tokens',
+      unitCases: ' cases',
+      unitIssues: ' issues',
+      conclusionsTitle: 'Conclusions',
+      conclusionsSubtitle: 'Titles first; expand for full reasoning',
+      chapterCoreFinding: 'Core Finding',
+      chapterTrajectory: 'Trajectory',
+      chapterTension: 'Tension',
+      chapterBoundary: 'Boundary Conditions',
+      chapterUnresolved: 'Unresolved',
+      chapterImplication: 'Implication',
+      expandReasoning: '↓ Expand reasoning',
+      collapse: '↑ Collapse',
+      recapTitle: 'Analysis Trail',
+      recapLensTitle: 'Lens We Used',
+      recapCaseIndex: 'Case Index',
+      recapDegradation: 'Degradations & Skips',
+      recapDegradationSubtitle: 'Failure points encountered during analysis',
+      recapMetaLens: 'Lens',
+      recapMetaCases: '{count} cases',
+      recapMetaDegradations: '{count} degradations',
+      recapMetaEmpty: 'No process material to review this time',
+      backBtn: 'Start Over',
+      resultMeta: 'Cross-domain {lateral} · Cross-era {vertical} · {tokens} tokens{degradations}',
+      logEntries: ' entries',
+      tokensUnit: 'tokens',
+      casesCounter: '{count} cases',
+      layerTip: 'Layer: {layer}',
+      outlineTitle: 'This Analysis',
+      outlineLens: 'Lens',
+      outlineRails: 'Progress',
+      outlineCases: 'Cases Found',
+      outlineSection: '§ {num}',
+      emptyBody: '(System did not provide this item)',
+      caseIndexEmpty: 'No cases collected this time.',
+      caseIndexNone: '(None)',
+    }
+  };
+
+  function t(key, params) {
+    var dict = I18N[state.language] || I18N['中文'];
+    var text = dict[key];
+    if (text == null) text = I18N['中文'][key] || key;
+    if (params) {
+      Object.keys(params).forEach(function (k) {
+        text = text.replace(new RegExp('\\{' + k + '\\}', 'g'), String(params[k]));
+      });
+    }
+    return text;
+  }
+
+  function applyLanguage() {
+    var lang = state.language === 'English' ? 'en' : 'zh-CN';
+    document.documentElement.lang = lang;
+    document.title = t('pageTitle');
+
+    // --- Home screen ---
+    var manifestoLine = document.querySelector('.manifesto__line');
+    if (manifestoLine) manifestoLine.innerHTML = t('manifesto');
+
+    var lead = document.querySelector('.home__lead');
+    if (lead) lead.textContent = t('lead');
+
+    var formLabel = document.querySelector('.home-form__label[for="home-question"]');
+    if (formLabel) formLabel.textContent = t('formLabel');
+
+    var questionInput = document.getElementById('home-question');
+    if (questionInput) questionInput.placeholder = t('placeholder');
+
+    var submitBtn = document.querySelector('.home-form__submit');
+    if (submitBtn) {
+      var submitText = submitBtn.querySelector('span:not(.home-form__submit-arrow)');
+      if (submitText) submitText.textContent = t('submit');
+    }
+
+    var demoLink = document.querySelector('.home__demo-link');
+    if (demoLink) {
+      var arrow = demoLink.querySelector('span');
+      demoLink.innerHTML = t('demoLink') + ' <span aria-hidden="true">→</span>';
+    }
+
+    var promptsHeading = document.querySelector('.prompts__heading-text');
+    if (promptsHeading) promptsHeading.textContent = t('promptsHeading');
+
+    var promptCards = document.querySelectorAll('.prompt-card');
+    promptCards.forEach(function (card, i) {
+      var qEl = card.querySelector('.prompt-card__question');
+      var lEl = card.querySelector('.prompt-card__lenses');
+      if (qEl) qEl.textContent = t('prompt' + (i + 1) + 'q');
+      if (lEl) lEl.textContent = t('prompt' + (i + 1) + 'l');
+    });
+
+    var footLines = document.querySelectorAll('.home__foot-line');
+    if (footLines.length >= 2) {
+      footLines[0].textContent = t('footLine1');
+      footLines[1].textContent = t('footLine2');
+    }
+
+    // --- Analysis screen ---
+    // Phase names & descs
+    var phaseSteps = document.querySelectorAll('.phases__step');
+    var phaseKeys = ['inception', 'exploration', 'convergence'];
+    phaseSteps.forEach(function (step, i) {
+      var nameEl = step.querySelector('.phases__step-name');
+      var descEl = step.querySelector('.phases__step-desc');
+      if (nameEl) nameEl.textContent = t('phase' + phaseKeys[i].charAt(0).toUpperCase() + phaseKeys[i].slice(1));
+      if (descEl) descEl.textContent = t('phase' + phaseKeys[i].charAt(0).toUpperCase() + phaseKeys[i].slice(1) + 'Desc');
+    });
+
+    var nowLabel = document.querySelector('.now__label');
+    if (nowLabel) nowLabel.textContent = t('nowLabel');
+
+    var lensTag = document.querySelector('.lens-reveal__tag');
+    if (lensTag) lensTag.textContent = t('lensTag');
+
+    var lensColHeads = document.querySelectorAll('.lens-reveal__col-head, .lens-map__col-head');
+    if (lensColHeads.length >= 2) {
+      lensColHeads[0].textContent = t('lensEntities');
+      lensColHeads[1].textContent = t('lensRelations');
+    }
+
+    var railsTitle = document.querySelector('.rails__title');
+    if (railsTitle) railsTitle.textContent = t('railsTitle');
+    var railsSubtitle = document.querySelector('.rails__subtitle');
+    if (railsSubtitle) railsSubtitle.textContent = t('railsSubtitle');
+
+    var railNames = document.querySelectorAll('.rail__name');
+    if (railNames.length >= 2) {
+      railNames[0].textContent = t('railLateral');
+      railNames[1].textContent = t('railVertical');
+    }
+    var railDescs = document.querySelectorAll('.rail__desc');
+    if (railDescs.length >= 2) {
+      railDescs[0].textContent = t('railLateralDesc');
+      railDescs[1].textContent = t('railVerticalDesc');
+    }
+
+    var casesTitle = document.querySelector('.cases__title');
+    if (casesTitle) casesTitle.textContent = t('casesTitle');
+
+    var machineToggleLabel = document.querySelector('.drawer__toggle-label');
+    if (machineToggleLabel) machineToggleLabel.textContent = t('machineView');
+
+    var integrityLabels = document.querySelectorAll('.integrity__label');
+    if (integrityLabels.length >= 4) {
+      integrityLabels[0].textContent = t('integrityLateralLabel');
+      integrityLabels[1].textContent = t('integrityVerticalLabel');
+      integrityLabels[2].textContent = t('integrityDegradationLabel');
+      integrityLabels[2].parentElement.title = t('integrityDegradationTitle');
+      integrityLabels[3].textContent = t('integrityTokensLabel');
+    }
+    var integrityUnits = document.querySelectorAll('.integrity__unit');
+    if (integrityUnits.length >= 3) {
+      integrityUnits[0].textContent = t('unitCases');
+      integrityUnits[1].textContent = t('unitCases');
+      integrityUnits[2].textContent = t('unitIssues');
+    }
+
+    var conclusionsTitle = document.querySelector('.conclusions__title');
+    if (conclusionsTitle) conclusionsTitle.textContent = t('conclusionsTitle');
+    var conclusionsSubtitle = document.querySelector('.conclusions__subtitle');
+    if (conclusionsSubtitle) conclusionsSubtitle.textContent = t('conclusionsSubtitle');
+
+    // Chapter markers
+    var chapterKeys = ['CoreFinding', 'Trajectory', 'Tension', 'Boundary', 'Unresolved', 'Implication'];
+    var chapterEls = document.querySelectorAll('.conclusion');
+    chapterEls.forEach(function (el, i) {
+      var nameEl = el.querySelector('.conclusion__marker-name');
+      if (nameEl) nameEl.textContent = t('chapter' + chapterKeys[i]);
+      var toggleOpen = el.querySelector('.conclusion__toggle-open');
+      var toggleClose = el.querySelector('.conclusion__toggle-close');
+      if (toggleOpen) toggleOpen.textContent = t('expandReasoning');
+      if (toggleClose) toggleClose.textContent = t('collapse');
+    });
+
+    var recapToggleLabel = document.querySelector('.recap__toggle-label');
+    if (recapToggleLabel) recapToggleLabel.textContent = t('recapTitle');
+
+    var recapSectionTitles = document.querySelectorAll('.recap__section-title');
+    if (recapSectionTitles.length >= 3) {
+      recapSectionTitles[0].textContent = t('recapLensTitle');
+      recapSectionTitles[1].textContent = t('recapCaseIndex');
+      recapSectionTitles[2].textContent = t('recapDegradation');
+    }
+    var recapSectionSubs = document.querySelectorAll('.recap__section-sub');
+    if (recapSectionSubs.length >= 3) {
+      recapSectionSubs[2].textContent = t('recapDegradationSubtitle');
+    }
+
+    var backBtn = document.querySelector('.analysis__back');
+    if (backBtn) {
+      var backText = backBtn.querySelector('span:not([aria-hidden])');
+      if (backText) backText.textContent = t('backBtn');
+    }
+
+    var outlineTitle = document.querySelector('.outline__title');
+    if (outlineTitle) outlineTitle.textContent = t('outlineTitle');
+    var outlineItems = document.querySelectorAll('.outline__item[data-target]');
+    var outlineKeys = ['outlineLens', 'outlineRails', 'outlineCases'];
+    outlineItems.forEach(function (item, i) {
+      var label = item.querySelector('.outline__label');
+      if (label && i < 3) label.textContent = t(outlineKeys[i]);
+    });
+
+    // Update dynamic constants
+    PHASE_LABEL.inception = t('phaseInception');
+    PHASE_LABEL.exploration = t('phaseExploration');
+    PHASE_LABEL.convergence = t('phaseConvergence');
+    DIRECTION_LABEL.lateral = t('directionLateral');
+    DIRECTION_LABEL.vertical = t('directionVertical');
+    LAYER_LABEL.phenomenon = t('layerPhenomenon');
+    LAYER_LABEL.mechanism = t('layerMechanism');
+    LAYER_LABEL.structure = t('layerStructure');
+    CONFIDENCE_LABEL.strong = t('confStrong');
+    CONFIDENCE_LABEL.medium = t('confMedium');
+    CONFIDENCE_LABEL.weak = t('confWeak');
+    CONFIDENCE_LABEL.unexpected = t('confUnexpected');
+    CHAPTERS[0].fallback = t('chapterCoreFinding');
+    CHAPTERS[1].fallback = t('chapterTrajectory');
+    CHAPTERS[2].fallback = t('chapterTension');
+    CHAPTERS[3].fallback = t('chapterBoundary');
+    CHAPTERS[4].fallback = t('chapterUnresolved');
+    CHAPTERS[5].fallback = t('chapterImplication');
+
+    // Update CSS pseudo-element labels via custom properties
+    var casesList = document.querySelector('.cases__list');
+    if (casesList) {
+      casesList.style.setProperty('--cases-empty', '"' + t('casesEmpty') + '"');
+    }
+    var transitionEl = document.querySelector('.analysis__transition');
+    if (transitionEl) {
+      transitionEl.style.setProperty('--transition-label', '"' + t('transitionLabel') + '"');
+    }
+
+    // Update current edition label if analysis is visible
+    if (state.screen === 'analysis') {
+      if (state.result) {
+        setText(dom.analysisEdition, t('editionComplete'));
+      } else {
+        setText(dom.analysisEdition, t('editionPrefix') + ' · ' + (PHASE_LABEL[state.phase] || state.phase));
+      }
+    }
+  }
+
   // ============================== State ==============================
 
   var TARGET_PER_DIRECTION = 10;
@@ -60,7 +484,6 @@
 
   var state = {
     screen: 'home',
-    mode: 'balance',
     language: '中文',
     taskId: null,
     eventSource: null,
@@ -87,8 +510,7 @@
       // Home
       homeForm: document.getElementById('home-form'),
       homeQuestion: document.getElementById('home-question'),
-      modeOptions: document.querySelectorAll('.home-form__mode-option'),
-      langOptions: document.querySelectorAll('.home-form__lang-option'),
+      langOptions: document.querySelectorAll('.lang-toggle__btn'),
       promptCards: document.querySelectorAll('.prompt-card'),
 
       // Analysis
@@ -191,6 +613,36 @@
     node.textContent = value == null ? '' : String(value);
   }
 
+  function setNarration(text) {
+    var wrap = dom.narrationText && dom.narrationText.closest('.now');
+    if (!wrap) {
+      setText(dom.narrationText, text);
+      return;
+    }
+    wrap.classList.add('is-updating');
+    setTimeout(function () {
+      setText(dom.narrationText, text);
+      wrap.classList.remove('is-updating');
+    }, 160);
+  }
+
+  function animateNumber(el, target, duration) {
+    if (!el) return;
+    duration = duration || 700;
+    var start = parseInt(el.textContent.replace(/\D/g, ''), 10) || 0;
+    if (start === target) { setText(el, target); return; }
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var current = Math.round(start + (target - start) * eased);
+      setText(el, current);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   function clear(node) {
     if (!node) return;
     while (node.firstChild) node.removeChild(node.firstChild);
@@ -227,6 +679,7 @@
     bindAnalysisControls();
     bindConclusionControls();
     outline.init();
+    applyLanguage();
 
     var params = new URLSearchParams(window.location.search);
     if (params.get('demo') === '1') {
@@ -235,17 +688,6 @@
   }
 
   function bindHome() {
-    dom.modeOptions.forEach(function (opt) {
-      opt.addEventListener('click', function () {
-        state.mode = opt.dataset.mode;
-        dom.modeOptions.forEach(function (o) {
-          var selected = o === opt;
-          o.classList.toggle('is-selected', selected);
-          o.setAttribute('aria-checked', selected ? 'true' : 'false');
-        });
-      });
-    });
-
     dom.langOptions.forEach(function (opt) {
       opt.addEventListener('click', function () {
         state.language = opt.dataset.lang;
@@ -254,6 +696,7 @@
           o.classList.toggle('is-selected', selected);
           o.setAttribute('aria-checked', selected ? 'true' : 'false');
         });
+        applyLanguage();
       });
     });
 
@@ -268,7 +711,7 @@
       e.preventDefault();
       var q = (dom.homeQuestion.value || '').trim();
       if (!q) return;
-      startAnalysis(q, state.mode, state.language);
+      startAnalysis(q, state.language);
     });
   }
 
@@ -326,7 +769,7 @@
     state.conclusion = null;
     state.result = null;
 
-    setText(dom.narrationText, '正在准备分析……');
+    setNarration(t('narrationInit'));
     hide(dom.lensReveal);
     hide(dom.rails);
     hide(dom.casesSection);
@@ -334,8 +777,8 @@
     clear(dom.lensRelations);
     clear(dom.casesList);
     clear(dom.scheduleLogList);
-    setText(dom.casesCounter, '0 条');
-    setText(dom.machineMeta, '0 条调度 · 0 token');
+    setText(dom.casesCounter, t('casesCounter', {count: 0}));
+    setText(dom.machineMeta, '0 ' + t('logEntries') + ' · 0 ' + t('tokensUnit'));
     setPhase('inception');
     updateRailUI('lateral');
     updateRailUI('vertical');
@@ -369,7 +812,7 @@
 
   // ========================== Start a run ============================
 
-  function startAnalysis(question, mode, language) {
+  function startAnalysis(question, language) {
     resetAnalysisState();
     setText(dom.analysisQuestion, question);
     showScreen('analysis');
@@ -377,7 +820,7 @@
     fetch('/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question, mode: mode, language: language }),
+      body: JSON.stringify({ question: question, language: language }),
     })
       .then(function (r) {
         if (!r.ok) throw new Error('analyze failed: ' + r.status);
@@ -389,7 +832,7 @@
         openEventSource(data.task_id);
       })
       .catch(function (err) {
-        setText(dom.narrationText, '启动分析失败：' + (err.message || err));
+        setNarration(t('narrationStartFailed') + (err.message || err));
       });
   }
 
@@ -440,11 +883,11 @@
     if (ev.phase === 'exploration') {
       show(dom.rails);
       show(dom.casesSection);
-      setText(dom.narrationText, '跨领域与跨时期并行搜索 — 找结构相似的类比案例');
+      setNarration(t('narrationExploration'));
     } else if (ev.phase === 'convergence') {
-      setText(dom.narrationText, '正在跨案例归纳共性 · 找矛盾 · 写结论');
+      setNarration(t('narrationConvergence'));
     } else if (ev.phase === 'inception') {
-      setText(dom.narrationText, '正在拆解问题 — 提炼核心结构');
+      setNarration(t('narrationInception'));
     }
   }
 
@@ -452,7 +895,7 @@
     state.lens = ev.lens;
     renderLens(ev.lens);
     show(dom.lensReveal);
-    setText(dom.narrationText, '观察角度已就位：' + (ev.lens.name || '未命名'));
+    setNarration(t('lensTag') + ' — ' + (ev.lens.name || t('lensUnnamed')));
   }
 
   function onEvidenceBatch(ev) {
@@ -471,8 +914,12 @@
     if (items.length) {
       var first = items[0];
       var dirLabel = DIRECTION_LABEL[first.search_direction] || first.search_direction;
-      var moreNote = items.length > 1 ? '（共 ' + items.length + ' 条）' : '';
-      setText(dom.narrationText, '刚刚找到 [' + dirLabel + '] ' + (first.case_name || '一条案例') + moreNote);
+      var moreNote = items.length > 1 ? ' (' + items.length + ')' : '';
+      setNarration(t('narrationFoundCase', {
+        dir: dirLabel,
+        name: first.case_name || t('caseUnnamed'),
+        more: moreNote
+      }));
     }
   }
 
@@ -486,7 +933,7 @@
 
   function onConclusion(ev) {
     state.conclusion = ev.conclusion;
-    setText(dom.narrationText, '结论已写入，准备呈现……');
+    setNarration(t('narrationConclusionReady'));
   }
 
   function onTokens(ev) {
@@ -508,7 +955,7 @@
   }
 
   function onError(ev) {
-    setText(dom.narrationText, '出错了：' + (ev.error || '未知错误'));
+    setNarration('Error: ' + (ev.error || 'Unknown error'));
   }
 
   // ============================ Renderers ============================
@@ -522,7 +969,7 @@
       else if (i === idx) step.classList.add('is-active');
       else step.classList.add('is-future');
     });
-    setText(dom.analysisEdition, '一份正在进行的分析 · ' + (PHASE_LABEL[phaseKey] || phaseKey));
+    setText(dom.analysisEdition, t('editionPrefix') + ' · ' + (PHASE_LABEL[phaseKey] || phaseKey));
   }
 
   function setPhaseAllComplete() {
@@ -530,11 +977,11 @@
       step.classList.remove('is-active', 'is-future');
       step.classList.add('is-complete');
     });
-    setText(dom.analysisEdition, '分析完成');
+    setText(dom.analysisEdition, t('editionComplete'));
   }
 
   function renderLens(lens) {
-    setText(dom.lensName, lens.name || '未命名');
+    setText(dom.lensName, lens.name || t('lensUnnamed'));
     setText(dom.lensRationale, lens.rationale || '');
     clear(dom.lensEntities);
     (lens.entities || []).forEach(function (e) {
@@ -568,24 +1015,26 @@
     var fillPct = pct(rec.count, TARGET_PER_DIRECTION);
     fillEl.style.width = fillPct + '%';
 
-    var label = '进行中';
+    var label = t('statusInProgress');
     if (rec.count >= TARGET_PER_DIRECTION) {
-      label = '已完成 — 找到 ' + rec.count + ' 条';
+      label = t('statusComplete', {count: rec.count});
       fillEl.classList.add('rail__fill--done');
     } else if (rec.rounds >= MAX_ROUNDS) {
-      label = '轮次用完 — 带 ' + rec.count + ' 条结束';
+      label = t('statusRoundsExhausted', {count: rec.count});
       fillEl.classList.add('rail__fill--stuck');
     } else if (rec.rounds === 0 && rec.count === 0) {
-      label = '尚未开始';
+      label = t('statusNotStarted');
     }
     setText(statusEl, label);
   }
 
   function appendCases(items) {
-    items.forEach(function (e) {
-      dom.casesList.appendChild(buildCaseRow(e));
+    items.forEach(function (e, i) {
+      var card = buildCaseRow(e);
+      card.style.animationDelay = (i * 70) + 'ms';
+      dom.casesList.appendChild(card);
     });
-    setText(dom.casesCounter, state.evidence.length + ' 条');
+    setText(dom.casesCounter, t('casesCounter', {count: state.evidence.length}));
   }
 
   function buildCaseRow(e) {
@@ -598,7 +1047,7 @@
     }, DIRECTION_LABEL[direction] || direction);
     var layerMark = el('span', {
       class: 'case__layer',
-      title: '层级：' + (LAYER_LABEL[layer] || layer),
+      title: t('layerTip', {layer: LAYER_LABEL[layer] || layer}),
     }, LAYER_MARKER[layer] || '■□□');
     var confChip = el('span', {
       class: 'case__chip case__chip--conf case__chip--conf-' + conf,
@@ -607,12 +1056,12 @@
     if (isUnexpected) {
       meta.appendChild(el('span', {
         class: 'case__chip case__chip--unexpected',
-        title: '系统标注为意外发现',
-      }, '意外'));
+        title: t('caseUnexpectedTitle'),
+      }, t('caseUnexpected')));
     }
     return el('li', { class: 'case' + (isUnexpected ? ' case--unexpected' : '') }, [
       meta,
-      el('div', { class: 'case__name' }, e.case_name || '（未命名案例）'),
+      el('div', { class: 'case__name' }, e.case_name || t('caseUnnamed')),
       el('div', { class: 'case__body' }, e.content || ''),
     ]);
   }
@@ -630,7 +1079,7 @@
   function updateMachineMeta() {
     setText(
       dom.machineMeta,
-      state.schedule.length + ' 条调度 · ' + formatTokens(state.tokens) + ' token'
+      state.schedule.length + t('logEntries') + ' · ' + formatTokens(state.tokens) + ' ' + t('tokensUnit')
     );
   }
 
@@ -643,7 +1092,7 @@
     setPhaseAllComplete();
 
     // 2. Narration wraps up
-    setText(dom.narrationText, '分析完成');
+    setNarration(t('narrationComplete'));
 
     // 3. Process elements get "completed" visual treatment
     dom.casesSection.classList.add('is-complete');
@@ -679,12 +1128,12 @@
   // ======================== Result sub-renderers ========================
 
   function renderIntegrity(result) {
-    setText(dom.integrityLateral, result.lateral_count || 0);
-    setText(dom.integrityVertical, result.vertical_count || 0);
+    animateNumber(dom.integrityLateral, result.lateral_count || 0);
+    animateNumber(dom.integrityVertical, result.vertical_count || 0);
     var degCount = (result.schedule_log || []).filter(function (l) {
       return l.is_degradation;
     }).length;
-    setText(dom.integrityDegradation, degCount);
+    animateNumber(dom.integrityDegradation, degCount);
     setText(dom.integrityTokens, formatTokens(result.token_spent || 0));
   }
 
@@ -710,13 +1159,13 @@
       clear(bodyEl);
       var bodyClass = chap.bodyClass + (text ? '' : ' is-empty');
       bodyEl.appendChild(
-        el('p', { class: bodyClass }, text || '（系统未给出此项）')
+        el('p', { class: bodyClass }, text || t('emptyBody'))
       );
     }
 
     if (chapterEl) {
       chapterEl.classList.toggle('is-empty', !text);
-      chapterEl.style.animationDelay = (index * 120) + 'ms';
+      chapterEl.style.animationDelay = (index * 160) + 'ms';
       chapterEl.classList.add('is-revealed');
     }
   }
@@ -764,12 +1213,12 @@
     // Recap drawer meta
     if (dom.recapMeta) {
       var bits = [];
-      if (lenses.length) bits.push('观察角度');
+      if (lenses.length) bits.push(t('recapMetaLens'));
       var evCount = (result.evidence || []).length;
-      if (evCount) bits.push(evCount + ' 个案例');
+      if (evCount) bits.push(t('recapMetaCases', {count: evCount}));
       var degCount = degraded.length;
-      if (degCount) bits.push(degCount + ' 处降级');
-      setText(dom.recapMeta, bits.length ? bits.join(' · ') : '本次没有可回顾的过程材料');
+      if (degCount) bits.push(t('recapMetaDegradations', {count: degCount}));
+      setText(dom.recapMeta, bits.length ? bits.join(' · ') : t('recapMetaEmpty'));
     }
   }
 
@@ -777,11 +1226,14 @@
     var degCount = (result.schedule_log || []).filter(function (l) {
       return l.is_degradation;
     }).length;
+    var degText = degCount ? ' · ' + t('recapMetaDegradations', {count: degCount}) : '';
     setText(dom.resultMeta,
-      '跨领域 ' + (result.lateral_count || 0) +
-      ' · 跨时期 ' + (result.vertical_count || 0) +
-      ' · ' + formatTokens(result.token_spent || 0) + ' token' +
-      (degCount ? ' · ' + degCount + ' 处降级' : '')
+      t('resultMeta', {
+        lateral: result.lateral_count || 0,
+        vertical: result.vertical_count || 0,
+        tokens: formatTokens(result.token_spent || 0),
+        degradations: degText
+      })
     );
   }
 
@@ -789,10 +1241,10 @@
 
   function renderCaseIndex(evidence) {
     clear(dom.caseIndex);
-    setText(dom.caseIndexMeta, evidence.length + ' 条案例');
+    setText(dom.caseIndexMeta, t('casesCounter', {count: evidence.length}));
     if (!evidence.length) {
       dom.caseIndex.appendChild(
-        el('div', { class: 'case-index__empty' }, '本次没有收集到案例。')
+        el('div', { class: 'case-index__empty' }, t('caseIndexEmpty'))
       );
       return;
     }
@@ -805,7 +1257,7 @@
         el('div', { class: 'case-index__rowhead' }, [
           el('span', { class: 'case-index__rowname' }, DIRECTION_LABEL[dir] || dir),
           el('span', { class: 'case-index__rowdesc' },
-            dir === 'lateral' ? '当代其他行业' : '历史上的先例'),
+            dir === 'lateral' ? t('railLateralDesc') : t('railVerticalDesc')),
         ])
       );
       var cells = el('div', { class: 'case-index__cells' });
@@ -829,7 +1281,7 @@
 
   function buildCaseIndexList(items) {
     if (!items.length) {
-      return el('div', { class: 'case-index__none' }, '（无）');
+      return el('div', { class: 'case-index__none' }, t('caseIndexNone'));
     }
     var list = el('ul', { class: 'case-index__list' });
     items.forEach(function (e) {
@@ -848,7 +1300,6 @@
   function loadDemoResult() {
     var demo = {
       question: 'AI 时代人们的 AI 焦虑',
-      mode: 'balance',
       language: '中文',
       lateral_count: 7,
       vertical_count: 5,
