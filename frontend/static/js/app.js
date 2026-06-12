@@ -256,6 +256,13 @@
     return text;
   }
 
+  function detectLanguage() {
+    var lang = (navigator.language || (navigator.languages && navigator.languages[0]) || 'zh-CN').toLowerCase();
+    if (lang.indexOf('zh') === 0) return '中文';
+    if (lang.indexOf('en') === 0) return 'English';
+    return '中文';
+  }
+
   function applyLanguage() {
     var lang = state.language === 'English' ? 'en' : 'zh-CN';
     document.documentElement.lang = lang;
@@ -522,7 +529,7 @@
 
   var state = {
     screen: 'home',
-    language: '中文',
+    language: detectLanguage(),
     taskId: null,
     eventSource: null,
     phase: 'inception',
@@ -713,6 +720,7 @@
 
   function init() {
     resolveDom();
+    syncLanguageToggle();
     bindHome();
     bindAnalysisControls();
     bindConclusionControls();
@@ -723,6 +731,14 @@
     if (params.get('demo') === '1') {
       loadDemoResult();
     }
+  }
+
+  function syncLanguageToggle() {
+    dom.langOptions.forEach(function (opt) {
+      var selected = opt.dataset.lang === state.language;
+      opt.classList.toggle('is-selected', selected);
+      opt.setAttribute('aria-checked', selected ? 'true' : 'false');
+    });
   }
 
   function bindHome() {
