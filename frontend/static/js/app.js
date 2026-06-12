@@ -68,6 +68,7 @@
       railLateralDesc: '找当代其他行业',
       railVertical: '跨时期',
       railVerticalDesc: '找历史上的先例',
+      railRounds: '第 {round} / {max} 轮',
       statusNotStarted: '尚未开始',
       statusInProgress: '进行中',
       statusComplete: '已完成 — 找到 {count} 条',
@@ -125,6 +126,8 @@
       outlineRails: '搜索进度',
       outlineCases: '找到的类比',
       outlineSection: '§ {num}',
+      outlineAriaLabel: '这次分析的目录',
+      phaseAriaLabel: '分析阶段',
       emptyBody: '（系统未给出此项）',
       caseIndexEmpty: '本次没有收集到案例。',
       caseIndexNone: '（无）',
@@ -175,6 +178,7 @@
       railLateralDesc: 'Find contemporary industries',
       railVertical: 'Cross-era',
       railVerticalDesc: 'Find historical precedents',
+      railRounds: 'Round {round} / {max}',
       statusNotStarted: 'Not started',
       statusInProgress: 'In progress',
       statusComplete: 'Complete — {count} found',
@@ -223,7 +227,7 @@
       recapMetaEmpty: 'No process material to review this time',
       backBtn: 'Start Over',
       resultMeta: 'Cross-domain {lateral} · Cross-era {vertical} · {tokens} tokens{degradations}',
-      logEntries: ' entries',
+      logEntries: 'log entries',
       tokensUnit: 'tokens',
       casesCounter: '{count} cases',
       layerTip: 'Layer: {layer}',
@@ -232,6 +236,8 @@
       outlineRails: 'Progress',
       outlineCases: 'Cases Found',
       outlineSection: '§ {num}',
+      outlineAriaLabel: 'Analysis outline',
+      phaseAriaLabel: 'Analysis phase',
       emptyBody: '(System did not provide this item)',
       caseIndexEmpty: 'No cases collected this time.',
       caseIndexNone: '(None)',
@@ -398,9 +404,17 @@
     if (outlineTitle) outlineTitle.textContent = t('outlineTitle');
     var outlineItems = document.querySelectorAll('.outline__item[data-target]');
     var outlineKeys = ['outlineLens', 'outlineRails', 'outlineCases'];
+    var chapterKeys = ['CoreFinding', 'Trajectory', 'Tension', 'Boundary', 'Unresolved', 'Implication'];
     outlineItems.forEach(function (item, i) {
       var label = item.querySelector('.outline__label');
-      if (label && i < 3) label.textContent = t(outlineKeys[i]);
+      if (!label) return;
+      var target = item.dataset.target;
+      if (target && target.indexOf('chapter-') === 0) {
+        var chapIdx = CHAPTERS.findIndex(function (ch) { return 'chapter-' + ch.key === target; });
+        if (chapIdx >= 0) label.textContent = t('chapter' + chapterKeys[chapIdx]);
+      } else if (i < 3) {
+        label.textContent = t(outlineKeys[i]);
+      }
     });
 
     // Update dynamic constants
@@ -441,6 +455,30 @@
         setText(dom.analysisEdition, t('editionPrefix') + ' · ' + (PHASE_LABEL[state.phase] || state.phase));
       }
     }
+
+    // Update dynamic counters / meta text that may have been rendered in another language
+    if (dom.casesCounter) {
+      setText(dom.casesCounter, t('casesCounter', {count: state.evidence.length}));
+    }
+    if (dom.machineMeta) {
+      updateMachineMeta();
+    }
+    if (dom.caseIndexMeta) {
+      setText(dom.caseIndexMeta, t('casesCounter', {count: state.evidence.length}));
+    }
+    if (state.result) {
+      if (dom.resultMeta) renderResultMeta(state.result);
+      if (dom.recapMeta) renderRecap(state.result);
+    }
+    if (dom.narrationText && state.screen === 'home') {
+      setText(dom.narrationText, t('narrationInit'));
+    }
+
+    // Accessibility labels and document language
+    var outlineEl = document.getElementById('outline');
+    if (outlineEl) outlineEl.setAttribute('aria-label', t('outlineAriaLabel'));
+    if (dom.phaseIndicator) dom.phaseIndicator.setAttribute('aria-label', t('phaseAriaLabel'));
+    document.documentElement.lang = state.language === '中文' ? 'zh-CN' : 'en';
   }
 
   // ============================== State ==============================
@@ -702,7 +740,8 @@
 
     dom.promptCards.forEach(function (card) {
       card.addEventListener('click', function () {
-        dom.homeQuestion.value = card.dataset.example || '';
+        var qEl = card.querySelector('.prompt-card__question');
+        dom.homeQuestion.value = qEl ? qEl.textContent.trim() : '';
         dom.homeQuestion.focus();
       });
     });
@@ -1011,7 +1050,7 @@
     if (!countEl) return;
 
     setText(countEl, rec.count);
-    setText(roundsEl, rec.rounds);
+    setText(roundsEl, t('railRounds', {round: rec.rounds, max: MAX_ROUNDS}));
     var fillPct = pct(rec.count, TARGET_PER_DIRECTION);
     fillEl.style.width = fillPct + '%';
 
@@ -1079,7 +1118,7 @@
   function updateMachineMeta() {
     setText(
       dom.machineMeta,
-      state.schedule.length + t('logEntries') + ' · ' + formatTokens(state.tokens) + ' ' + t('tokensUnit')
+      state.schedule.length + ' ' + t('logEntries') + ' · ' + formatTokens(state.tokens) + ' ' + t('tokensUnit')
     );
   }
 
