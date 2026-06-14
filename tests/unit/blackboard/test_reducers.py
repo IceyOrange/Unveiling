@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from blackboard.reducers import merge_dicts, merge_lists, replace
+from unveiling.blackboard.reducers import merge_dicts, merge_lists, replace
 
 
 def test_merge_lists_appends():

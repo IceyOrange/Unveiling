@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import openai
 import pytest
 
-from llm.client import LLMClient, LLMJSONError
+from unveiling.llm.client import LLMClient, LLMJSONError
 
 
 def _make_response(content: str, total_tokens: int = 10) -> MagicMock:
@@ -19,7 +19,7 @@ def _make_response(content: str, total_tokens: int = 10) -> MagicMock:
     return response
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_chat_returns_content_and_tokens(mock_openai_cls):
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = _make_response("hello", 42)
@@ -33,7 +33,7 @@ def test_chat_returns_content_and_tokens(mock_openai_cls):
     assert mock_client.chat.completions.create.call_count == 1
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_json_mode_retry_on_malformed_then_succeeds(mock_openai_cls):
     bad = _make_response("not-json {", total_tokens=20)
     good = _make_response('{"ok": true}', total_tokens=30)
@@ -54,7 +54,7 @@ def test_json_mode_retry_on_malformed_then_succeeds(mock_openai_cls):
     assert mock_client.chat.completions.create.call_count == 2
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_json_mode_raises_after_max_retries(mock_openai_cls):
     bad = _make_response("still not json", total_tokens=5)
     mock_client = MagicMock()
@@ -101,7 +101,7 @@ def test_ensure_json_instruction_appends_to_existing_system():
     assert messages[0]["content"] == "You are an X."
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_non_json_mode_no_retry(mock_openai_cls):
     # Even malformed-looking content is returned as-is in non-json mode.
     mock_client = MagicMock()
@@ -123,7 +123,7 @@ def test_non_json_mode_no_retry(mock_openai_cls):
 
 
 @patch("tenacity.nap.time.sleep", lambda *_a, **_kw: None)
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_transient_error_retries_then_succeeds(mock_openai_cls):
     transient = openai.APIConnectionError(request=MagicMock())
     good = _make_response("hello", total_tokens=11)
@@ -140,7 +140,7 @@ def test_transient_error_retries_then_succeeds(mock_openai_cls):
 
 
 @patch("tenacity.nap.time.sleep", lambda *_a, **_kw: None)
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_transient_error_reraises_after_max_attempts(mock_openai_cls):
     transient = openai.APIConnectionError(request=MagicMock())
     mock_client = MagicMock()
@@ -156,7 +156,7 @@ def test_transient_error_reraises_after_max_attempts(mock_openai_cls):
 
 
 @patch("tenacity.nap.time.sleep", lambda *_a, **_kw: None)
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_non_transient_error_does_not_retry(mock_openai_cls):
     # BadRequestError is not in the transient set and should fail fast.
     bad = openai.BadRequestError(
@@ -216,7 +216,7 @@ def test_inject_language_instruction_is_self_consistent(language):
     assert f"Do NOT use {language}" not in content
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_chat_constructor_language_reaches_system_message(mock_openai_cls):
     """End-to-end: language passed to LLMClient(...) must show up in the
     system message that gets sent to the API. The lab calls
@@ -234,7 +234,7 @@ def test_chat_constructor_language_reaches_system_message(mock_openai_cls):
     assert "Write ALL natural-language content in English" in sent_messages[0]["content"]
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_chat_language_kwarg_overrides_constructor(mock_openai_cls):
     """Explicit ``chat(language=...)`` should win over the constructor default."""
     mock_client = MagicMock()
@@ -249,7 +249,7 @@ def test_chat_language_kwarg_overrides_constructor(mock_openai_cls):
     assert "Write ALL natural-language content in English" not in sent_messages[0]["content"]
 
 
-@patch("llm.client.OpenAI")
+@patch("unveiling.llm.client.OpenAI")
 def test_chat_empty_language_skips_injection(mock_openai_cls):
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = _make_response("ok", 1)

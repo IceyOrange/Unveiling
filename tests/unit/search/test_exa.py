@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from search.exa import search
+from unveiling.search.exa import search
 
 
 class FakeExaResult:
@@ -27,7 +27,7 @@ def _make_exa_mock(results: list[FakeExaResult]):
     return mock_exa
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_success(mock_exa_cls):
     mock_exa_cls.return_value = _make_exa_mock([
         FakeExaResult("T1", "http://a", highlights=["Snippet A"], text="Text A"),
@@ -46,7 +46,7 @@ def test_search_success(mock_exa_cls):
     assert call_args.kwargs["num_results"] == 5
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_empty_results(mock_exa_cls):
     mock_exa_cls.return_value = _make_exa_mock([])
 
@@ -56,7 +56,7 @@ def test_search_empty_results(mock_exa_cls):
     assert results == []
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_with_far_search_hint(mock_exa_cls):
     mock_exa_cls.return_value = _make_exa_mock([])
 
@@ -67,7 +67,7 @@ def test_search_with_far_search_hint(mock_exa_cls):
     assert call_args[0][0] == "base query historical analogy"
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_uses_env_api_key(mock_exa_cls):
     mock_exa_cls.return_value = _make_exa_mock([])
 
@@ -84,7 +84,7 @@ def test_search_missing_api_key():
     assert "EXA_API_KEY" in str(exc_info.value)
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_api_exception(mock_exa_cls):
     mock_exa_cls.return_value.search.side_effect = RuntimeError("network failure")
 
@@ -95,7 +95,7 @@ def test_search_api_exception(mock_exa_cls):
     assert "Exa API request failed" in str(exc_info.value)
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_result_without_highlights_uses_text(mock_exa_cls):
     mock_exa_cls.return_value = _make_exa_mock([
         FakeExaResult("T", "http://x", highlights=[], text="Fallback text"),
@@ -107,7 +107,7 @@ def test_search_result_without_highlights_uses_text(mock_exa_cls):
     assert results[0]["snippet"] == "Fallback text"
 
 
-@patch("search.exa.Exa")
+@patch("unveiling.search.exa.Exa")
 def test_search_result_without_highlights_or_text(mock_exa_cls):
     mock_exa_cls.return_value = _make_exa_mock([
         FakeExaResult("T", "http://x", highlights=[], text=""),

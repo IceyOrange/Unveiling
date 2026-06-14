@@ -212,7 +212,7 @@ def test_preview_with_unknown_variable_in_edited_text_does_not_crash(client):
 # ---------------------------------------------------------------------------
 
 def test_run_prompt_calls_llm_and_returns_output(client, monkeypatch):
-    monkeypatch.setattr("llm.client.LLMClient", _FakeLLMClient)
+    monkeypatch.setattr("unveiling.llm.client.LLMClient", _FakeLLMClient)
     resp = client.post(
         "/api/prompts/demo/run",
         data=json.dumps({
@@ -238,7 +238,7 @@ def test_run_prompt_calls_llm_and_returns_output(client, monkeypatch):
 
 
 def test_run_prompt_records_history_visible_via_runs_endpoint(client, monkeypatch):
-    monkeypatch.setattr("llm.client.LLMClient", _FakeLLMClient)
+    monkeypatch.setattr("unveiling.llm.client.LLMClient", _FakeLLMClient)
     client.post(
         "/api/prompts/demo/run",
         data=json.dumps({"inputs": {"question": "X"}}),
@@ -278,7 +278,7 @@ def test_run_prompt_injects_selected_language_into_system_message(
         resp.usage = MagicMock(total_tokens=7)
         return resp
 
-    monkeypatch.setattr("llm.client.LLMClient._create_completion", fake_create)
+    monkeypatch.setattr("unveiling.llm.client.LLMClient._create_completion", fake_create)
     monkeypatch.setenv("OPENAI_API_KEY", "dummy")
 
     resp = client.post(
@@ -300,7 +300,7 @@ def test_run_prompt_injects_selected_language_into_system_message(
 
 
 def test_run_prompt_llm_failure_returns_500_with_error_history(client, monkeypatch):
-    monkeypatch.setattr("llm.client.LLMClient", _ExplodingLLMClient)
+    monkeypatch.setattr("unveiling.llm.client.LLMClient", _ExplodingLLMClient)
     resp = client.post(
         "/api/prompts/demo/run",
         data=json.dumps({"inputs": {"question": "X"}}),

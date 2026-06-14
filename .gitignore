@@ -12,6 +12,8 @@ venv/
 .env
 
 # Output (generated at runtime)
+data/output/
+data/tmp/
 output/
 tmp/
 *.log

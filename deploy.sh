@@ -40,6 +40,7 @@ python3 -m venv .venv --clear
 source .venv/bin/activate
 pip install --quiet --upgrade pip
 pip install --quiet -r requirements.txt
+pip install --quiet -e .
 pip install --quiet gunicorn gevent
 
 # 5. 写入环境变量模板（用户需要手动编辑）
@@ -48,7 +49,7 @@ if [ ! -f ".env" ]; then
     cat > .env << 'EOF'
 OPENAI_API_KEY=sk-your-deepseek-key-here
 OPENAI_API_BASE=https://api.deepseek.com/v1
-OPENAI_MODEL_NAME=deepseek-chat
+OPENAI_MODEL_NAME=deepseek-v4-flash
 SERPER_API_KEY=your-serper-key-here
 EOF
     echo "⚠️  请编辑 $APP_DIR/.env 文件，填入你的真实 API Key"

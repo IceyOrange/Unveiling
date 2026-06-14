@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from search.serper import search
+from unveiling.search.serper import search
 
 
 def _make_response(json_body: dict, status_code: int = 200) -> MagicMock:
@@ -20,7 +20,7 @@ def _make_response(json_body: dict, status_code: int = 200) -> MagicMock:
 
 
 @patch.dict("os.environ", {"SERPER_API_KEY": "test-key"})
-@patch("search.serper.requests.post")
+@patch("unveiling.search.serper.requests.post")
 def test_search_success(mock_post):
     mock_post.return_value = _make_response({
         "organic": [{"title": "t", "snippet": "s", "link": "u"}]
@@ -32,7 +32,7 @@ def test_search_success(mock_post):
 
 
 @patch.dict("os.environ", {"SERPER_API_KEY": "test-key"})
-@patch("search.serper.requests.post")
+@patch("unveiling.search.serper.requests.post")
 def test_search_empty_results(mock_post):
     mock_post.return_value = _make_response({"organic": []})
 
@@ -42,7 +42,7 @@ def test_search_empty_results(mock_post):
 
 
 @patch.dict("os.environ", {"SERPER_API_KEY": ""}, clear=False)
-@patch("search.serper.requests.post")
+@patch("unveiling.search.serper.requests.post")
 def test_search_missing_api_key(mock_post):
     with pytest.raises(ValueError) as exc_info:
         search("query")
@@ -52,7 +52,7 @@ def test_search_missing_api_key(mock_post):
 
 
 @patch.dict("os.environ", {"SERPER_API_KEY": "test-key"})
-@patch("search.serper.requests.post")
+@patch("unveiling.search.serper.requests.post")
 def test_search_passes_query_correctly(mock_post):
     mock_post.return_value = _make_response({"organic": []})
 
@@ -73,7 +73,7 @@ def test_search_passes_query_correctly(mock_post):
 
 
 @patch.dict("os.environ", {"SERPER_API_KEY": "test-key"})
-@patch("search.serper.requests.post")
+@patch("unveiling.search.serper.requests.post")
 def test_search_appends_far_search_hint(mock_post):
     mock_post.return_value = _make_response({"organic": []})
 
@@ -84,7 +84,7 @@ def test_search_appends_far_search_hint(mock_post):
 
 
 @patch.dict("os.environ", {"SERPER_API_KEY": "test-key"})
-@patch("search.serper.requests.post")
+@patch("unveiling.search.serper.requests.post")
 def test_search_retries_on_failure_then_succeeds(mock_post):
     # First two calls raise, third succeeds. tenacity should retry.
     success = _make_response({"organic": [{"title": "ok", "link": "l", "snippet": "s"}]})

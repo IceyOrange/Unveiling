@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from llm import prompt_loader
+from unveiling.llm import prompt_loader
 
 
 def test_load_lab_prompt_reads_existing_file():

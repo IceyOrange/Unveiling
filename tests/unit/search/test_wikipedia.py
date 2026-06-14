@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from search.wikipedia import search
+from unveiling.search.wikipedia import search
 
 
 class FakePagesDict:
@@ -51,7 +51,7 @@ def test_search_returns_structured_results():
     }
     fake = FakeWiki(pages)
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
         results = search("AI", num=5)
 
     assert len(results) == 2
@@ -68,7 +68,7 @@ def test_search_respects_num_limit():
     }
     fake = FakeWiki(pages)
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
         results = search("test", num=2)
 
     assert len(results) == 2
@@ -84,7 +84,7 @@ def test_search_appends_far_search_hint():
 
     fake = TrackedFakeWiki({})
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
         search("AI", num=5, far_search_hint="history")
 
     assert captured_query == ["AI history"]
@@ -97,7 +97,7 @@ def test_search_skips_nonexistent_pages():
     }
     fake = FakeWiki(pages)
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", return_value=fake):
         results = search("test", num=5)
 
     assert len(results) == 1
@@ -109,7 +109,7 @@ def test_search_gracefully_handles_search_exception():
         def search(self, query: str, limit: int = 10):
             raise RuntimeError("network failure")
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", return_value=BrokenWiki()):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", return_value=BrokenWiki()):
         results = search("test", num=5)
 
     assert results == []
@@ -123,7 +123,7 @@ def test_search_uses_chinese_for_zh():
             captured_lang.append(language)
             super().__init__({})
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", side_effect=TrackingWiki):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", side_effect=TrackingWiki):
         search("test", num=5, lang="中文")
 
     assert captured_lang == ["zh"]
@@ -137,7 +137,7 @@ def test_search_uses_english_for_english():
             captured_lang.append(language)
             super().__init__({})
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", side_effect=TrackingWiki):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", side_effect=TrackingWiki):
         search("test", num=5, lang="English")
 
     assert captured_lang == ["en"]
@@ -151,7 +151,7 @@ def test_search_defaults_to_zh_for_unknown_lang():
             captured_lang.append(language)
             super().__init__({})
 
-    with patch("search.wikipedia.wikipediaapi.Wikipedia", side_effect=TrackingWiki):
+    with patch("unveiling.search.wikipedia.wikipediaapi.Wikipedia", side_effect=TrackingWiki):
         search("test", num=5, lang="Français")
 
     assert captured_lang == ["zh"]
