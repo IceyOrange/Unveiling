@@ -38,7 +38,7 @@ cd "$APP_DIR"
 echo "[4/6] 安装 Python 依赖..."
 python3 -m venv .venv --clear
 source .venv/bin/activate
-pip install --quiet --upgrade pip
+pip install --quiet --upgrade pip setuptools
 pip install --quiet -r requirements.txt
 pip install --quiet -e .
 pip install --quiet gunicorn gevent

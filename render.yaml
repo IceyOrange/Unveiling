@@ -4,8 +4,8 @@ services:
     runtime: python
     plan: free
     region: singapore
-    buildCommand: "pip install -r requirements.txt && pip install -e ."
-    startCommand: "gunicorn -k gevent -w 1 -b 0.0.0.0:$PORT --timeout 300 frontend.app:app"
+    buildCommand: "pip install --upgrade pip setuptools && pip install -r requirements.txt && pip install -e ."
+    startCommand: "PYTHONPATH=src gunicorn -k gevent -w 1 -b 0.0.0.0:$PORT --timeout 300 frontend.app:app"
     envVars:
       - key: PYTHON_VERSION
         value: "3.11"
