@@ -384,6 +384,8 @@ def _serialize_evidence(ev) -> dict:
     sd = getattr(ev, "search_direction", None)
     layer = getattr(ev, "layer", None)
     conf = getattr(ev, "confidence", None)
+    era = getattr(ev, "era", None)
+    domain = getattr(ev, "domain", None)
     return {
         "id": getattr(ev, "id", ""),
         "case_name": getattr(ev, "case_name", ""),
@@ -394,6 +396,10 @@ def _serialize_evidence(ev) -> dict:
         "is_unexpected": bool(getattr(ev, "is_unexpected", False)),
         "source_lens_id": getattr(ev, "source_lens_id", ""),
         "status": getattr(ev, "status", "committed"),
+        "era": era.value if hasattr(era, "value") else (str(era) if era else None),
+        "domain": domain.value if hasattr(domain, "value") else (str(domain) if domain else None),
+        "distance": getattr(ev, "distance", None),
+        "distance_reason": getattr(ev, "distance_reason", None),
     }
 
 
