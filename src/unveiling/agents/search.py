@@ -519,8 +519,17 @@ def parallel_search_node(state: State) -> dict:
                 }
 
     # Collect new evidence
-    new_lateral: list[EvidenceRecord] = results.get("lateral", {}).get("evidence_zone", [])
-    new_vertical: list[EvidenceRecord] = results.get("vertical", {}).get("evidence_zone", [])
+    lateral_result = results.get("lateral", {})
+    vertical_result = results.get("vertical", {})
+
+    # Defensive: ensure results are dicts before calling .get()
+    if not isinstance(lateral_result, dict):
+        lateral_result = {}
+    if not isinstance(vertical_result, dict):
+        vertical_result = {}
+
+    new_lateral: list[EvidenceRecord] = lateral_result.get("evidence_zone", [])
+    new_vertical: list[EvidenceRecord] = vertical_result.get("evidence_zone", [])
 
     # Dedup across directions (only relevant when both ran)
     all_new = new_lateral + new_vertical
@@ -541,6 +550,9 @@ def parallel_search_node(state: State) -> dict:
 
     total_new_tokens = 0
     for direction, r in results.items():
+        # Defensive: skip non-dict results (shouldn't happen but guards against race conditions)
+        if not isinstance(r, dict):
+            continue
         for k, v in r.items():
             if k in ("evidence_zone", "lateral_count", "vertical_count"):
                 continue
