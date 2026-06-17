@@ -1553,25 +1553,31 @@
 
     // Now marker (the user's question sits at the present, top-left)
     var nowPos = dataToSvg(scale, scale.originX, ERA_YEAR[SCATTER.nowEra]);
+    var nowLabelText = t('scatterNow');
+    var nowLabelW = measureSvgTextWidth(nowLabelText, 'scatter__label scatter__label--origin');
+    var nowPillW = nowLabelW + 20; // 10px horizontal padding each side
+    var nowPillH = 18;
+    var nowPillX = nowPos.x - nowPillW / 2;
+    var nowPillY = nowPos.y - 30;
+
     var nowGroup = createSvgEl('g', { class: 'scatter__origin scatter__origin--now' });
     nowGroup.appendChild(createSvgEl('circle', {
       cx: nowPos.x, cy: nowPos.y, r: 5, class: 'scatter__origin-dot'
     }));
-    // Callout line from dot to label
+    // Vertical callout line from dot to label
     nowGroup.appendChild(createSvgEl('line', {
-      x1: nowPos.x, y1: nowPos.y + 6, x2: nowPos.x, y2: nowPos.y + 14,
+      x1: nowPos.x, y1: nowPos.y - 6, x2: nowPos.x, y2: nowPos.y - 12,
       class: 'scatter__origin-callout'
     }));
     // Background pill for label
-    var nowLabelText = t('scatterNow');
-    var nowPillW = nowLabelText.length * 11 + 16;
     nowGroup.appendChild(createSvgEl('rect', {
-      x: nowPos.x - nowPillW / 2, y: nowPos.y + 16,
-      width: nowPillW, height: 18, rx: 9, ry: 9,
+      x: nowPillX, y: nowPillY,
+      width: nowPillW, height: nowPillH, rx: 9, ry: 9,
       class: 'scatter__origin-pill scatter__origin-pill--now'
     }));
     nowGroup.appendChild(createSvgEl('text', {
-      x: nowPos.x, y: nowPos.y + 29, 'text-anchor': 'middle', class: 'scatter__label scatter__label--origin'
+      x: nowPos.x, y: nowPos.y - 17, 'text-anchor': 'middle',
+      class: 'scatter__label scatter__label--origin'
     }, nowLabelText));
     dom.scatterAxisLabels.appendChild(nowGroup);
 
