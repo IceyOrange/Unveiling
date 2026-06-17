@@ -1402,6 +1402,15 @@
     return el;
   }
 
+  function measureSvgTextWidth(text, className) {
+    var tmp = createSvgEl('text', { class: className }, text);
+    tmp.setAttribute('visibility', 'hidden');
+    dom.scatterChart.appendChild(tmp);
+    var width = tmp.getBBox().width;
+    dom.scatterChart.removeChild(tmp);
+    return width;
+  }
+
   function createDotShape(cx, cy, layer, dotClass) {
     var size = 22;
     if (layer === 'mechanism') {
