@@ -30,6 +30,6 @@ SEARCH PRINCIPLES:
 
 4. The query should be ONE SENTENCE, 10-30 words, in the same language as the lens rationale.
 
-5. Generate only 1-2 queries. More is not better — a single clear abstract query lets the semantic engine explore freely.
+5. Generate 3-4 DISTINCT abstract queries that approach the same pattern from different historical angles (e.g. one framed around skill obsolescence, one around institutional/guild response, one around shifts in social status). Varied phrasings surface a wider, richer pool of cases for the extractor.
 
-Output valid JSON only: {{"queries": ["q1"]}}
+Output valid JSON only: {{"queries": ["q1", "q2", "q3"]}}

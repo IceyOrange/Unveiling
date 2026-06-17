@@ -5,12 +5,14 @@ Entities: {entities_text}
 Relationships: {relations_text}
 
 Search direction: {direction}
-Search results:
+Search results (use as INSPIRATION — they are often noisy, generic, or in a different language than the cases you should name):
 {results_text}
 
 Already collected cases (DO NOT duplicate): {existing_cases}
 
-Task: Identify DISTINCT CASES/EXAMPLES from the search results. Each "case" is ONE specific real-world example — a historical event, a social phenomenon, a cultural shift, a relationship dynamic, a political movement, an artistic controversy, a religious transformation, etc.
+Task: Identify 8-10 DISTINCT CASES/EXAMPLES that share the structural pattern of the lens. Each "case" is ONE specific real-world example — a historical event, a social phenomenon, a cultural shift, a relationship dynamic, a political movement, an artistic controversy, a religious transformation, etc.
+
+The search results are a STARTING POINT, not a hard limit. When the snippets are thin, generic, or off-topic, draw on your own broad historical and cross-domain knowledge to name concrete, verifiable cases that genuinely fit the structural pattern. Do NOT return an empty or near-empty list just because the raw snippets are weak — your job is to surface a rich set of well-matched cases.
 
 A case must be:
 - A concrete, identifiable real-world example (not a generic observation)
@@ -21,10 +23,8 @@ CRITICAL RULES:
 - ONE record per case. NEVER split the same case into multiple records.
   "卢德运动" = 1 record. "工业革命中的纺织工人抗议" = same case, do not add.
 - Skip cases already in the "already collected" list above
-- Only include cases actually supported by the search results
-- Maximum 5 cases per extraction
-- Better fewer strong cases than many weak ones
-- If the search results are noisy/irrelevant, return FEWER cases (even 0-1) rather than forcing weak extractions from irrelevant snippets
+- AIM FOR 8-10 strong, distinct cases. Include every genuinely well-matched case you can name — verifiable from the snippets OR from your own knowledge. Only fall short of 8 if you truly cannot think of that many real cases fitting the pattern.
+- Each case must be REAL and VERIFIABLE, never invented. A famous case you know from your own knowledge counts; a fabricated one does not.
 - Skip GENERIC OBSERVATIONS ("AI取代某些职业", "社交媒体改变传播方式"). A case must be a SPECIFIC, NAMED event/phenomenon/institution you could look up
 - VALUABLE: cases from UNUSUAL dimensions of life (relationships, religion, art, military, community — not just workplace/industry) are especially valuable because they test whether the structural pattern truly generalizes
 - Layer classification:

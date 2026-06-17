@@ -1176,8 +1176,9 @@
     dom.casesSection.classList.add('is-complete');
     dom.lensReveal.classList.add('is-complete');
 
-    // 3.5 Render scatter plot (if enough cases with coordinates)
-    renderScatter(result.evidence || []);
+    // 3.5 Render scatter plot (if enough cases with coordinates).
+    // Fresh results get the staged hand-drawn reveal; restore renders instantly.
+    renderScatter(result.evidence || [], { animate: true });
 
     // 4. Show transition marker
     show(dom.analysisTransition);
@@ -1456,8 +1457,15 @@
     });
   }
 
-  function renderScatter(evidence) {
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function renderScatter(evidence, opts) {
     if (!dom.scatterSection || !dom.scatterDots || !dom.scatterCards) return;
+    // Staged hand-drawn reveal only when explicitly requested (fresh result),
+    // and never under reduced-motion. Restore paths render instantly.
+    var animate = !!(opts && opts.animate) && !prefersReducedMotion();
     clear(dom.scatterQuadrants);
     clear(dom.scatterGrid);
     clear(dom.scatterAxisLabels);
@@ -1509,26 +1517,33 @@
     });
 
     // Grid lines
+    var gridLines = [];
     // vertical grid lines
     for (var gx = left; gx <= right; gx += (right - left) / 5) {
-      dom.scatterGrid.appendChild(createSvgEl('line', {
+      var vline = createSvgEl('line', {
         x1: gx, y1: top, x2: gx, y2: bottom, class: 'scatter__grid-line'
-      }));
+      });
+      gridLines.push(vline);
+      dom.scatterGrid.appendChild(vline);
     }
     // horizontal grid lines
     for (var gy = top; gy <= bottom; gy += (bottom - top) / 4) {
-      dom.scatterGrid.appendChild(createSvgEl('line', {
+      var hline = createSvgEl('line', {
         x1: left, y1: gy, x2: right, y2: gy, class: 'scatter__grid-line'
-      }));
+      });
+      gridLines.push(hline);
+      dom.scatterGrid.appendChild(hline);
     }
 
-    // Axes
-    dom.scatterGrid.appendChild(createSvgEl('line', {
+    // Axes (drawn first / most prominently in the brush-stroke sequence)
+    var axisX = createSvgEl('line', {
       x1: left, y1: origin.y, x2: right, y2: origin.y, class: 'scatter__axis-line scatter__axis-line--x'
-    }));
-    dom.scatterGrid.appendChild(createSvgEl('line', {
+    });
+    var axisY = createSvgEl('line', {
       x1: divider.x, y1: top, x2: divider.x, y2: bottom, class: 'scatter__axis-line scatter__axis-line--y'
-    }));
+    });
+    dom.scatterGrid.appendChild(axisX);
+    dom.scatterGrid.appendChild(axisY);
 
     // Origin marker (the Second Industrial Revolution pivot, on the left edge)
     var originLabelText = t('scatterOrigin');
@@ -1658,15 +1673,88 @@
 
       dom.scatterDots.appendChild(g);
 
-      // Detail card
-      dom.scatterCards.appendChild(buildScatterCard(e));
+      // Detail card (paired with the dot above — they reveal as one beat)
+      var card = buildScatterCard(e);
+      dom.scatterCards.appendChild(card);
 
       return {
         g: g,
         dot: shape,
+        card: card,
         x: pos.x,
         y: pos.y
       };
+    });
+
+    if (animate) {
+      runScatterReveal(gridLines, axisX, axisY, items);
+    }
+  }
+
+  // Staged hand-drawn reveal: sketch the frame, then drop in each dot
+  // together with its paired card. Driven by inline animation-delay so the
+  // dot landing on the chart and its descriptive card are one synced beat.
+  function runScatterReveal(gridLines, axisX, axisY, items) {
+    // --- Frame: brush-stroke line drawing via stroke-dashoffset ---
+    // Axes lead, slightly out of sync for an organic hand feel; grid follows.
+    setupLineDraw(axisX, 0, 520);
+    setupLineDraw(axisY, 90, 560);
+    gridLines.forEach(function (ln, i) {
+      // small jitter so strokes don't all snap in lockstep
+      var jitter = (i % 3) * 40;
+      setupLineDraw(ln, 220 + i * 55 + jitter, 460);
+    });
+
+    // Axis / quadrant labels fade in as their region is drawn.
+    if (dom.scatterAxisLabels) {
+      var labelGroups = dom.scatterAxisLabels.childNodes;
+      for (var li = 0; li < labelGroups.length; li++) {
+        var node = labelGroups[li];
+        if (node.nodeType !== 1) continue;
+        node.classList.add('scatter-anim-label');
+        node.style.animationDelay = (300 + li * 90) + 'ms';
+      }
+    }
+
+    // --- Cases: each dot + its card revealed synchronously, staggered ---
+    var frameDoneMs = 950; // frame finishes drawing (~0.95s) before cases land
+    var stepMs = 220;
+    items.forEach(function (it, idx) {
+      var delay = (frameDoneMs + idx * stepMs) + 'ms';
+      it.g.classList.add('scatter-anim-dot');
+      it.g.style.animationDelay = delay;
+      it.card.classList.add('scatter-anim-card');
+      it.card.style.animationDelay = delay;
+    });
+  }
+
+  // Prime an SVG line for a stroke-dashoffset "drawing" animation.
+  function setupLineDraw(line, delayMs, durationMs) {
+    if (!line) return;
+    var len;
+    try { len = line.getTotalLength(); }
+    catch (_) { len = 0; }
+    if (!len) {
+      // getTotalLength may fail before layout; fall back to a generous value.
+      len = SCATTER.viewW + SCATTER.viewH;
+    }
+    line.classList.add('scatter-anim-line');
+    // During the draw we override stroke-dasharray with one long dash so the
+    // stroke renders as a single growing line. On completion we strip the
+    // inline styles so CSS reclaims its look (e.g. the grid's dashed pattern).
+    line.style.setProperty('--draw-len', len);
+    line.style.strokeDasharray = len + ' ' + len;
+    line.style.strokeDashoffset = len;
+    line.style.animationDelay = delayMs + 'ms';
+    line.style.animationDuration = durationMs + 'ms';
+    line.addEventListener('animationend', function onDrawn() {
+      line.removeEventListener('animationend', onDrawn);
+      line.classList.remove('scatter-anim-line');
+      line.style.removeProperty('--draw-len');
+      line.style.removeProperty('stroke-dasharray');
+      line.style.removeProperty('stroke-dashoffset');
+      line.style.removeProperty('animation-delay');
+      line.style.removeProperty('animation-duration');
     });
   }
 
