@@ -273,23 +273,27 @@
       </div>
       <!-- Legend -->
       <div class="scatter__legend" id="scatter-legend" aria-hidden="true">
-        <span class="scatter__legend-item scatter__legend-item--origin">
-          <span class="scatter__legend-swatch scatter__legend-swatch--origin"></span>
-          <span id="scatter-legend-origin">你的问题</span>
-        </span>
-        <span class="scatter__legend-item">
-          <span class="scatter__legend-swatch scatter__legend-swatch--lateral"></span>
-          <span id="scatter-legend-lateral">跨领域</span>
-        </span>
-        <span class="scatter__legend-item">
-          <span class="scatter__legend-swatch scatter__legend-swatch--vertical"></span>
-          <span id="scatter-legend-vertical">跨时期</span>
-        </span>
-        <span class="scatter__legend-item">
-          <span class="scatter__legend-swatch scatter__legend-swatch--unexpected"></span>
-          <span id="scatter-legend-unexpected">意外发现</span>
-        </span>
-        <span class="scatter__legend-layer">
+        <div class="scatter__legend-group scatter__legend-group--marker">
+          <span class="scatter__legend-title" id="scatter-legend-marker-title">标记</span>
+          <span class="scatter__legend-item scatter__legend-item--origin">
+            <span class="scatter__legend-swatch scatter__legend-swatch--origin"></span>
+            <span id="scatter-legend-origin">你的问题</span>
+          </span>
+          <span class="scatter__legend-item">
+            <span class="scatter__legend-swatch scatter__legend-swatch--lateral"></span>
+            <span id="scatter-legend-lateral">跨领域</span>
+          </span>
+          <span class="scatter__legend-item">
+            <span class="scatter__legend-swatch scatter__legend-swatch--vertical"></span>
+            <span id="scatter-legend-vertical">跨时期</span>
+          </span>
+          <span class="scatter__legend-item">
+            <span class="scatter__legend-swatch scatter__legend-swatch--unexpected"></span>
+            <span id="scatter-legend-unexpected">意外发现</span>
+          </span>
+        </div>
+        <div class="scatter__legend-group scatter__legend-group--layer">
+          <span class="scatter__legend-title" id="scatter-legend-layer-title">层级</span>
           <span class="scatter__legend-layer-item">
             <span class="scatter__legend-swatch scatter__legend-swatch--layer-structure"></span>
             <span id="scatter-legend-layer-structure">结构</span>
@@ -302,7 +306,7 @@
             <span class="scatter__legend-swatch scatter__legend-swatch--layer-phenomenon"></span>
             <span id="scatter-legend-layer-phenomenon">现象</span>
           </span>
-        </span>
+        </div>
       </div>
       <!-- Case detail cards below chart -->
       <div class="scatter__cards" id="scatter-cards"></div>
@@ -332,10 +336,6 @@
 
     <!-- Conclusions: six chapters, compact inline -->
     <section class="conclusions" id="conclusions" hidden>
-      <header class="conclusions__head">
-        <span class="conclusions__title">结论</span>
-      </header>
-
       <section class="conclusion" id="chapter-core_finding" data-key="core_finding">
         <header class="conclusion__marker">
           <span class="conclusion__marker-no">§ 1</span>
@@ -384,19 +384,6 @@
         <div class="conclusion__prose" id="prose-implication"></div>
       </section>
     </section>
-
-    <!-- Recap drawer: reasoning trail on demand -->
-    <aside class="recap" id="recap" hidden>
-      <div class="recap__content" id="recap-content">
-        <section class="recap__section" id="section-degradation" hidden>
-          <header class="recap__section-head">
-            <h2 class="recap__section-title">降级与跳过</h2>
-            <span class="recap__section-sub">系统在分析中遇到的失败点</span>
-          </header>
-          <ul class="degradation-list" id="degradation-list"></ul>
-        </section>
-      </div>
-    </aside>
 
     <footer class="analysis__foot" id="analysis-foot" hidden>
       <button class="analysis__back" type="button" id="result-back">

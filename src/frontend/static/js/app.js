@@ -121,6 +121,8 @@
       scatterLegendLateral: '跨领域',
       scatterLegendVertical: '跨时期',
       scatterLegendUnexpected: '意外发现',
+      scatterLegendMarkerTitle: '标记',
+      scatterLegendLayerTitle: '层级',
       eraAncient: '古代',
       eraMedieval: '中世纪',
       eraEarlyModern: '近代',
@@ -253,6 +255,8 @@
       scatterLegendLateral: 'Cross-domain',
       scatterLegendVertical: 'Cross-era',
       scatterLegendUnexpected: 'Unexpected',
+      scatterLegendMarkerTitle: 'Marker',
+      scatterLegendLayerTitle: 'Layer',
       eraAncient: 'Ancient',
       eraMedieval: 'Medieval',
       eraEarlyModern: 'Early modern',
@@ -403,6 +407,8 @@
     if (scatterLegendVertical) scatterLegendVertical.textContent = t('scatterLegendVertical');
     var scatterLegendUnexpected = document.getElementById('scatter-legend-unexpected');
     if (scatterLegendUnexpected) scatterLegendUnexpected.textContent = t('scatterLegendUnexpected');
+    var scatterLegendMarkerTitle = document.getElementById('scatter-legend-marker-title');
+    if (scatterLegendMarkerTitle) scatterLegendMarkerTitle.textContent = t('scatterLegendMarkerTitle');
 
     var scatterLegendLayerStructure = document.getElementById('scatter-legend-layer-structure');
     if (scatterLegendLayerStructure) scatterLegendLayerStructure.textContent = t('layerStructure');
@@ -410,6 +416,8 @@
     if (scatterLegendLayerMechanism) scatterLegendLayerMechanism.textContent = t('layerMechanism');
     var scatterLegendLayerPhenomenon = document.getElementById('scatter-legend-layer-phenomenon');
     if (scatterLegendLayerPhenomenon) scatterLegendLayerPhenomenon.textContent = t('layerPhenomenon');
+    var scatterLegendLayerTitle = document.getElementById('scatter-legend-layer-title');
+    if (scatterLegendLayerTitle) scatterLegendLayerTitle.textContent = t('scatterLegendLayerTitle');
 
     var machineToggleLabel = document.querySelector('.drawer__toggle-label');
     if (machineToggleLabel) machineToggleLabel.textContent = t('machineView');
@@ -1304,8 +1312,8 @@
     viewH: 520,
     padL: 110,
     padR: 110,
-    padT: 78,
-    padB: 82,
+    padT: 52,
+    padB: 52,
     originDomain: 'original',
     originEra: 'industrial',
     nowEra: 'contemporary',
