@@ -4,7 +4,7 @@
 // Unveiling frontend controller — two screens, unified analysis → result.
 //
 //   • home      — manifesto + question form
-//   • analysis  — phase ribbon + lens reveal + dual progress rails +
+//   • analysis  — phase ribbon + lens reveal +
 //                 chronological case feed + machine-view drawer +
 //                 conclusion chapters (revealed after analysis completes)
 //
@@ -62,13 +62,6 @@
       lensUnnamed: '未命名',
       lensEntities: '参与的角色',
       lensRelations: '角色之间的关系',
-      railsTitle: '搜索进度',
-      railsSubtitle: '两个方向 · 各找 10 个 · 最多 3 轮',
-      railLateral: '跨领域',
-      railLateralDesc: '找当代其他行业',
-      railVertical: '跨时期',
-      railVerticalDesc: '找历史上的先例',
-      railRounds: '第 {round} / {max} 轮',
       statusNotStarted: '尚未开始',
       statusInProgress: '进行中',
       statusComplete: '已完成 — 找到 {count} 条',
@@ -89,15 +82,9 @@
       confUnexpected: '意外',
       machineView: '机器视角',
       transitionLabel: '结论',
-      integrityLateralLabel: '跨领域',
-      integrityVerticalLabel: '跨时期',
-      integrityDegradationLabel: '降级处理',
-      integrityDegradationTitle: 'LLM 调用失败时启用的备用方案次数',
-      integrityTokensLabel: 'token',
-      unitCases: '个案例',
-      unitIssues: '处',
       conclusionsTitle: '结论',
-      conclusionsSubtitle: '标题为主，展开看完整推理',
+      conclusionsSubtitle: '',
+      conclusionsPreface: '',
       chapterCoreFinding: '核心结论',
       chapterTrajectory: '这件事的走向',
       chapterTension: '难处在哪',
@@ -107,30 +94,65 @@
       expandReasoning: '↓ 展开看推理',
       collapse: '↑ 收起',
       recapTitle: '分析过程速览',
-      recapLensTitle: '我们用什么角度看',
-      recapCaseIndex: '案例索引',
       recapDegradation: '降级与跳过',
       recapDegradationSubtitle: '系统在分析中遇到的失败点',
       recapMetaLens: '观察角度',
-      recapMetaCases: '{count} 个案例',
       recapMetaDegradations: '{count} 处降级',
-      recapMetaEmpty: '本次没有可回顾的过程材料',
+      recapMetaEmpty: '本次没有需要回顾的过程材料',
       backBtn: '重新开始',
       resultMeta: '跨领域 {lateral} · 跨时期 {vertical} · {tokens} token{degradations}',
+      resultMetaFallback: '分析完成',
+      insightBridgeLabel: '核心洞察',
+      scatterTitle: '找到的类比',
+      scatterSubtitle: '横轴 = 领域 · 纵轴 = 时间 · 原点 = 第二次工业革命',
+      scatterAria: '类比分布图：横轴为领域，纵轴为时间，原点为第二次工业革命',
+      scatterAxisDomainNear: '原领域',
+      scatterAxisDomainFar: '其他领域',
+      scatterAxisTimeAncient: '古代',
+      scatterAxisTimeNow: '现在',
+      scatterQuadrantTL: '同领域 · 工业革命后',
+      scatterQuadrantTR: '跨领域 · 工业革命后',
+      scatterQuadrantBL: '同领域 · 工业革命前',
+      scatterQuadrantBR: '跨领域 · 工业革命前',
+      scatterOrigin: '第二次工业革命',
+      scatterNow: '你的问题',
+      scatterDistance: '距离',
+      scatterLegendOrigin: '你的问题',
+      scatterLegendLateral: '跨领域',
+      scatterLegendVertical: '跨时期',
+      scatterLegendUnexpected: '意外发现',
+      eraAncient: '古代',
+      eraMedieval: '中世纪',
+      eraEarlyModern: '近代',
+      eraIndustrial: '工业革命',
+      eraContemporary: '当代',
+      eraFuture: '未来',
+      domainOriginal: '原领域',
+      domainTechnology: '技术',
+      domainEconomy: '经济',
+      domainPolitics: '政治',
+      domainCulture: '文化',
+      domainArt: '艺术',
+      domainReligion: '宗教',
+      domainMilitary: '军事',
+      domainScience: '科学',
+      domainEducation: '教育',
+      domainMedia: '媒体',
+      domainLaw: '法律',
+      domainMedicine: '医学',
+      domainSocial: '社会',
+      domainOther: '其他',
       logEntries: '条调度',
       tokensUnit: 'token',
       casesCounter: '{count} 条',
       layerTip: '层级：{layer}',
       outlineTitle: '这次分析',
       outlineLens: '观察角度',
-      outlineRails: '搜索进度',
       outlineCases: '找到的类比',
       outlineSection: '§ {num}',
       outlineAriaLabel: '这次分析的目录',
       phaseAriaLabel: '分析阶段',
       emptyBody: '（系统未给出此项）',
-      caseIndexEmpty: '本次没有收集到案例。',
-      caseIndexNone: '（无）',
     },
     'English': {
       pageTitle: 'Unveiling · Everything happened elsewhere; essences always connect in the depths',
@@ -172,13 +194,6 @@
       lensUnnamed: 'Unnamed',
       lensEntities: 'Entities',
       lensRelations: 'Relations',
-      railsTitle: 'Search Progress',
-      railsSubtitle: 'Two directions · 10 each · max 3 rounds',
-      railLateral: 'Cross-domain',
-      railLateralDesc: 'Find contemporary industries',
-      railVertical: 'Cross-era',
-      railVerticalDesc: 'Find historical precedents',
-      railRounds: 'Round {round} / {max}',
       statusNotStarted: 'Not started',
       statusInProgress: 'In progress',
       statusComplete: 'Complete — {count} found',
@@ -199,15 +214,9 @@
       confUnexpected: 'Unexpected',
       machineView: 'Machine View',
       transitionLabel: 'Conclusions',
-      integrityLateralLabel: 'Cross-domain',
-      integrityVerticalLabel: 'Cross-era',
-      integrityDegradationLabel: 'Degradations',
-      integrityDegradationTitle: 'Fallback activations when LLM calls failed',
-      integrityTokensLabel: 'tokens',
-      unitCases: ' cases',
-      unitIssues: ' issues',
       conclusionsTitle: 'Conclusions',
-      conclusionsSubtitle: 'Titles first; expand for full reasoning',
+      conclusionsSubtitle: '',
+      conclusionsPreface: '',
       chapterCoreFinding: 'Core Finding',
       chapterTrajectory: 'Trajectory',
       chapterTension: 'Tension',
@@ -217,30 +226,65 @@
       expandReasoning: '↓ Expand reasoning',
       collapse: '↑ Collapse',
       recapTitle: 'Analysis Trail',
-      recapLensTitle: 'Lens We Used',
-      recapCaseIndex: 'Case Index',
       recapDegradation: 'Degradations & Skips',
       recapDegradationSubtitle: 'Failure points encountered during analysis',
       recapMetaLens: 'Lens',
-      recapMetaCases: '{count} cases',
       recapMetaDegradations: '{count} degradations',
-      recapMetaEmpty: 'No process material to review this time',
+      recapMetaEmpty: 'No process material to review',
       backBtn: 'Start Over',
       resultMeta: 'Cross-domain {lateral} · Cross-era {vertical} · {tokens} tokens{degradations}',
+      resultMetaFallback: 'Analysis complete',
+      insightBridgeLabel: 'Core insight',
+      scatterTitle: 'Analogies Found',
+      scatterSubtitle: 'X = domain · Y = time · origin = Second Industrial Revolution',
+      scatterAria: 'Analogies map: domain on the horizontal axis, time on the vertical axis, origin is the Second Industrial Revolution',
+      scatterAxisDomainNear: 'Original domain',
+      scatterAxisDomainFar: 'Other domains',
+      scatterAxisTimeAncient: 'Ancient',
+      scatterAxisTimeNow: 'Now',
+      scatterQuadrantTL: 'Same domain · Post-industrial',
+      scatterQuadrantTR: 'Other domain · Post-industrial',
+      scatterQuadrantBL: 'Same domain · Pre-industrial',
+      scatterQuadrantBR: 'Other domain · Pre-industrial',
+      scatterOrigin: 'Second Industrial Revolution',
+      scatterNow: 'Your question',
+      scatterDistance: 'Distance',
+      scatterLegendOrigin: 'Your question',
+      scatterLegendLateral: 'Cross-domain',
+      scatterLegendVertical: 'Cross-era',
+      scatterLegendUnexpected: 'Unexpected',
+      eraAncient: 'Ancient',
+      eraMedieval: 'Medieval',
+      eraEarlyModern: 'Early modern',
+      eraIndustrial: 'Industrial',
+      eraContemporary: 'Contemporary',
+      eraFuture: 'Future',
+      domainOriginal: 'Original',
+      domainTechnology: 'Technology',
+      domainEconomy: 'Economy',
+      domainPolitics: 'Politics',
+      domainCulture: 'Culture',
+      domainArt: 'Art',
+      domainReligion: 'Religion',
+      domainMilitary: 'Military',
+      domainScience: 'Science',
+      domainEducation: 'Education',
+      domainMedia: 'Media',
+      domainLaw: 'Law',
+      domainMedicine: 'Medicine',
+      domainSocial: 'Social',
+      domainOther: 'Other',
       logEntries: 'log entries',
       tokensUnit: 'tokens',
       casesCounter: '{count} cases',
       layerTip: 'Layer: {layer}',
       outlineTitle: 'This Analysis',
       outlineLens: 'Lens',
-      outlineRails: 'Progress',
       outlineCases: 'Cases Found',
       outlineSection: '§ {num}',
       outlineAriaLabel: 'Analysis outline',
       phaseAriaLabel: 'Analysis phase',
       emptyBody: '(System did not provide this item)',
-      caseIndexEmpty: 'No cases collected this time.',
-      caseIndexNone: '(None)',
     }
   };
 
@@ -340,47 +384,48 @@
       lensColHeads[1].textContent = t('lensRelations');
     }
 
-    var railsTitle = document.querySelector('.rails__title');
-    if (railsTitle) railsTitle.textContent = t('railsTitle');
-    var railsSubtitle = document.querySelector('.rails__subtitle');
-    if (railsSubtitle) railsSubtitle.textContent = t('railsSubtitle');
-
-    var railNames = document.querySelectorAll('.rail__name');
-    if (railNames.length >= 2) {
-      railNames[0].textContent = t('railLateral');
-      railNames[1].textContent = t('railVertical');
-    }
-    var railDescs = document.querySelectorAll('.rail__desc');
-    if (railDescs.length >= 2) {
-      railDescs[0].textContent = t('railLateralDesc');
-      railDescs[1].textContent = t('railVerticalDesc');
-    }
-
     var casesTitle = document.querySelector('.cases__title');
     if (casesTitle) casesTitle.textContent = t('casesTitle');
+
+    // Scatter plot labels
+    var scatterTitle = document.getElementById('scatter-title');
+    if (scatterTitle) scatterTitle.textContent = t('scatterTitle');
+    var scatterSubtitle = document.getElementById('scatter-subtitle');
+    if (scatterSubtitle) scatterSubtitle.textContent = t('scatterSubtitle');
+    var scatterChart = document.getElementById('scatter-chart');
+    if (scatterChart) scatterChart.setAttribute('aria-label', t('scatterAria'));
+
+    var scatterLegendOrigin = document.getElementById('scatter-legend-origin');
+    if (scatterLegendOrigin) scatterLegendOrigin.textContent = t('scatterLegendOrigin');
+    var scatterLegendLateral = document.getElementById('scatter-legend-lateral');
+    if (scatterLegendLateral) scatterLegendLateral.textContent = t('scatterLegendLateral');
+    var scatterLegendVertical = document.getElementById('scatter-legend-vertical');
+    if (scatterLegendVertical) scatterLegendVertical.textContent = t('scatterLegendVertical');
+    var scatterLegendUnexpected = document.getElementById('scatter-legend-unexpected');
+    if (scatterLegendUnexpected) scatterLegendUnexpected.textContent = t('scatterLegendUnexpected');
+
+    var scatterLegendLayerStructure = document.getElementById('scatter-legend-layer-structure');
+    if (scatterLegendLayerStructure) scatterLegendLayerStructure.textContent = t('layerStructure');
+    var scatterLegendLayerMechanism = document.getElementById('scatter-legend-layer-mechanism');
+    if (scatterLegendLayerMechanism) scatterLegendLayerMechanism.textContent = t('layerMechanism');
+    var scatterLegendLayerPhenomenon = document.getElementById('scatter-legend-layer-phenomenon');
+    if (scatterLegendLayerPhenomenon) scatterLegendLayerPhenomenon.textContent = t('layerPhenomenon');
 
     var machineToggleLabel = document.querySelector('.drawer__toggle-label');
     if (machineToggleLabel) machineToggleLabel.textContent = t('machineView');
 
-    var integrityLabels = document.querySelectorAll('.integrity__label');
-    if (integrityLabels.length >= 4) {
-      integrityLabels[0].textContent = t('integrityLateralLabel');
-      integrityLabels[1].textContent = t('integrityVerticalLabel');
-      integrityLabels[2].textContent = t('integrityDegradationLabel');
-      integrityLabels[2].parentElement.title = t('integrityDegradationTitle');
-      integrityLabels[3].textContent = t('integrityTokensLabel');
-    }
-    var integrityUnits = document.querySelectorAll('.integrity__unit');
-    if (integrityUnits.length >= 3) {
-      integrityUnits[0].textContent = t('unitCases');
-      integrityUnits[1].textContent = t('unitCases');
-      integrityUnits[2].textContent = t('unitIssues');
-    }
+    var insightBridgeLabel = document.getElementById('insight-bridge-label');
+    if (insightBridgeLabel) insightBridgeLabel.textContent = t('insightBridgeLabel');
 
     var conclusionsTitle = document.querySelector('.conclusions__title');
     if (conclusionsTitle) conclusionsTitle.textContent = t('conclusionsTitle');
     var conclusionsSubtitle = document.querySelector('.conclusions__subtitle');
     if (conclusionsSubtitle) conclusionsSubtitle.textContent = t('conclusionsSubtitle');
+    var conclusionsPreface = document.querySelector('.conclusions__preface');
+    if (conclusionsPreface) {
+      var prefaceText = conclusionsPreface.querySelector('span:not(.conclusions__preface-dot)');
+      if (prefaceText) prefaceText.textContent = t('conclusionsPreface');
+    }
 
     // Chapter markers
     var chapterKeys = ['CoreFinding', 'Trajectory', 'Tension', 'Boundary', 'Unresolved', 'Implication'];
@@ -388,24 +433,18 @@
     chapterEls.forEach(function (el, i) {
       var nameEl = el.querySelector('.conclusion__marker-name');
       if (nameEl) nameEl.textContent = t('chapter' + chapterKeys[i]);
-      var toggleOpen = el.querySelector('.conclusion__toggle-open');
-      var toggleClose = el.querySelector('.conclusion__toggle-close');
-      if (toggleOpen) toggleOpen.textContent = t('expandReasoning');
-      if (toggleClose) toggleClose.textContent = t('collapse');
     });
 
     var recapToggleLabel = document.querySelector('.recap__toggle-label');
     if (recapToggleLabel) recapToggleLabel.textContent = t('recapTitle');
 
     var recapSectionTitles = document.querySelectorAll('.recap__section-title');
-    if (recapSectionTitles.length >= 3) {
-      recapSectionTitles[0].textContent = t('recapLensTitle');
-      recapSectionTitles[1].textContent = t('recapCaseIndex');
-      recapSectionTitles[2].textContent = t('recapDegradation');
+    if (recapSectionTitles.length >= 1) {
+      recapSectionTitles[0].textContent = t('recapDegradation');
     }
     var recapSectionSubs = document.querySelectorAll('.recap__section-sub');
-    if (recapSectionSubs.length >= 3) {
-      recapSectionSubs[2].textContent = t('recapDegradationSubtitle');
+    if (recapSectionSubs.length >= 1) {
+      recapSectionSubs[0].textContent = t('recapDegradationSubtitle');
     }
 
     var backBtn = document.querySelector('.analysis__back');
@@ -417,7 +456,7 @@
     var outlineTitle = document.querySelector('.outline__title');
     if (outlineTitle) outlineTitle.textContent = t('outlineTitle');
     var outlineItems = document.querySelectorAll('.outline__item[data-target]');
-    var outlineKeys = ['outlineLens', 'outlineRails', 'outlineCases'];
+    var outlineKeys = ['outlineLens', 'outlineCases'];
     var chapterKeys = ['CoreFinding', 'Trajectory', 'Tension', 'Boundary', 'Unresolved', 'Implication'];
     outlineItems.forEach(function (item, i) {
       var label = item.querySelector('.outline__label');
@@ -451,6 +490,8 @@
     CHAPTERS[4].fallback = t('chapterUnresolved');
     CHAPTERS[5].fallback = t('chapterImplication');
 
+    refreshEraDomainLabels();
+
     // Update CSS pseudo-element labels via custom properties
     var casesList = document.querySelector('.cases__list');
     if (casesList) {
@@ -477,12 +518,11 @@
     if (dom.machineMeta) {
       updateMachineMeta();
     }
-    if (dom.caseIndexMeta) {
-      setText(dom.caseIndexMeta, t('casesCounter', {count: state.evidence.length}));
-    }
     if (state.result) {
       if (dom.resultMeta) renderResultMeta(state.result);
       if (dom.recapMeta) renderRecap(state.result);
+      if (dom.scatterSection) renderScatter(state.result.evidence || state.evidence || []);
+      if (dom.narrationText) setNarration(t('narrationComplete'));
     }
     if (dom.narrationText && state.screen === 'home') {
       setText(dom.narrationText, t('narrationInit'));
@@ -526,12 +566,12 @@
   };
 
   var CHAPTERS = [
-    { key: 'core_finding',        fallback: '核心结论',         bodyClass: 'body-takeaway' },
-    { key: 'temporal_trajectory', fallback: '这件事的走向',     bodyClass: 'body-trajectory' },
-    { key: 'tension',             fallback: '难处在哪',         bodyClass: 'body-tension' },
-    { key: 'boundary_condition',  fallback: '这话在哪里不成立', bodyClass: 'body-boundary' },
-    { key: 'unresolved',          fallback: '还没回答清楚的',   bodyClass: 'body-unresolved' },
-    { key: 'implication',         fallback: '所以你应该',       bodyClass: 'body-implication' },
+    { key: 'core_finding',        fallback: '核心结论' },
+    { key: 'temporal_trajectory', fallback: '这件事的走向' },
+    { key: 'tension',             fallback: '难处在哪' },
+    { key: 'boundary_condition',  fallback: '这话在哪里不成立' },
+    { key: 'unresolved',          fallback: '还没回答清楚的' },
+    { key: 'implication',         fallback: '所以你应该' },
   ];
 
   var state = {
@@ -577,19 +617,18 @@
       lensEntities: document.getElementById('lens-entities'),
       lensRelations: document.getElementById('lens-relations'),
 
-      rails: document.getElementById('rails'),
-      lateralCount: document.getElementById('lateral-count'),
-      lateralRounds: document.getElementById('lateral-rounds'),
-      lateralFill: document.getElementById('lateral-fill'),
-      lateralStatus: document.getElementById('lateral-status'),
-      verticalCount: document.getElementById('vertical-count'),
-      verticalRounds: document.getElementById('vertical-rounds'),
-      verticalFill: document.getElementById('vertical-fill'),
-      verticalStatus: document.getElementById('vertical-status'),
-
       casesSection: document.getElementById('cases'),
       casesList: document.getElementById('cases-list'),
       casesCounter: document.getElementById('cases-counter'),
+
+      scatterSection: document.getElementById('scatter'),
+      scatterQuadrants: document.getElementById('scatter-quadrants'),
+      scatterGrid: document.getElementById('scatter-grid'),
+      scatterAxisLabels: document.getElementById('scatter-axis-labels'),
+      scatterDots: document.getElementById('scatter-dots'),
+      scatterTooltip: document.getElementById('scatter-tooltip'),
+      scatterCards: document.getElementById('scatter-cards'),
+      scatterLegend: document.getElementById('scatter-legend'),
 
       machineView: document.getElementById('machine-view'),
       machineToggle: document.getElementById('machine-view-toggle'),
@@ -599,24 +638,14 @@
       // Unified: conclusion zone
       analysisTransition: document.getElementById('analysis-transition'),
       integrity: document.getElementById('integrity'),
-      integrityLateral: document.getElementById('integrity-lateral'),
-      integrityVertical: document.getElementById('integrity-vertical'),
-      integrityDegradation: document.getElementById('integrity-degradation'),
-      integrityTokens: document.getElementById('integrity-tokens'),
+      integrityInsight: document.getElementById('integrity-insight'),
       conclusions: document.getElementById('conclusions'),
       conclusionChapters: document.querySelectorAll('.conclusion'),
 
       recap: document.getElementById('recap'),
       recapToggle: document.getElementById('recap-toggle'),
       recapMeta: document.getElementById('recap-meta'),
-
-      lensResultName: document.getElementById('lens-result-name'),
-      lensResultRationale: document.getElementById('lens-result-rationale'),
-      lensResultEntities: document.getElementById('lens-result-entities'),
-      lensResultRelations: document.getElementById('lens-result-relations'),
-
-      caseIndex: document.getElementById('case-index'),
-      caseIndexMeta: document.getElementById('case-index-meta'),
+      riverTransition: document.getElementById('river-transition'),
 
       sectionDegradation: document.getElementById('section-degradation'),
       degradationList: document.getElementById('degradation-list'),
@@ -716,6 +745,16 @@
   // ====================== Screen switching ===========================
 
   function showScreen(name) {
+    // Trigger river transition when switching home -> analysis
+    if (name === 'analysis' && state.screen === 'home') {
+      var riverTransition = document.getElementById('river-transition');
+      if (riverTransition) {
+        riverTransition.classList.add('is-active');
+        setTimeout(function () {
+          riverTransition.classList.remove('is-active');
+        }, 900);
+      }
+    }
     state.screen = name;
     dom.screens.forEach(function (s) {
       s.classList.toggle('is-active', s.dataset.screen === name);
@@ -736,6 +775,9 @@
 
     var params = new URLSearchParams(window.location.search);
     if (params.get('demo') === '1') {
+      // Analysis screen is already active server-side; keep state in sync
+      // so showScreen() does not re-trigger the home→analysis transition.
+      state.screen = 'analysis';
       loadDemoResult();
     }
   }
@@ -783,10 +825,12 @@
   }
 
   function bindAnalysisControls() {
-    dom.machineToggle.addEventListener('click', function () {
-      var expanded = dom.machineView.classList.toggle('is-expanded');
-      dom.machineToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-    });
+    if (dom.machineToggle && dom.machineView) {
+      dom.machineToggle.addEventListener('click', function () {
+        var expanded = dom.machineView.classList.toggle('is-expanded');
+        dom.machineToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      });
+    }
   }
 
   function bindConclusionControls() {
@@ -798,18 +842,6 @@
       }
       resetAnalysisState();
       showScreen('home');
-    });
-
-    // Chapter toggle — delegated on each conclusion
-    Array.prototype.forEach.call(dom.conclusionChapters, function (chapter) {
-      var toggle = chapter.querySelector('.conclusion__toggle');
-      if (!toggle) return;
-      toggle.addEventListener('click', function () {
-        var expanded = chapter.classList.toggle('is-expanded');
-        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        var body = chapter.querySelector('.conclusion__body');
-        if (body) body.setAttribute('aria-hidden', expanded ? 'false' : 'true');
-      });
     });
 
     // Recap drawer toggle
@@ -838,17 +870,20 @@
 
     setNarration(t('narrationInit'));
     hide(dom.lensReveal);
-    hide(dom.rails);
     hide(dom.casesSection);
+    hide(dom.scatterSection);
     clear(dom.lensEntities);
     clear(dom.lensRelations);
     clear(dom.casesList);
-    clear(dom.scheduleLogList);
+    clear(dom.scatterQuadrants);
+    clear(dom.scatterGrid);
+    clear(dom.scatterAxisLabels);
+    clear(dom.scatterDots);
+    clear(dom.scatterCards);
+    if (dom.scheduleLogList) clear(dom.scheduleLogList);
     setText(dom.casesCounter, t('casesCounter', {count: 0}));
-    setText(dom.machineMeta, '0 ' + t('logEntries') + ' · 0 ' + t('tokensUnit'));
+    if (dom.machineMeta) setText(dom.machineMeta, '0 ' + t('logEntries') + ' · 0 ' + t('tokensUnit'));
     setPhase('inception');
-    updateRailUI('lateral');
-    updateRailUI('vertical');
 
     // Reset conclusion zone
     hide(dom.analysisTransition);
@@ -857,19 +892,17 @@
     hide(dom.recap);
     hide(dom.analysisFoot);
     dom.casesSection.classList.remove('is-complete');
-    dom.rails.classList.remove('is-complete');
     dom.lensReveal.classList.remove('is-complete');
+    if (dom.scatterSection) dom.scatterSection.classList.remove('is-complete');
 
     CHAPTERS.forEach(function (chap) {
       var el = document.getElementById('chapter-' + chap.key);
       if (el) {
-        el.classList.remove('is-empty', 'is-revealed', 'is-expanded');
+        el.classList.remove('is-empty', 'is-revealed');
         el.style.animationDelay = '';
       }
-      var body = document.getElementById('body-' + chap.key);
-      if (body) clear(body);
-      var tagline = document.getElementById('tagline-' + chap.key);
-      if (tagline) setText(tagline, '');
+      var prose = document.getElementById('prose-' + chap.key);
+      if (prose) clear(prose);
     });
 
     // Outline back to all-pending — sections will re-announce themselves
@@ -948,7 +981,6 @@
   function onPhase(ev) {
     setPhase(ev.phase);
     if (ev.phase === 'exploration') {
-      show(dom.rails);
       show(dom.casesSection);
       setNarration(t('narrationExploration'));
     } else if (ev.phase === 'convergence') {
@@ -974,8 +1006,6 @@
     state.lateral.rounds = ev.lateral_rounds != null ? ev.lateral_rounds : state.lateral.rounds;
     state.vertical.rounds = ev.vertical_rounds != null ? ev.vertical_rounds : state.vertical.rounds;
 
-    updateRailUI('lateral');
-    updateRailUI('vertical');
     appendCases(items);
 
     if (items.length) {
@@ -1013,8 +1043,6 @@
     state.vertical.count = ev.vertical_count != null ? ev.vertical_count : state.vertical.count;
     state.lateral.rounds = ev.lateral_rounds != null ? ev.lateral_rounds : state.lateral.rounds;
     state.vertical.rounds = ev.vertical_rounds != null ? ev.vertical_rounds : state.vertical.rounds;
-    updateRailUI('lateral');
-    updateRailUI('vertical');
   }
 
   function onDone(ev) {
@@ -1068,33 +1096,6 @@
     ]);
   }
 
-  function updateRailUI(direction) {
-    var rec = state[direction];
-    var isLateral = direction === 'lateral';
-    var countEl = isLateral ? dom.lateralCount : dom.verticalCount;
-    var roundsEl = isLateral ? dom.lateralRounds : dom.verticalRounds;
-    var fillEl = isLateral ? dom.lateralFill : dom.verticalFill;
-    var statusEl = isLateral ? dom.lateralStatus : dom.verticalStatus;
-    if (!countEl) return;
-
-    setText(countEl, rec.count);
-    setText(roundsEl, t('railRounds', {round: rec.rounds, max: MAX_ROUNDS}));
-    var fillPct = pct(rec.count, TARGET_PER_DIRECTION);
-    fillEl.style.width = fillPct + '%';
-
-    var label = t('statusInProgress');
-    if (rec.count >= TARGET_PER_DIRECTION) {
-      label = t('statusComplete', {count: rec.count});
-      fillEl.classList.add('rail__fill--done');
-    } else if (rec.rounds >= MAX_ROUNDS) {
-      label = t('statusRoundsExhausted', {count: rec.count});
-      fillEl.classList.add('rail__fill--stuck');
-    } else if (rec.rounds === 0 && rec.count === 0) {
-      label = t('statusNotStarted');
-    }
-    setText(statusEl, label);
-  }
-
   function appendCases(items) {
     items.forEach(function (e, i) {
       var card = buildCaseRow(e);
@@ -1134,6 +1135,7 @@
   }
 
   function appendScheduleLog(entry) {
+    if (!dom.scheduleLogList) return;
     var klass = 'log' + (entry.is_degradation ? ' log--degraded' : '');
     var author = el('span', { class: 'log__author' }, entry.author || 'system');
     var decision = el('span', { class: 'log__decision' }, entry.decision || '');
@@ -1163,8 +1165,10 @@
 
     // 3. Process elements get "completed" visual treatment
     dom.casesSection.classList.add('is-complete');
-    dom.rails.classList.add('is-complete');
     dom.lensReveal.classList.add('is-complete');
+
+    // 3.5 Render scatter plot (if enough cases with coordinates)
+    renderScatter(result.evidence || []);
 
     // 4. Show transition marker
     show(dom.analysisTransition);
@@ -1195,13 +1199,12 @@
   // ======================== Result sub-renderers ========================
 
   function renderIntegrity(result) {
-    animateNumber(dom.integrityLateral, result.lateral_count || 0);
-    animateNumber(dom.integrityVertical, result.vertical_count || 0);
-    var degCount = (result.schedule_log || []).filter(function (l) {
-      return l.is_degradation;
-    }).length;
-    animateNumber(dom.integrityDegradation, degCount);
-    setText(dom.integrityTokens, formatTokens(result.token_spent || 0));
+    var c = result.conclusion || {};
+    var taglines = (c.taglines && typeof c.taglines === 'object') ? c.taglines : {};
+    var insight = taglines.core_finding || c.core_finding || '';
+    insight = String(insight).split('。')[0].trim();
+    if (insight.length > 120) insight = insight.slice(0, 120) + '…';
+    if (dom.integrityInsight) setText(dom.integrityInsight, insight || '—');
   }
 
   function renderConclusions(result) {
@@ -1214,49 +1217,44 @@
 
   function renderConclusion(chap, tagline, body, index) {
     var chapterEl = document.getElementById('chapter-' + chap.key);
-    var taglineEl = document.getElementById('tagline-' + chap.key);
-    var bodyEl = document.getElementById('body-' + chap.key);
+    var proseEl = document.getElementById('prose-' + chap.key);
 
     var text = (body == null ? '' : String(body)).trim();
     var taglineText = (tagline == null ? '' : String(tagline)).trim() || chap.fallback;
 
-    if (taglineEl) setText(taglineEl, taglineText);
+    if (proseEl) {
+      clear(proseEl);
+      var hasContent = false;
 
-    if (bodyEl) {
-      clear(bodyEl);
-      var bodyClass = chap.bodyClass + (text ? '' : ' is-empty');
-      bodyEl.appendChild(
-        el('p', { class: bodyClass }, text || t('emptyBody'))
-      );
+      // Lead paragraph from tagline
+      if (taglineText) {
+        proseEl.appendChild(el('p', { class: 'conclusion__lead' }, taglineText));
+        hasContent = true;
+      }
+
+      // Body paragraphs (split on blank lines, otherwise keep as one paragraph)
+      if (text) {
+        var paras = text.split(/\n\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+        if (!paras.length) paras = [text];
+        paras.forEach(function (para) {
+          proseEl.appendChild(el('p', { class: 'conclusion__para' }, para));
+        });
+        hasContent = true;
+      }
+
+      if (!hasContent) {
+        proseEl.appendChild(el('p', { class: 'conclusion__para conclusion__para--empty' }, t('emptyBody')));
+      }
     }
 
     if (chapterEl) {
-      chapterEl.classList.toggle('is-empty', !text);
+      chapterEl.classList.toggle('is-empty', !(taglineText || text));
       chapterEl.style.animationDelay = (index * 160) + 'ms';
       chapterEl.classList.add('is-revealed');
     }
   }
 
   function renderRecap(result) {
-    // Lens snapshot
-    var lenses = result.lenses || [];
-    if (lenses.length) {
-      var lens = lenses[lenses.length - 1];
-      setText(dom.lensResultName, lens.name || '');
-      setText(dom.lensResultRationale, lens.rationale || '');
-      clear(dom.lensResultEntities);
-      (lens.entities || []).forEach(function (e) {
-        dom.lensResultEntities.appendChild(buildLensPair(e.surface, e.structural_role));
-      });
-      clear(dom.lensResultRelations);
-      (lens.relationships || []).forEach(function (r) {
-        dom.lensResultRelations.appendChild(buildLensPair(r.surface, r.structural));
-      });
-    }
-
-    // Case index
-    renderCaseIndex(result.evidence || []);
-
     // Degradation list
     var degraded = (result.schedule_log || []).filter(function (l) {
       return l.is_degradation;
@@ -1280,9 +1278,10 @@
     // Recap drawer meta
     if (dom.recapMeta) {
       var bits = [];
-      if (lenses.length) bits.push(t('recapMetaLens'));
-      var evCount = (result.evidence || []).length;
-      if (evCount) bits.push(t('recapMetaCases', {count: evCount}));
+      var lensName = (result.lens && result.lens.name) || (state.lens && state.lens.name);
+      if (lensName) {
+        bits.push(t('recapMetaLens') + '：' + lensName);
+      }
       var degCount = degraded.length;
       if (degCount) bits.push(t('recapMetaDegradations', {count: degCount}));
       setText(dom.recapMeta, bits.length ? bits.join(' · ') : t('recapMetaEmpty'));
@@ -1290,76 +1289,477 @@
   }
 
   function renderResultMeta(result) {
-    var degCount = (result.schedule_log || []).filter(function (l) {
-      return l.is_degradation;
-    }).length;
-    var degText = degCount ? ' · ' + t('recapMetaDegradations', {count: degCount}) : '';
-    setText(dom.resultMeta,
-      t('resultMeta', {
-        lateral: result.lateral_count || 0,
-        vertical: result.vertical_count || 0,
-        tokens: formatTokens(result.token_spent || 0),
-        degradations: degText
-      })
-    );
+    var c = result.conclusion || {};
+    var tagline = (c.taglines && c.taglines.core_finding) || c.core_finding || '';
+    var insight = tagline.split('。')[0];
+    if (insight.length > 60) insight = insight.slice(0, 60) + '…';
+    setText(dom.resultMeta, insight || t('resultMetaFallback'));
   }
 
-  // ========================== Case index ==============================
+  // ========================== Scatter plot ============================
 
-  function renderCaseIndex(evidence) {
-    clear(dom.caseIndex);
-    setText(dom.caseIndexMeta, t('casesCounter', {count: evidence.length}));
-    if (!evidence.length) {
-      dom.caseIndex.appendChild(
-        el('div', { class: 'case-index__empty' }, t('caseIndexEmpty'))
-      );
+  var SCATTER = {
+    viewW: 800,
+    viewH: 520,
+    padL: 110,
+    padR: 110,
+    padT: 78,
+    padB: 82,
+    originDomain: 'original',
+    originEra: 'industrial',
+    nowEra: 'contemporary',
+    domainDivider: 0.35
+  };
+
+  // Continuous 1-D positions for each domain. "original" sits at the origin;
+  // the spectrum spreads toward culturally / structurally distant fields.
+  var DOMAIN_POSITION = {
+    original: 0.0,
+    technology: 0.16,
+    economy: 0.30,
+    politics: 0.40,
+    social: 0.50,
+    culture: 0.58,
+    art: 0.66,
+    education: 0.74,
+    media: 0.82,
+    law: 0.90,
+    medicine: 0.98,
+    military: 1.06,
+    religion: 1.14,
+    science: 1.22,
+    other: 1.30
+  };
+
+  // Normalized timeline: 0 = ancient (bottom), 0.5 = Second Industrial Revolution
+  // (the axis origin), 1 = present (top). No speculative future is plotted.
+  var ERA_YEAR = {
+    ancient: 0.00,
+    medieval: 0.16,
+    early_modern: 0.32,
+    industrial: 0.50,
+    contemporary: 0.84,
+    future: 1.00
+  };
+
+  function hashString(str) {
+    var h = 0;
+    var s = String(str || '');
+    for (var i = 0; i < s.length; i++) {
+      h = ((h << 5) - h) + s.charCodeAt(i);
+      h |= 0;
+    }
+    return (Math.abs(h) % 1000000) / 1000000;
+  }
+
+  function domainToX(domain, distance, seed) {
+    var base = DOMAIN_POSITION[domain];
+    if (base == null) base = 0.72;
+    var distSpread = ((distance == null ? 0.5 : distance) - 0.5) * 0.55;
+    var jitter = (hashString(seed + 'x') - 0.5) * 0.14;
+    return Math.max(0, Math.min(1.35, base + distSpread + jitter));
+  }
+
+  function eraToY(era, distance, seed) {
+    var base = ERA_YEAR[era];
+    if (base == null) base = ERA_YEAR.contemporary;
+    var distSpread = ((distance == null ? 0.5 : distance) - 0.5) * 0.12;
+    var jitter = (hashString(seed + 'y') - 0.5) * 0.08;
+    return Math.max(0, Math.min(1, base + distSpread + jitter));
+  }
+
+  function computeScatterScale(cases) {
+    var originX = DOMAIN_POSITION[SCATTER.originDomain];
+    var originY = ERA_YEAR[SCATTER.originEra];
+    var minX = 0, maxX = 1.35;
+    var minY = 0, maxY = 1;
+    cases.forEach(function (e) {
+      var x = domainToX(e.domain, e.distance, e.case_name);
+      var y = eraToY(e.era, e.distance, e.case_name);
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    });
+    return { originX: originX, originY: originY, minX: minX, maxX: maxX, minY: minY, maxY: maxY };
+  }
+
+  function dataToSvg(scale, x, y) {
+    var plotW = SCATTER.viewW - SCATTER.padL - SCATTER.padR;
+    var plotH = SCATTER.viewH - SCATTER.padT - SCATTER.padB;
+    return {
+      x: SCATTER.padL + (x - scale.minX) / (scale.maxX - scale.minX) * plotW,
+      y: SCATTER.padT + plotH - (y - scale.minY) / (scale.maxY - scale.minY) * plotH
+    };
+  }
+
+  function createSvgEl(tag, attrs, text) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) {
+      if (attrs[k] != null) el.setAttribute(k, attrs[k]);
+    }
+    if (text != null) el.textContent = text;
+    return el;
+  }
+
+  function createDotShape(cx, cy, layer, dotClass) {
+    var size = 22;
+    if (layer === 'mechanism') {
+      return createSvgEl('rect', {
+        x: cx - size / 2,
+        y: cy - size / 2,
+        width: size,
+        height: size,
+        rx: 4,
+        ry: 4,
+        class: dotClass
+      });
+    }
+    if (layer === 'structure') {
+      var s = size * 0.88;
+      var pts = [
+        [cx, cy - s / 2],
+        [cx + s / 2, cy],
+        [cx, cy + s / 2],
+        [cx - s / 2, cy]
+      ].map(function (p) { return p.join(','); }).join(' ');
+      return createSvgEl('polygon', {
+        points: pts,
+        class: dotClass
+      });
+    }
+    // phenomenon (and fallback)
+    return createSvgEl('circle', {
+      cx: cx,
+      cy: cy,
+      r: size / 2,
+      class: dotClass
+    });
+  }
+
+  function renderScatter(evidence) {
+    if (!dom.scatterSection || !dom.scatterDots || !dom.scatterCards) return;
+    clear(dom.scatterQuadrants);
+    clear(dom.scatterGrid);
+    clear(dom.scatterAxisLabels);
+    clear(dom.scatterDots);
+    clear(dom.scatterCards);
+
+    var plotCases = evidence.filter(function (e) {
+      return (e.era || e.distance != null) && e.era !== 'future';
+    });
+
+    if (plotCases.length < 2) {
+      hide(dom.scatterSection);
+      show(dom.casesSection);
       return;
     }
 
-    var directions = ['lateral', 'vertical'];
-    var layers = ['structure', 'mechanism', 'phenomenon'];
-    directions.forEach(function (dir) {
-      var row = el('div', { class: 'case-index__row' });
-      row.appendChild(
-        el('div', { class: 'case-index__rowhead' }, [
-          el('span', { class: 'case-index__rowname' }, DIRECTION_LABEL[dir] || dir),
-          el('span', { class: 'case-index__rowdesc' },
-            dir === 'lateral' ? t('railLateralDesc') : t('railVerticalDesc')),
-        ])
-      );
-      var cells = el('div', { class: 'case-index__cells' });
-      layers.forEach(function (layer) {
-        var matches = evidence.filter(function (e) {
-          return e.search_direction === dir && e.layer === layer;
-        });
-        var cell = el('div', { class: 'case-index__cell' }, [
-          el('div', { class: 'case-index__layer' }, [
-            el('span', { class: 'case-index__layer-marker' }, LAYER_MARKER[layer]),
-            el('span', { class: 'case-index__layer-name' }, LAYER_LABEL[layer]),
-          ]),
-          buildCaseIndexList(matches),
-        ]);
-        cells.appendChild(cell);
+    plotCases.forEach(function (e) {
+      if (!e.era) e.era = e.search_direction === 'vertical' ? 'industrial' : 'contemporary';
+      if (e.distance == null) e.distance = e.search_direction === 'lateral' ? 0.5 : 0.7;
+    });
+
+    show(dom.scatterSection);
+    hide(dom.casesSection);
+    if (dom.scatterLegend) show(dom.scatterLegend);
+
+    var scale = computeScatterScale(plotCases);
+    var origin = dataToSvg(scale, scale.originX, scale.originY);
+    var divider = dataToSvg(scale, SCATTER.domainDivider, scale.originY);
+    var left = SCATTER.padL;
+    var right = SCATTER.viewW - SCATTER.padR;
+    var top = SCATTER.padT;
+    var bottom = SCATTER.viewH - SCATTER.padB;
+
+    // Quadrant backgrounds: left = same/near domain, right = other domains
+    var qColors = ['#f7f6f2', '#faf8f4', '#f4f7f2', '#faf5f0'];
+    var qRects = [
+      { x: left, y: top, w: divider.x - left, h: origin.y - top },
+      { x: divider.x, y: top, w: right - divider.x, h: origin.y - top },
+      { x: left, y: origin.y, w: divider.x - left, h: bottom - origin.y },
+      { x: divider.x, y: origin.y, w: right - divider.x, h: bottom - origin.y }
+    ];
+    qRects.forEach(function (r, i) {
+      if (r.w <= 0 || r.h <= 0) return;
+      dom.scatterQuadrants.appendChild(createSvgEl('rect', {
+        x: r.x, y: r.y, width: r.w, height: r.h,
+        class: 'scatter__quadrant scatter__quadrant--' + ['tl', 'tr', 'bl', 'br'][i],
+        fill: qColors[i]
+      }));
+    });
+
+    // Grid lines
+    // vertical grid lines
+    for (var gx = left; gx <= right; gx += (right - left) / 5) {
+      dom.scatterGrid.appendChild(createSvgEl('line', {
+        x1: gx, y1: top, x2: gx, y2: bottom, class: 'scatter__grid-line'
+      }));
+    }
+    // horizontal grid lines
+    for (var gy = top; gy <= bottom; gy += (bottom - top) / 4) {
+      dom.scatterGrid.appendChild(createSvgEl('line', {
+        x1: left, y1: gy, x2: right, y2: gy, class: 'scatter__grid-line'
+      }));
+    }
+
+    // Axes
+    dom.scatterGrid.appendChild(createSvgEl('line', {
+      x1: left, y1: origin.y, x2: right, y2: origin.y, class: 'scatter__axis-line scatter__axis-line--x'
+    }));
+    dom.scatterGrid.appendChild(createSvgEl('line', {
+      x1: divider.x, y1: top, x2: divider.x, y2: bottom, class: 'scatter__axis-line scatter__axis-line--y'
+    }));
+
+    // Origin marker (the Second Industrial Revolution pivot, on the left edge)
+    var originGroup = createSvgEl('g', { class: 'scatter__origin' });
+    originGroup.appendChild(createSvgEl('circle', {
+      cx: origin.x, cy: origin.y, r: 5, class: 'scatter__origin-dot'
+    }));
+    // Callout line from dot to label
+    originGroup.appendChild(createSvgEl('line', {
+      x1: origin.x, y1: origin.y - 6, x2: origin.x, y2: origin.y - 14,
+      class: 'scatter__origin-callout'
+    }));
+    // Background pill for label
+    var originLabelText = t('scatterOrigin');
+    var originPillW = originLabelText.length * 11 + 16; // approximate width
+    originGroup.appendChild(createSvgEl('rect', {
+      x: origin.x - originPillW / 2, y: origin.y - 30,
+      width: originPillW, height: 18, rx: 9, ry: 9,
+      class: 'scatter__origin-pill'
+    }));
+    originGroup.appendChild(createSvgEl('text', {
+      x: origin.x, y: origin.y - 17, 'text-anchor': 'middle', class: 'scatter__label scatter__label--origin'
+    }, originLabelText));
+    dom.scatterAxisLabels.appendChild(originGroup);
+
+    // Now marker (the user's question sits at the present, top-left)
+    var nowPos = dataToSvg(scale, scale.originX, ERA_YEAR[SCATTER.nowEra]);
+    var nowGroup = createSvgEl('g', { class: 'scatter__origin scatter__origin--now' });
+    nowGroup.appendChild(createSvgEl('circle', {
+      cx: nowPos.x, cy: nowPos.y, r: 5, class: 'scatter__origin-dot'
+    }));
+    // Callout line from dot to label
+    nowGroup.appendChild(createSvgEl('line', {
+      x1: nowPos.x, y1: nowPos.y + 6, x2: nowPos.x, y2: nowPos.y + 14,
+      class: 'scatter__origin-callout'
+    }));
+    // Background pill for label
+    var nowLabelText = t('scatterNow');
+    var nowPillW = nowLabelText.length * 11 + 16;
+    nowGroup.appendChild(createSvgEl('rect', {
+      x: nowPos.x - nowPillW / 2, y: nowPos.y + 16,
+      width: nowPillW, height: 18, rx: 9, ry: 9,
+      class: 'scatter__origin-pill scatter__origin-pill--now'
+    }));
+    nowGroup.appendChild(createSvgEl('text', {
+      x: nowPos.x, y: nowPos.y + 29, 'text-anchor': 'middle', class: 'scatter__label scatter__label--origin'
+    }, nowLabelText));
+    dom.scatterAxisLabels.appendChild(nowGroup);
+
+    // Axis end labels
+    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+      x: left + 4, y: top - 8, class: 'scatter__label scatter__label--axis'
+    }, t('scatterAxisDomainNear')));
+    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+      x: right - 4, y: top - 8, 'text-anchor': 'end', class: 'scatter__label scatter__label--axis'
+    }, t('scatterAxisDomainFar')));
+    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+      x: divider.x - 8, y: top + 16, 'text-anchor': 'end', class: 'scatter__label scatter__label--axis'
+    }, t('scatterAxisTimeNow')));
+    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+      x: divider.x - 8, y: bottom - 12, 'text-anchor': 'end', class: 'scatter__label scatter__label--axis'
+    }, t('scatterAxisTimeAncient')));
+
+    // Quadrant corner labels (centered in each quadrant)
+    var qLabels = [
+      { x: (left + divider.x) / 2, y: (top + origin.y) / 2, key: 'scatterQuadrantTL' },
+      { x: (divider.x + right) / 2, y: (top + origin.y) / 2, key: 'scatterQuadrantTR' },
+      { x: (left + divider.x) / 2, y: (origin.y + bottom) / 2, key: 'scatterQuadrantBL' },
+      { x: (divider.x + right) / 2, y: (origin.y + bottom) / 2, key: 'scatterQuadrantBR' }
+    ];
+    qLabels.forEach(function (ql) {
+      dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+        x: ql.x, y: ql.y, 'text-anchor': 'middle',
+        class: 'scatter__label scatter__label--quadrant'
+      }, t(ql.key)));
+    });
+
+    // First pass: create dots and initial labels (sorted by y for stable vertical spacing)
+    var rawItems = plotCases.map(function (e, i) {
+      var xData = domainToX(e.domain, e.distance, e.case_name);
+      var yData = eraToY(e.era, e.distance, e.case_name);
+      var pos = dataToSvg(scale, xData, yData);
+      return { e: e, i: i, x: pos.x, y: pos.y, xData: xData, yData: yData };
+    });
+    rawItems.sort(function (a, b) { return a.y - b.y; });
+
+    var items = rawItems.map(function (item, sortedIdx) {
+      var e = item.e;
+      var pos = { x: item.x, y: item.y };
+      var isUnexpected = !!e.is_unexpected;
+      var dotClass = 'scatter__dot' +
+        (isUnexpected ? ' scatter__dot--unexpected' : ' scatter__dot--' + e.search_direction);
+
+      var g = createSvgEl('g', { class: 'scatter__dot-group', tabindex: '0', role: 'button' });
+      var shape = createDotShape(pos.x, pos.y, e.layer, dotClass);
+      g.appendChild(shape);
+
+      g.setAttribute('aria-label', e.case_name + '：' + (e.distance_reason || ''));
+
+      g.addEventListener('mouseenter', function (evt) {
+        showScatterTooltip(e, evt);
       });
-      row.appendChild(cells);
-      dom.caseIndex.appendChild(row);
+      g.addEventListener('mouseleave', function () {
+        hide(dom.scatterTooltip);
+      });
+      g.addEventListener('focus', function (evt) {
+        showScatterTooltip(e, evt);
+      });
+      g.addEventListener('blur', function () {
+        hide(dom.scatterTooltip);
+      });
+
+      dom.scatterDots.appendChild(g);
+
+      // Detail card
+      dom.scatterCards.appendChild(buildScatterCard(e));
+
+      return {
+        g: g,
+        dot: shape,
+        x: pos.x,
+        y: pos.y
+      };
     });
   }
 
-  function buildCaseIndexList(items) {
-    if (!items.length) {
-      return el('div', { class: 'case-index__none' }, t('caseIndexNone'));
+  function showScatterTooltip(e, evt) {
+    if (!dom.scatterTooltip) return;
+    var name = e.case_name || t('caseUnnamed');
+    var reason = e.distance_reason || '';
+    var eraText = ERA_LABEL[e.era] || e.era || '';
+    var domainText = DOMAIN_LABEL[e.domain] || e.domain || '';
+    var direction = e.search_direction || '';
+    var layer = e.layer || '';
+    var conf = e.confidence || '';
+    var isUnexpected = !!e.is_unexpected;
+
+    var dirClass = 'scatter__tooltip-chip--direction-' + direction;
+    if (isUnexpected) dirClass = 'scatter__tooltip-chip--unexpected';
+
+    var chips = [];
+    if (isUnexpected) {
+      chips.push('<span class="scatter__tooltip-chip ' + dirClass + '">' + escapeHtml(t('caseUnexpected')) + '</span>');
+    } else if (direction) {
+      chips.push('<span class="scatter__tooltip-chip ' + dirClass + '">' + escapeHtml(DIRECTION_LABEL[direction] || direction) + '</span>');
     }
-    var list = el('ul', { class: 'case-index__list' });
-    items.forEach(function (e) {
-      list.appendChild(
-        el('li', { class: 'case-index__item' + (e.is_unexpected ? ' is-unexpected' : '') }, [
-          el('span', { class: 'case-index__item-name' }, e.case_name || '（未命名）'),
-          el('span', { class: 'case-index__item-conf' }, CONFIDENCE_LABEL[e.confidence] || e.confidence),
-        ])
-      );
-    });
-    return list;
+    if (conf) {
+      chips.push('<span class="scatter__tooltip-chip">' + escapeHtml(CONFIDENCE_LABEL[conf] || conf) + '</span>');
+    }
+    if (eraText || domainText) {
+      chips.push('<span class="scatter__tooltip-chip">' + escapeHtml(eraText + (eraText && domainText ? ' · ' : '') + domainText) + '</span>');
+    }
+
+    var layerText = layer ? (LAYER_LABEL[layer] || layer) : '';
+
+    var html = '<div class="scatter__tooltip-name">' + escapeHtml(name) + '</div>';
+    if (chips.length) {
+      html += '<div class="scatter__tooltip-row">' + chips.join('') + '</div>';
+    }
+    if (layerText) {
+      html += '<div class="scatter__tooltip-layer">' + escapeHtml(t('layerTip', {layer: layerText})) + '</div>';
+    }
+    if (reason) {
+      html += '<div class="scatter__tooltip-reason">' + escapeHtml(reason) + '</div>';
+    }
+
+    dom.scatterTooltip.innerHTML = html;
+    show(dom.scatterTooltip);
+
+    var wrap = dom.scatterTooltip.closest('.scatter__chart-wrap');
+    var rect = wrap.getBoundingClientRect();
+    var targetRect = evt.target.getBoundingClientRect();
+    var left = targetRect.left - rect.left + targetRect.width / 2 - dom.scatterTooltip.offsetWidth / 2;
+    var top = targetRect.top - rect.top - dom.scatterTooltip.offsetHeight - 10;
+    dom.scatterTooltip.style.left = Math.max(0, left) + 'px';
+    dom.scatterTooltip.style.top = Math.max(0, top) + 'px';
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  var ERA_LABEL = {};
+  var DOMAIN_LABEL = {};
+  function refreshEraDomainLabels() {
+    ERA_LABEL = {
+      ancient: t('eraAncient'),
+      medieval: t('eraMedieval'),
+      early_modern: t('eraEarlyModern'),
+      industrial: t('eraIndustrial'),
+      contemporary: t('eraContemporary'),
+      future: t('eraFuture'),
+    };
+    DOMAIN_LABEL = {
+      original: t('domainOriginal'),
+      technology: t('domainTechnology'),
+      economy: t('domainEconomy'),
+      politics: t('domainPolitics'),
+      culture: t('domainCulture'),
+      art: t('domainArt'),
+      religion: t('domainReligion'),
+      military: t('domainMilitary'),
+      science: t('domainScience'),
+      education: t('domainEducation'),
+      media: t('domainMedia'),
+      law: t('domainLaw'),
+      medicine: t('domainMedicine'),
+      social: t('domainSocial'),
+      other: t('domainOther'),
+    };
+  }
+
+  function buildScatterCard(e) {
+    var direction = e.search_direction;
+    var layer = e.layer;
+    var conf = e.confidence;
+    var isUnexpected = !!e.is_unexpected;
+    var dirChip = el('span', {
+      class: 'case__chip case__chip--dir case__chip--' + direction,
+    }, DIRECTION_LABEL[direction] || direction);
+    var layerMark = el('span', {
+      class: 'case__layer',
+      title: t('layerTip', {layer: LAYER_LABEL[layer] || layer}),
+    }, LAYER_MARKER[layer] || '■□□');
+    var confChip = el('span', {
+      class: 'case__chip case__chip--conf case__chip--conf-' + conf,
+    }, CONFIDENCE_LABEL[conf] || conf);
+    var meta = el('div', { class: 'scatter-card__meta' }, [dirChip, layerMark, confChip]);
+    if (isUnexpected) {
+      meta.appendChild(el('span', {
+        class: 'case__chip case__chip--unexpected',
+        title: t('caseUnexpectedTitle'),
+      }, t('caseUnexpected')));
+    }
+    var distText = '';
+    if (e.distance != null) {
+      var eraText = ERA_LABEL[e.era] || e.era || '';
+      var domainText = DOMAIN_LABEL[e.domain] || e.domain || '';
+      distText = eraText + (eraText && domainText ? ' · ' : '') + domainText +
+        (domainText || eraText ? ' · ' : '') + t('scatterDistance') + ' ' + Math.round(e.distance * 100) + '%';
+    }
+    return el('div', { class: 'scatter-card scatter-card--' + (isUnexpected ? 'unexpected' : direction) }, [
+      meta,
+      el('div', { class: 'scatter-card__name' }, e.case_name || t('caseUnnamed')),
+      el('div', { class: 'scatter-card__body' }, e.content || ''),
+      distText ? el('div', { class: 'scatter-card__distance' }, distText) : null,
+    ]);
   }
 
   // ============================== Demo ===============================
@@ -1386,32 +1786,32 @@
         ],
       }],
       evidence: [
-        { id: '1', case_name: '卢德运动 1810s', content: '英国织布工人破坏机器，并非反对技术本身，而是抵制技术对其手工技艺所承载的社会身份的剥夺。', search_direction: 'vertical', layer: 'mechanism', confidence: 'strong', is_unexpected: false },
-        { id: '2', case_name: '印刷术革命 1450s', content: '抄写员行业终结。但更深的震动在于：知识的权威从教会与抄写员的"持有"，转向了印刷术使得知识"可复制、可传播"。', search_direction: 'vertical', layer: 'structure', confidence: 'strong', is_unexpected: false },
-        { id: '3', case_name: '基因编辑伦理争议', content: '社会对 CRISPR 的恐慌不只是关于安全性，而是对"什么是自然人"的界定权被技术重新拿走的存在论不安。', search_direction: 'lateral', layer: 'structure', confidence: 'medium', is_unexpected: false },
-        { id: '4', case_name: '社交媒体焦虑', content: '注意力被算法定价，自我表达被指标量化。焦虑来自于"我是谁"的判定权从内部转移到了平台。', search_direction: 'lateral', layer: 'mechanism', confidence: 'strong', is_unexpected: false },
-        { id: '5', case_name: '电报革命 1840s', content: '空间被压平，远距离通讯不再是特权。但与今天 AI 的差异在于：电报扩张了人的能力，未取代人的判断。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: true },
-        { id: '6', case_name: '电脑普及 1980s', content: '"会用电脑"成为新的识字能力。许多原本以人脑为唯一载体的认知任务被外包。', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false },
-        { id: '7', case_name: '石油行业抵制电动车', content: '既有生产力的承载者抵制新生产力，不只是经济利益问题，更是"我们决定能源未来"的权力领地被剥夺。', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false },
-        { id: '8', case_name: '工业革命的女工抗议', content: '机器并未完全取代女工，而是把劳动重组到工厂体制下。抗议焦点是工作节奏与身体节奏被剥离了协商权。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false },
-        { id: '9', case_name: '医生面对 AI 诊断', content: '医生焦虑的不是"AI 比我准"，而是临床判断权从个人专业被重新分配到"AI + 医保 + 监管"的三方系统。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false },
-        { id: '10', case_name: '艺术家面对生成式 AI', content: '焦虑来自"风格作为劳动结果"被消解 — 风格的独占性被算法的可复用性瓦解。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false },
-        { id: '11', case_name: '律师面对法律检索 AI', content: '一部分初级案件的"思考"被外包，但责任仍归律师承担。义务领地未变，能力领地被压缩。', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false },
-        { id: '12', case_name: '汽车取代马车 1900s', content: '马车夫并未消失，转岗到出租车司机。但今天 AI 的差异在于：替代不是水平迁移，而是垂直挤压判断密度。', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true },
+        { id: '1', case_name: '卢德运动 1810s', content: '英国织布工人破坏机器，并非反对技术本身，而是抵制技术对其手工技艺所承载的社会身份的剥夺。', search_direction: 'vertical', layer: 'mechanism', confidence: 'strong', is_unexpected: false, era: 'industrial', domain: 'technology', distance: 0.55, distance_reason: '同一技术替代主题，但发生在工业革命时期，与当代AI问题时代不同' },
+        { id: '2', case_name: '印刷术革命 1450s', content: '抄写员行业终结。但更深的震动在于：知识的权威从教会与抄写员的"持有"，转向了印刷术使得知识"可复制、可传播"。', search_direction: 'vertical', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'early_modern', domain: 'technology', distance: 0.75, distance_reason: '信息生产技术变革，但发生在15世纪，与当代数字技术相距甚远' },
+        { id: '3', case_name: '基因编辑伦理争议', content: '社会对 CRISPR 的恐慌不只是关于安全性，而是对"什么是自然人"的界定权被技术重新拿走的存在论不安。', search_direction: 'lateral', layer: 'structure', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'science', distance: 0.45, distance_reason: '同一当代时期，但发生在生物技术领域而非信息技术' },
+        { id: '4', case_name: '社交媒体焦虑', content: '注意力被算法定价，自我表达被指标量化。焦虑来自于"我是谁"的判定权从内部转移到了平台。', search_direction: 'lateral', layer: 'mechanism', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'media', distance: 0.25, distance_reason: '同一数字时代，非常接近用户问题的核心领域' },
+        { id: '5', case_name: '电报革命 1840s', content: '空间被压平，远距离通讯不再是特权。但与今天 AI 的差异在于：电报扩张了人的能力，未取代人的判断。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: true, era: 'industrial', domain: 'technology', distance: 0.65, distance_reason: '通讯技术革命，但发生在19世纪，且未触及判断权本身' },
+        { id: '6', case_name: '电脑普及 1980s', content: '"会用电脑"成为新的识字能力。许多原本以人脑为唯一载体的认知任务被外包。', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'technology', distance: 0.35, distance_reason: '同一技术领域，但发生在20世纪末，接近当代但非当前AI浪潮' },
+        { id: '7', case_name: '石油行业抵制电动车', content: '既有生产力的承载者抵制新生产力，不只是经济利益问题，更是"我们决定能源未来"的权力领地被剥夺。', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'economy', distance: 0.50, distance_reason: '同一当代时期，但发生在能源经济领域而非信息技术' },
+        { id: '8', case_name: '工业革命的女工抗议', content: '机器并未完全取代女工，而是把劳动重组到工厂体制下。抗议焦点是工作节奏与身体节奏被剥离了协商权。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'industrial', domain: 'social', distance: 0.60, distance_reason: '工业革命时期的社会抗议，时代久远但主题相关' },
+        { id: '9', case_name: '医生面对 AI 诊断', content: '医生焦虑的不是"AI 比我准"，而是临床判断权从个人专业被重新分配到"AI + 医保 + 监管"的三方系统。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'medicine', distance: 0.30, distance_reason: '同一AI时代，发生在医疗领域，与用户问题高度相似' },
+        { id: '10', case_name: '艺术家面对生成式 AI', content: '焦虑来自"风格作为劳动结果"被消解 — 风格的独占性被算法的可复用性瓦解。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'art', distance: 0.35, distance_reason: '同一AI时代，发生在艺术领域，与用户问题高度相似' },
+        { id: '11', case_name: '律师面对法律检索 AI', content: '一部分初级案件的"思考"被外包，但责任仍归律师承担。义务领地未变，能力领地被压缩。', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'law', distance: 0.40, distance_reason: '同一AI时代，发生在法律领域，与用户问题相似' },
+        { id: '12', case_name: '汽车取代马车 1900s', content: '马车夫并未消失，转岗到出租车司机。但今天 AI 的差异在于：替代不是水平迁移，而是垂直挤压判断密度。', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true, era: 'industrial', domain: 'technology', distance: 0.70, distance_reason: '交通技术革命，但发生在20世纪初，与AI的信息技术本质差异较大' },
       ],
       conclusion: {
         core_finding: 'AI 焦虑的结构性根源不是"AI 会取代我做什么"，而是"AI 让我对「我是谁」的判定权被重新分配"。这种重分配把意义、专业身份、责任归属拆解到了一个由人、模型、机构共同构成的混合系统里。',
         temporal_trajectory: '在最初的几年，AI 焦虑表现为对失业的直接恐惧；随着应用深入，焦虑转向身份与意义的重组——"我做的事还算专业吗"取代了"我会不会被裁"。再往后，焦虑可能稳态化为一种"与系统协商的日常张力"，就像电报和电脑的焦虑最终被吸收进新的工作样态。但 AI 与前者不同：它压缩的是"判断"，而非"执行"。这意味着稳态化所需的时间会更长，且新的协商对象不再仅是雇主，而是包含模型、平台、监管的混合系统。',
         tension: '新生产力的扩展性与主体意义领地的稳定性互斥又共存：扩展性意味着能力可被复制、可外溢，这恰恰削弱了"专业身份"赖以成立的稀缺与边界；但主体又必须有稳定的意义边界才能产生焦虑——所以张力不是 AI vs 人，而是"能力可复制" vs "身份必须不可复制"。',
         boundary_condition: '在那些"能力的稀缺即身份"的领域（艺术家、医生、律师），焦虑最强。在"能力本就被工具中介"的领域（如会计、翻译），焦虑反而较弱——因为意义领地早已与具体技能解耦。',
-        unresolved: '当 AI 同时降低了"产出"和"判断"的边际成本，是否仍有不可被复制的领域？我们没有找到结构上对应"判断本身被外包"的成熟历史案例——这是一个真正的新情境。',
+        unresolved: 'AI 压缩的不仅是"执行"，更是"判断"本身。历史上，机器替代的是可被标准化的动作，而责任与最终判定仍留在人手里。当 AI 把判断也变成可调用、可规模化的服务时，"人"的不可替代性究竟锚定在哪里——是情感、是伦理承担，还是某种无法被数据化的具体情境？这个问题尚未有稳定的答案。',
         implication: '与其问"AI 会不会取代我"，更值得问的是"我的意义领地是建立在能力的稀缺上，还是建立在判断的承担上"。前者会被持续侵蚀，后者反而可能在 AI 时代被放大。',
         taglines: {
           core_finding: 'AI 焦虑的根源是判定权被重新分配',
           temporal_trajectory: '从失业恐惧 → 身份重组 → 与系统的日常协商',
           tension: '能力可复制 vs 身份必须不可复制',
           boundary_condition: '能力即身份的领域，焦虑最强',
-          unresolved: '没有"判断本身被外包"的历史对应',
+          unresolved: '判断本身被压缩后，人的不可替代性锚定在哪里',
           implication: '问"判断的承担"，不是"能力的稀缺"',
         },
       },
@@ -1442,32 +1842,32 @@
         ],
       }],
       evidence: [
-        { id: '1', case_name: 'Luddite movement 1810s', content: 'British textile workers destroyed machines not because they opposed technology itself, but because they resisted technology\'s stripping of the social identity embedded in their craft skills.', search_direction: 'vertical', layer: 'mechanism', confidence: 'strong', is_unexpected: false },
-        { id: '2', case_name: 'Printing press revolution 1450s', content: 'The scribe profession ended. But the deeper shock was that the authority of knowledge shifted from the Church and scribes\' "possession" to the press\'s making knowledge "copyable and transmittable."', search_direction: 'vertical', layer: 'structure', confidence: 'strong', is_unexpected: false },
-        { id: '3', case_name: 'Gene-editing ethics controversy', content: 'Society\'s panic over CRISPR is not just about safety, but about the ontological unease of having the power to define "what is a natural human" taken away by technology.', search_direction: 'lateral', layer: 'structure', confidence: 'medium', is_unexpected: false },
-        { id: '4', case_name: 'Social-media anxiety', content: 'Attention is priced by algorithms; self-expression is quantified by metrics. Anxiety comes from the authority over "who I am" moving from inside oneself to the platform.', search_direction: 'lateral', layer: 'mechanism', confidence: 'strong', is_unexpected: false },
-        { id: '5', case_name: 'Telegraph revolution 1840s', content: 'Space was flattened and long-distance communication was no longer a privilege. But unlike AI today, the telegraph expanded human ability without replacing human judgment.', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: true },
-        { id: '6', case_name: 'PC adoption 1980s', content: '"Knowing how to use a computer" became a new kind of literacy. Many cognitive tasks previously carried only by the human brain were outsourced.', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false },
-        { id: '7', case_name: 'Oil industry resisting electric vehicles', content: 'Incumbent carriers of productive forces resist new ones not only for economic reasons, but because their power territory over "we decide the energy future" is being stripped away.', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false },
-        { id: '8', case_name: 'Female workers\' protests in the Industrial Revolution', content: 'Machines did not fully replace female workers; they reorganized labor under the factory system. The focus of protest was the loss of negotiating power over work rhythm and bodily rhythm.', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false },
-        { id: '9', case_name: 'Doctors facing AI diagnosis', content: 'Doctors are not anxious that "AI is more accurate than me," but that clinical judgment is being redistributed from individual expertise to a tripartite system of "AI + insurance + regulation."', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false },
-        { id: '10', case_name: 'Artists facing generative AI', content: 'Anxiety comes from "style as labor outcome" being dissolved — the exclusivity of style is undermined by the algorithm\'s reproducibility.', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false },
-        { id: '11', case_name: 'Lawyers facing legal-research AI', content: 'Part of the "thinking" in routine cases is outsourced, but responsibility still rests with the lawyer. The obligation territory remains unchanged while the capability territory is compressed.', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false },
-        { id: '12', case_name: 'Cars replacing horse-drawn carriages 1900s', content: 'Coach drivers did not disappear; they became taxi drivers. But the difference with AI today is that substitution is not horizontal migration but vertical compression of judgment density.', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true },
+        { id: '1', case_name: 'Luddite movement 1810s', content: 'British textile workers destroyed machines not because they opposed technology itself, but because they resisted technology\'s stripping of the social identity embedded in their craft skills.', search_direction: 'vertical', layer: 'mechanism', confidence: 'strong', is_unexpected: false, era: 'industrial', domain: 'technology', distance: 0.55, distance_reason: 'Same technology-substitution theme, but from the Industrial Revolution era, different from contemporary AI' },
+        { id: '2', case_name: 'Printing press revolution 1450s', content: 'The scribe profession ended. But the deeper shock was that the authority of knowledge shifted from the Church and scribes\' "possession" to the press\'s making knowledge "copyable and transmittable."', search_direction: 'vertical', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'early_modern', domain: 'technology', distance: 0.75, distance_reason: 'Information-production technology revolution, but in the 15th century, far from contemporary digital tech' },
+        { id: '3', case_name: 'Gene-editing ethics controversy', content: 'Society\'s panic over CRISPR is not just about safety, but about the ontological unease of having the power to define "what is a natural human" taken away by technology.', search_direction: 'lateral', layer: 'structure', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'science', distance: 0.45, distance_reason: 'Same contemporary era, but in biotechnology rather than information technology' },
+        { id: '4', case_name: 'Social-media anxiety', content: 'Attention is priced by algorithms; self-expression is quantified by metrics. Anxiety comes from the authority over "who I am" moving from inside oneself to the platform.', search_direction: 'lateral', layer: 'mechanism', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'media', distance: 0.25, distance_reason: 'Same digital era, very close to the user\'s core domain' },
+        { id: '5', case_name: 'Telegraph revolution 1840s', content: 'Space was flattened and long-distance communication was no longer a privilege. But unlike AI today, the telegraph expanded human ability without replacing human judgment.', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: true, era: 'industrial', domain: 'technology', distance: 0.65, distance_reason: 'Communication technology revolution in the 19th century, but did not touch judgment authority' },
+        { id: '6', case_name: 'PC adoption 1980s', content: '"Knowing how to use a computer" became a new kind of literacy. Many cognitive tasks previously carried only by the human brain were outsourced.', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'technology', distance: 0.35, distance_reason: 'Same technology domain, but late 20th century, close but not the current AI wave' },
+        { id: '7', case_name: 'Oil industry resisting electric vehicles', content: 'Incumbent carriers of productive forces resist new ones not only for economic reasons, but because their power territory over "we decide the energy future" is being stripped away.', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'economy', distance: 0.50, distance_reason: 'Same contemporary era, but in energy economy rather than information technology' },
+        { id: '8', case_name: 'Female workers\' protests in the Industrial Revolution', content: 'Machines did not fully replace female workers; they reorganized labor under the factory system. The focus of protest was the loss of negotiating power over work rhythm and bodily rhythm.', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'industrial', domain: 'social', distance: 0.60, distance_reason: 'Industrial-era social protest, distant in time but thematically related' },
+        { id: '9', case_name: 'Doctors facing AI diagnosis', content: 'Doctors are not anxious that "AI is more accurate than me," but that clinical judgment is being redistributed from individual expertise to a tripartite system of "AI + insurance + regulation."', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'medicine', distance: 0.30, distance_reason: 'Same AI era in medicine, highly similar to the user\'s problem' },
+        { id: '10', case_name: 'Artists facing generative AI', content: 'Anxiety comes from "style as labor outcome" being dissolved — the exclusivity of style is undermined by the algorithm\'s reproducibility.', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'art', distance: 0.35, distance_reason: 'Same AI era in art, highly similar to the user\'s problem' },
+        { id: '11', case_name: 'Lawyers facing legal-research AI', content: 'Part of the "thinking" in routine cases is outsourced, but responsibility still rests with the lawyer. The obligation territory remains unchanged while the capability territory is compressed.', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'law', distance: 0.40, distance_reason: 'Same AI era in law, similar to the user\'s problem' },
+        { id: '12', case_name: 'Cars replacing horse-drawn carriages 1900s', content: 'Coach drivers did not disappear; they became taxi drivers. But the difference with AI today is that substitution is not horizontal migration but vertical compression of judgment density.', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true, era: 'industrial', domain: 'technology', distance: 0.70, distance_reason: 'Transportation technology revolution in early 20th century, quite different from AI\'s information-technology essence' },
       ],
       conclusion: {
         core_finding: 'The structural root of AI anxiety is not "what will AI replace me in doing," but "AI is redistributing my authority to decide who I am." This redistribution dismantles meaning, professional identity, and accountability into a hybrid system of humans, models, and institutions.',
         temporal_trajectory: 'In the first few years, AI anxiety appears as direct fear of unemployment; as adoption deepens, anxiety shifts to the reorganization of identity and meaning — "Is what I do still professional?" replaces "Will I be laid off?" Further on, anxiety may stabilize into a "daily tension of negotiating with the system," much as the anxieties around the telegraph and computer were eventually absorbed into new work forms. But AI differs from its predecessors: it compresses judgment, not execution. This means stabilization will take longer, and the new negotiation counterpart is no longer just the employer, but a hybrid system including models, platforms, and regulators.',
         tension: 'The scalability of new productive forces and the stability of the subject\'s meaning territory are both mutually exclusive and coexistent: scalability means capabilities can be copied and spill over, which precisely weakens the scarcity and boundaries on which "professional identity" depends; yet the subject must have stable meaning boundaries to feel anxiety at all — so the tension is not AI vs. humans, but "copyable capabilities" vs. "identity must be uncopyable."',
         boundary_condition: 'Anxiety is strongest in domains where "scarcity of capability is identity" (artists, doctors, lawyers). It is weaker in domains where capability is already mediated by tools (accounting, translation), because the territory of meaning has long been decoupled from specific skills.',
-        unresolved: 'When AI simultaneously lowers the marginal cost of both "output" and "judgment," is there still any domain that cannot be copied? We have not found a mature historical counterpart to "judgment itself being outsourced" — this is a genuinely new situation.',
+        unresolved: 'AI compresses not only execution but judgment itself. Historically, machines replaced standardized actions while responsibility and final decisions remained with humans. When AI turns judgment into a callable, scalable service, what exactly becomes irreplaceable in humans — emotion, ethical accountability, or some context that cannot be captured by data? This question has no stable answer yet.',
         implication: 'Rather than asking "Will AI replace me," it is more valuable to ask "Is my territory of meaning built on scarcity of capability, or on bearing judgment." The former will be continuously eroded; the latter may actually be amplified in the AI age.',
         taglines: {
           core_finding: 'The root of AI anxiety is the redistribution of judgment authority',
           temporal_trajectory: 'From fear of unemployment → identity reorganization → daily negotiation with the system',
           tension: 'Copyable capabilities vs. identity must be uncopyable',
           boundary_condition: 'Anxiety is strongest where capability is identity',
-          unresolved: 'No historical counterpart for "judgment itself being outsourced"',
+          unresolved: 'Once judgment itself is compressed, what remains irreplaceably human?',
           implication: 'Ask about bearing judgment, not scarcity of capability',
         },
       },
@@ -1492,16 +1892,12 @@
       show(dom.lensReveal);
     }
 
-    // Rails
+    // Cases
     state.lateral = { count: demo.lateral_count || 0, rounds: demo.lateral_rounds || 0, done: true };
     state.vertical = { count: demo.vertical_count || 0, rounds: demo.vertical_rounds || 0, done: true };
-    updateRailUI('lateral');
-    updateRailUI('vertical');
-    show(dom.rails);
-
-    // Cases
     state.evidence = demo.evidence || [];
-    appendCases(demo.evidence);
+    clear(dom.casesList);
+    appendCases(demo.evidence || []);
     show(dom.casesSection);
 
     // Schedule log
@@ -1542,7 +1938,7 @@
     // #conclusions becoming visible reveals all six chapters at once.
     var ENABLE_MAP = {
       'lens-reveal': ['lens-reveal'],
-      'rails': ['rails'],
+      'scatter': ['scatter'],
       'cases': ['cases'],
       'conclusions': [
         'chapter-core_finding',

@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from unveiling.models._enums import (
     EvidenceConfidence,
+    EvidenceDomain,
+    EvidenceEra,
     EvidenceLayer,
     SearchDirection,
 )
@@ -126,6 +128,12 @@ class EvidenceRecord(BlackboardRecord):
     confidence: EvidenceConfidence
     is_unexpected: bool
     content: str
+
+    # Scatter-plot coordinates (optional — filled by LLM or heuristic)
+    era: Optional[EvidenceEra] = None
+    domain: Optional[EvidenceDomain] = None
+    distance: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    distance_reason: Optional[str] = None
 
 
 class ConclusionRecord(BlackboardRecord):

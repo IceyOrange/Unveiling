@@ -63,7 +63,7 @@ start_daemon
 case "$MODE" in
     web)
         log "starting Unveiling web (Flask :5001)..."
-        python frontend/app.py &
+        PYTHONPATH=src python src/frontend/app.py &
         CHILD_PIDS+=($!)
         ;;
     cli)

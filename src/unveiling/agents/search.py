@@ -14,6 +14,8 @@ from typing import Literal
 
 from unveiling.models._enums import (
     EvidenceConfidence,
+    EvidenceDomain,
+    EvidenceEra,
     EvidenceLayer,
     SearchDirection,
 )
@@ -290,6 +292,10 @@ def _build_records(
                     is_unexpected=bool(item.get("is_unexpected", False)),
                     content=item.get("content", ""),
                     references=[lens.id],
+                    era=item.get("era") or None,
+                    domain=item.get("domain") or None,
+                    distance=item.get("distance") if item.get("distance") is not None else None,
+                    distance_reason=item.get("distance_reason") or None,
                 )
             )
         except Exception:

@@ -24,6 +24,33 @@ class SearchDirection(str, Enum):
     vertical = "vertical"
 
 
+class EvidenceEra(str, Enum):
+    ancient = "ancient"
+    medieval = "medieval"
+    early_modern = "early_modern"
+    industrial = "industrial"
+    contemporary = "contemporary"
+    future = "future"
+
+
+class EvidenceDomain(str, Enum):
+    original = "original"
+    technology = "technology"
+    economy = "economy"
+    politics = "politics"
+    culture = "culture"
+    art = "art"
+    religion = "religion"
+    military = "military"
+    science = "science"
+    education = "education"
+    media = "media"
+    law = "law"
+    medicine = "medicine"
+    social = "social"
+    other = "other"
+
+
 class Phase(str, Enum):
     inception = "inception"
     exploration = "exploration"

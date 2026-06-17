@@ -48,7 +48,8 @@ _run_history_lock = Lock()
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    demo = request.args.get("demo") == "1"
+    return render_template("index.html", demo=demo)
 
 
 @app.route("/prompt-lab")

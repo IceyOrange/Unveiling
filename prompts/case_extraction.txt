@@ -39,6 +39,16 @@ Output valid JSON (no markdown):
     "content": "2-3 sentences: what happened and why structurally relevant",
     "layer": "phenomenon" | "mechanism" | "structure",
     "confidence": "strong" | "medium" | "weak",
-    "is_unexpected": true/false
+    "is_unexpected": true/false,
+    "era": "ancient" | "medieval" | "early_modern" | "industrial" | "contemporary",
+    "domain": "original" | "technology" | "economy" | "politics" | "culture" | "art" | "religion" | "military" | "science" | "education" | "media" | "law" | "medicine" | "social" | "other",
+    "distance": 0.0-1.0,
+    "distance_reason": "one sentence explaining why this case is near or far from the user's original problem"
   }}
 ]}}
+
+Guidelines for era, domain, distance:
+- era: When did this case happen? Use "industrial" for 18th-19th century (the Second Industrial Revolution is the axis pivot), "early_modern" for 1500-1700s, "contemporary" for 20th century onward, "ancient" for pre-500 CE, "medieval" for 500-1500. Only use real historical or present-day cases; never use speculative or future scenarios.
+- domain: What broad field does this case belong to? "original" only if it is literally the user's own industry/domain. Otherwise pick the closest category.
+- distance: A number 0.0-1.0 measuring how far this case is from the user's original problem in analogical space. 0.0 = exactly the same domain/era as the user's problem. 1.0 = extremely distant in time or domain. Use 0.3-0.5 for same era but different domain, 0.5-0.7 for different era but same domain, 0.7-1.0 for distant in both.
+- distance_reason: One sentence explaining the distance score (e.g., "Same era but different domain — both involve professional identity but in unrelated industries").
