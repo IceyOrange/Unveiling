@@ -1612,6 +1612,7 @@ em { font-style: normal; }
   position: relative;
   width: 100%;
   padding: var(--space-3) 0;
+  overflow: visible;
 }
 .scatter__chart {
   width: 100%;
