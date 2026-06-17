@@ -1522,25 +1522,31 @@
     }));
 
     // Origin marker (the Second Industrial Revolution pivot, on the left edge)
+    var originLabelText = t('scatterOrigin');
+    var originLabelW = measureSvgTextWidth(originLabelText, 'scatter__label scatter__label--origin');
+    var originPillW = originLabelW + 20; // 10px horizontal padding each side
+    var originPillH = 18;
+    var originPillX = origin.x - originPillW - 12;
+    var originPillY = origin.y - originPillH / 2;
+
     var originGroup = createSvgEl('g', { class: 'scatter__origin' });
     originGroup.appendChild(createSvgEl('circle', {
       cx: origin.x, cy: origin.y, r: 5, class: 'scatter__origin-dot'
     }));
-    // Callout line from dot to label
+    // Horizontal callout line from dot to label
     originGroup.appendChild(createSvgEl('line', {
-      x1: origin.x, y1: origin.y - 6, x2: origin.x, y2: origin.y - 14,
+      x1: origin.x - 6, y1: origin.y, x2: origin.x - 12, y2: origin.y,
       class: 'scatter__origin-callout'
     }));
     // Background pill for label
-    var originLabelText = t('scatterOrigin');
-    var originPillW = originLabelText.length * 11 + 16; // approximate width
     originGroup.appendChild(createSvgEl('rect', {
-      x: origin.x - originPillW / 2, y: origin.y - 30,
-      width: originPillW, height: 18, rx: 9, ry: 9,
+      x: originPillX, y: originPillY,
+      width: originPillW, height: originPillH, rx: 9, ry: 9,
       class: 'scatter__origin-pill'
     }));
     originGroup.appendChild(createSvgEl('text', {
-      x: origin.x, y: origin.y - 17, 'text-anchor': 'middle', class: 'scatter__label scatter__label--origin'
+      x: originPillX + originPillW / 2, y: origin.y + 4,
+      'text-anchor': 'middle', class: 'scatter__label scatter__label--origin'
     }, originLabelText));
     dom.scatterAxisLabels.appendChild(originGroup);
 
