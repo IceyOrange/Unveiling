@@ -1404,6 +1404,7 @@
   }
 
   function measureSvgTextWidth(text, className) {
+    if (!dom.scatterChart) return 0;
     var tmp = createSvgEl('text', { class: className }, text);
     tmp.setAttribute('visibility', 'hidden');
     dom.scatterChart.appendChild(tmp);
