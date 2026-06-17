@@ -629,6 +629,7 @@
       scatterTooltip: document.getElementById('scatter-tooltip'),
       scatterCards: document.getElementById('scatter-cards'),
       scatterLegend: document.getElementById('scatter-legend'),
+      scatterChart: document.getElementById('scatter-chart'),
 
       machineView: document.getElementById('machine-view'),
       machineToggle: document.getElementById('machine-view-toggle'),
