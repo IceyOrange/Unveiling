@@ -1191,6 +1191,47 @@ em { font-style: normal; }
 #chapter-unresolved,
 #chapter-implication {
   grid-column: span 2;
+  background: var(--surface-inset);
+  border-color: var(--border-hairline);
+  box-shadow: none;
+  padding: var(--space-4);
+}
+
+#chapter-boundary_condition:hover,
+#chapter-unresolved:hover,
+#chapter-implication:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+#chapter-boundary_condition .conclusion__marker-no,
+#chapter-boundary_condition .conclusion__marker-name,
+#chapter-unresolved .conclusion__marker-no,
+#chapter-unresolved .conclusion__marker-name,
+#chapter-implication .conclusion__marker-no,
+#chapter-implication .conclusion__marker-name {
+  font-size: 9px;
+}
+
+#chapter-boundary_condition .conclusion__lead,
+#chapter-unresolved .conclusion__lead,
+#chapter-implication .conclusion__lead {
+  font-size: 14px;
+}
+
+#chapter-boundary_condition .conclusion__para,
+#chapter-unresolved .conclusion__para,
+#chapter-implication .conclusion__para {
+  font-size: 13px;
+}
+
+/* .conclusion--unresolved normally sets an inset prose block; with the
+   footnote card already surface-inset, that inner block would read as a
+   duplicate border. Reset it so §5 blends into its card. */
+#chapter-unresolved .conclusion__prose {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
 @media (max-width: 960px) {
