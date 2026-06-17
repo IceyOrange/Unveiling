@@ -270,6 +270,35 @@ def _enrich_cases_with_wiki(cases: list[dict], lang: str) -> list[dict]:
     return cases
 
 
+def _coerce_enum(enum_cls, value, default=None):
+    """Coerce an LLM string into an enum member, tolerating bad/missing values.
+
+    EvidenceRecord is strict (ConfigDict(strict=True)), so enum fields must
+    receive actual enum instances — a raw string raises ValidationError. The
+    LLM returns era/domain/layer/confidence as plain strings, so we normalize
+    here. Unknown values fall back to ``default`` instead of dropping the case.
+    """
+    if value is None:
+        return default
+    try:
+        return enum_cls(str(value).strip().lower())
+    except (ValueError, TypeError):
+        return default
+
+
+def _coerce_distance(value):
+    """Coerce distance into a float in [0, 1]; out-of-range/invalid -> None."""
+    if value is None:
+        return None
+    try:
+        d = float(value)
+    except (ValueError, TypeError):
+        return None
+    if d < 0.0 or d > 1.0:
+        return None
+    return d
+
+
 def _build_records(
     cases: list[dict],
     lens: LensRecord,
@@ -279,22 +308,22 @@ def _build_records(
     records: list[EvidenceRecord] = []
     for item in cases:
         try:
-            layer_str = item.get("layer", "phenomenon")
-            conf_str = item.get("confidence", "medium")
             records.append(
                 EvidenceRecord(
                     author=author,
                     source_lens_id=lens.id,
                     search_direction=direction,
                     case_name=item.get("case_name", "")[:100],
-                    layer=EvidenceLayer(layer_str),
-                    confidence=EvidenceConfidence(conf_str),
+                    layer=_coerce_enum(EvidenceLayer, item.get("layer"), EvidenceLayer.phenomenon),
+                    confidence=_coerce_enum(
+                        EvidenceConfidence, item.get("confidence"), EvidenceConfidence.medium
+                    ),
                     is_unexpected=bool(item.get("is_unexpected", False)),
                     content=item.get("content", ""),
                     references=[lens.id],
-                    era=item.get("era") or None,
-                    domain=item.get("domain") or None,
-                    distance=item.get("distance") if item.get("distance") is not None else None,
+                    era=_coerce_enum(EvidenceEra, item.get("era")),
+                    domain=_coerce_enum(EvidenceDomain, item.get("domain")),
+                    distance=_coerce_distance(item.get("distance")),
                     distance_reason=item.get("distance_reason") or None,
                 )
             )

@@ -268,7 +268,7 @@ em { font-style: normal; }
 /* Global language toggle in top-right */
 .lang-toggle {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -277,6 +277,9 @@ em { font-style: normal; }
   margin-left: auto;
 }
 .lang-toggle__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 4px 10px;
   background: transparent;
   color: var(--ink-secondary);

@@ -64,10 +64,10 @@ OUTPUT FORMAT
 ═══════════════════════════════════════
 
 Output valid JSON with exactly these keys:
-- "pattern_name": a short, concrete name for the structural pattern
-- "essence": 2-3 sentences explaining the core forces and mechanisms — not a description of the surface phenomenon
-- "entities": list of {{"surface": "<original term>", "structural_role": "<abstracted structural role — must pass dimensional breadth test>"}}
-- "relationships": list of {{"surface": "<original relationship>", "structural": "<abstracted structural relationship>"}}
+- "pattern_name": a short, concrete name for the structural pattern — written in plain words a normal person would actually say (see TONE rules below)
+- "essence": 2-3 sentences explaining the core forces and mechanisms — not a description of the surface phenomenon. Write it like you are explaining the heart of the matter to a smart friend, not like an abstract.
+- "entities": list of {{"surface": "<original term>", "structural_role": "<the role this thing plays, in everyday words — must pass dimensional breadth test AND the plain-language test below>"}}
+- "relationships": list of {{"surface": "<original relationship>", "structural": "<what is really going on between them, in everyday words>"}}
 - "hidden_dynamics": list of {{"observation": "<surface phenomenon that seems singular>", "layers": ["<underlying cause at layer 1>", "<underlying cause at layer 2>", "..."]}} — only include if multiple parallel mechanisms are detected
 - "root_cause_chain": list of {{"level": <int starting from 1>, "surface_why": "<the concrete question asked at this level, in everyday language>", "answer": "<concrete answer, grounded in specific facts — name real policies, events, conditions>", "structural_why": "<the same answer abstracted to structural level>"}} — MUST be at least 5 levels deep. The final level's structural_why must include a classification: [cyclical], [structural_shift], or [lag_effect]
 - "cross_domain_analogues": list of {{"domain": "<another domain or time period — must span different life dimensions>", "analogous_pattern": "<how the same structure manifests there>", "what_happened": "<what actually played out in that situation>", "lesson_for_original": "<concrete insight mapped back to the original question>"}}
@@ -78,3 +78,19 @@ Rules:
 - "lesson_for_original" must be a concrete insight, not a generic platitude.
 - cross_domain_analogues must span at least 2 different life dimensions.
 - Output valid JSON only. No markdown, no commentary.
+
+═══════════════════════════════════════
+TONE & LANGUAGE — CRITICAL (this is what the user actually reads)
+═══════════════════════════════════════
+The pattern_name, essence, every structural_role, and every structural relationship are shown directly to a non-expert reader. They must read like plain conversation, NOT like an academic paper. Abstraction is about being GENERAL (it works across many fields), NOT about sounding fancy. You can be fully general using ordinary words.
+
+- FORBIDDEN words/phrases (and anything that smells like them): 前卫生产力, 承担者, 群体性身份, 价值不确定感, 结构性, 同构, 异质, 范式, 解构, 赋能, 抓手, 闭环, 底层逻辑, 维度, 个体, 主体, 客体, 张力, 范畴, 场域, 能指, 所指. If a phrase needs a sociology degree to parse, rewrite it.
+- Rewrite abstractions into how-it-feels language. Examples:
+  · "前卫生产力" → "一种更便宜更快的新做事方式"
+  · "原有生产力承担者" → "靠老办法吃饭的那群人"
+  · "群体性身份与价值不确定感" → "一群人突然不确定自己还值不值钱"
+  · "新生产力侵入既有岗位" → "新办法抢了老办法的饭碗"
+  · "既得群体对价值重估的抵抗" → "占着位置的人不想被重新定价"
+- Test for each structural_role: could you say it out loud to a friend at dinner without them frowning? If not, simplify.
+- Keep it general enough that it still applies to a marriage, a religion, or an army — but say it the way a sharp, plain-spoken person would.
+- root_cause_chain answers and surface_why must read like a natural train of thought, not a formal analysis. structural_why may be slightly more abstract but still uses ordinary words.

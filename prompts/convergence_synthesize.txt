@@ -68,8 +68,8 @@ Rules:
 - Output valid JSON only. No markdown, no commentary outside the JSON.
 
 TONE & LANGUAGE — CRITICAL:
-Write in natural, conversational language (Chinese if the original question is in Chinese). Imagine explaining this to a smart friend who isn't in your field.
-- FORBIDDEN: 准入信号, 结构性困境, 领域内已有者, 个体, 机制, 结构性, 维度, 异质, 同构, or any academic/structural jargon that a normal person wouldn't use in conversation.
+Write in natural, conversational language (Chinese if the original question is in Chinese). Imagine explaining this to a smart friend who isn't in your field. This rule applies to EVERY field — core_finding, tension, boundary_condition, unresolved, implication, coverage_note, causal_chain, temporal_trajectory, AND every tagline. Not one of them may slip into jargon.
+- FORBIDDEN: 准入信号, 结构性困境, 领域内已有者, 个体, 机制, 结构性, 维度, 异质, 同构, 范式, 解构, 赋能, 抓手, 闭环, 底层逻辑, 主体, 客体, 范畴, 场域, 价值重估, 承担者, or any academic/structural jargon that a normal person wouldn't use in conversation.
 - Instead of "准入信号" → use "敲门砖" or "入场券"
 - Instead of "结构性困境" → use "死循环" or "走不出的圈子" or describe the specific trap
 - Instead of "领域内已有者" → use "已经在里面的人" or "圈子内的人"

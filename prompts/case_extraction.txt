@@ -15,7 +15,7 @@ Task: Identify DISTINCT CASES/EXAMPLES from the search results. Each "case" is O
 A case must be:
 - A concrete, identifiable real-world example (not a generic observation)
 - Named specifically (e.g., "卢德运动", "宗教改革中的赎罪券争议", "印象派与沙龙体系的冲突", NOT "技术焦虑案例1")
-- Summarized in 2-3 sentences: what happened + structural relevance to the lens
+- Summarized in 2-3 sentences, told like a short story to a friend: first WHAT actually happened (concrete people, real events), then WHY it rhymes with the user's situation — said in plain words, not "结构相关" jargon
 
 CRITICAL RULES:
 - ONE record per case. NEVER split the same case into multiple records.
@@ -36,7 +36,7 @@ Output valid JSON (no markdown):
 {{"cases": [
   {{
     "case_name": "short case name (2-6 words)",
-    "content": "2-3 sentences: what happened and why structurally relevant",
+    "content": "2-3 plain-spoken sentences: what actually happened, then why it echoes the user's situation. No academic jargon (avoid 结构性/结构相关/同构/承担者/价值重估 etc.) — write so a normal reader gets it on first read.",
     "layer": "phenomenon" | "mechanism" | "structure",
     "confidence": "strong" | "medium" | "weak",
     "is_unexpected": true/false,
