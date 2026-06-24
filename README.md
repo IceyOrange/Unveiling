@@ -142,13 +142,13 @@ pip install -e .
 Copy `.env.example` to `.env` and fill in your keys:
 
 ```
-OPENAI_API_KEY="your-deepseek-api-key"
-OPENAI_API_BASE="https://api.deepseek.com"
-OPENAI_MODEL_NAME="deepseek-v4-flash"
+OPENAI_API_KEY="your-siliconflow-api-key"
+OPENAI_API_BASE="https://api.siliconflow.cn/v1"
+OPENAI_MODEL_NAME="deepseek-ai/DeepSeek-V4-Flash"
 SERPER_API_KEY="your-serper-api-key"
 ```
 
-- [DeepSeek API Key](https://platform.deepseek.com)
+- [SiliconFlow API Key](https://cloud.siliconflow.com/account/ak)
 - [Serper API Key](https://serper.dev)
 
 ### 3. Run
@@ -439,13 +439,13 @@ pip install -e .
 复制 `.env.example` 为 `.env` 并填入密钥：
 
 ```
-OPENAI_API_KEY="your-deepseek-api-key"
-OPENAI_API_BASE="https://api.deepseek.com"
-OPENAI_MODEL_NAME="deepseek-v4-flash"
+OPENAI_API_KEY="your-siliconflow-api-key"
+OPENAI_API_BASE="https://api.siliconflow.cn/v1"
+OPENAI_MODEL_NAME="deepseek-ai/DeepSeek-V4-Flash"
 SERPER_API_KEY="your-serper-api-key"
 ```
 
-- [DeepSeek API Key](https://platform.deepseek.com)
+- [SiliconFlow API Key](https://cloud.siliconflow.com/account/ak)
 - [Serper API Key](https://serper.dev)
 
 ### 3. 运行
