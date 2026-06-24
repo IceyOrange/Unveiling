@@ -30,10 +30,12 @@ class LLMJSONError(Exception):
 
 
 class LLMClient:
-    """DeepSeek client wrapper with retry, JSON parsing, and token accounting.
+    """OpenAI-compatible client wrapper with retry, JSON parsing, and token accounting.
 
-    Since DeepSeek does not support response_format, json_mode injects
-    an instruction and retries on malformed output.
+    Works with DeepSeek, SiliconFlow, or any other OpenAI-compatible provider
+    via OPENAI_API_BASE / OPENAI_API_KEY / OPENAI_MODEL_NAME. Since some
+    providers do not support response_format, json_mode injects an instruction
+    and retries on malformed output.
     """
 
     def __init__(self, model: Optional[str] = None, language: str = ""):
