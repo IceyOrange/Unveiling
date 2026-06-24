@@ -754,16 +754,29 @@
   // ====================== Screen switching ===========================
 
   function showScreen(name) {
-    // Trigger river transition when switching home -> analysis
-    if (name === 'analysis' && state.screen === 'home') {
+    var previousScreen = state.screen;
+
+    // River transition: cover the home screen before switching to analysis,
+    // then fade the overlay out to reveal the analysis screen. Without the
+    // instant cover, the analysis screen flashes into view underneath the
+    // fading-in overlay, making the content appear, disappear, and reappear.
+    if (name === 'analysis' && previousScreen === 'home') {
       var riverTransition = document.getElementById('river-transition');
       if (riverTransition) {
+        // Disable transition momentarily so the overlay becomes fully opaque
+        // before the screen switch happens underneath it.
+        riverTransition.style.transition = 'none';
         riverTransition.classList.add('is-active');
+        // Force a reflow so the browser commits the instant opacity change.
+        void riverTransition.offsetWidth;
+        riverTransition.style.transition = '';
+
         setTimeout(function () {
           riverTransition.classList.remove('is-active');
         }, 900);
       }
     }
+
     state.screen = name;
     dom.screens.forEach(function (s) {
       s.classList.toggle('is-active', s.dataset.screen === name);
