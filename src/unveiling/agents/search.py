@@ -7,9 +7,10 @@ distinct CASES/EXAMPLES as EvidenceRecords.
 Key invariant: one evidence record = one distinct case (e.g., "卢德运动" = 1 record).
 """
 
-from __future__ import annotations
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import threading
+import time
 from typing import Literal
 
 from unveiling.models._enums import (
@@ -29,6 +30,58 @@ from unveiling.llm.client import LLMClient, LLMJSONError
 from unveiling.llm.degradation import DegradationLogger
 from unveiling.llm.prompt_loader import load_lab_prompt
 from unveiling.search.engine import search
+
+
+# ---------------------------------------------------------------------------
+# Simple in-memory LRU cache for search results (query+lang -> results)
+# ---------------------------------------------------------------------------
+_search_cache: dict[tuple[str, str], tuple[list[dict], float]] = {}
+_CACHE_TTL_SECONDS = 300  # 5 minutes
+_CACHE_MAX_SIZE = 64
+
+
+def _cache_key(query: str, lang: str) -> tuple[str, str]:
+    return (query.strip().lower(), lang)
+
+
+def _get_cached(query: str, lang: str) -> list[dict] | None:
+    key = _cache_key(query, lang)
+    entry = _search_cache.get(key)
+    if entry is None:
+        return None
+    results, ts = entry
+    if time.time() - ts > _CACHE_TTL_SECONDS:
+        del _search_cache[key]
+        return None
+    return results
+
+
+def _set_cached(query: str, lang: str, results: list[dict]) -> None:
+    key = _cache_key(query, lang)
+    # Simple LRU eviction: if over limit, drop oldest by timestamp
+    if len(_search_cache) >= _CACHE_MAX_SIZE:
+        oldest = min(_search_cache, key=lambda k: _search_cache[k][1])
+        del _search_cache[oldest]
+    _search_cache[key] = (results, time.time())
+
+
+# ---------------------------------------------------------------------------
+# Global dedup set for case names across rounds (per-process)
+# ---------------------------------------------------------------------------
+_seen_case_names_global: set[str] = set()
+
+
+def _is_global_duplicate(case_name: str) -> bool:
+    key = case_name.strip().lower()
+    if key in _seen_case_names_global:
+        return True
+    _seen_case_names_global.add(key)
+    return False
+
+
+def _reset_global_dedup() -> None:
+    _seen_case_names_global.clear()
+    _search_cache.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -170,17 +223,30 @@ def _validate_queries(
 
 
 def _run_search_queries(queries: list[str], lang: str = "") -> list[dict]:
+    """Execute searches in parallel with a small thread pool."""
     all_results: list[dict] = []
-    for q in queries:
+    lock = threading.Lock()
+
+    def _search_one(q: str) -> list[dict]:
+        cached = _get_cached(q, lang)
+        if cached is not None:
+            return cached
         try:
             results = search(q, num=10, lang=lang)
-            all_results.extend(results)
         except Exception as exc:
-            all_results.append({
-                "title": "Search error",
-                "snippet": str(exc),
-                "link": "",
-            })
+            results = [{"title": "Search error", "snippet": str(exc), "link": ""}]
+        _set_cached(q, lang, results)
+        return results
+
+    with ThreadPoolExecutor(max_workers=min(4, len(queries))) as pool:
+        futures = {pool.submit(_search_one, q): q for q in queries}
+        for future in as_completed(futures):
+            try:
+                res = future.result()
+                with lock:
+                    all_results.extend(res)
+            except Exception:
+                pass
     return all_results
 
 
@@ -327,35 +393,68 @@ def _search_node(
 
     client = LLMClient(language=state.output_language)
     existing_cases_text = _format_existing_cases(state)
+    logs: list[ScheduleLogEntry] = []
+
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="query_generation_started",
+            reason=f"deriving {direction_key} queries from lens [{lens.id[:8]}]",
+        )
+    )
     queries = _generate_queries(client, lens, direction_key, existing_cases_text)
 
     # Pre-search validation: catch duplicates and direction mismatches
     if queries:
+        logs.append(
+            ScheduleLogEntry(
+                author=agent_name,
+                decision="query_validation_started",
+                reason=f"validating {len(queries)} {direction_key} queries",
+            )
+        )
         queries = _validate_queries(client, queries, direction_key, existing_cases_text)
 
     if not queries:
+        logs.append(
+            ScheduleLogEntry(
+                author=agent_name,
+                decision="search_no_queries",
+                reason="LLM failed to generate any queries",
+            )
+        )
         return {
-            "schedule_log": [
-                ScheduleLogEntry(
-                    author=agent_name,
-                    decision="search_no_queries",
-                    reason="LLM failed to generate any queries",
-                )
-            ],
+            "schedule_log": logs,
         }
 
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="search_running",
+            reason=f"running {len(queries)} {direction_key} queries",
+        )
+    )
     all_results = _run_search_queries(queries, lang=state.output_language)
 
     if not all_results:
+        logs.append(
+            ScheduleLogEntry(
+                author=agent_name,
+                decision="search_empty",
+                reason=f"Search returned no results for {len(queries)} queries",
+            )
+        )
         return {
-            "schedule_log": [
-                ScheduleLogEntry(
-                    author=agent_name,
-                    decision="search_empty",
-                    reason=f"Search returned no results for {len(queries)} queries",
-                )
-            ],
+            "schedule_log": logs,
         }
+
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="extraction_started",
+            reason=f"extracting cases from {len(all_results)} {direction_key} results",
+        )
+    )
 
     tokens = 0
     cases: list[dict] = []
@@ -365,40 +464,48 @@ def _search_node(
             client, lens, direction_key, all_results, existing_case_names,
         )
     except (LLMJSONError, json.JSONDecodeError) as exc:
-        deg = DegradationLogger.log_event(
-            agent_name=agent_name,
-            scenario=f"case extraction LLM failed: {exc}",
-            fallback_action="skip evidence, log degradation",
+        logs.append(
+            DegradationLogger.log_event(
+                agent_name=agent_name,
+                scenario=f"case extraction LLM failed: {exc}",
+                fallback_action="skip evidence, log degradation",
+            )
         )
         return {
-            "schedule_log": [deg],
+            "schedule_log": logs,
             "token_spent": state.token_spent + tokens,
         }
     except Exception as exc:
-        deg = DegradationLogger.log_event(
-            agent_name=agent_name,
-            scenario=f"unexpected error during case extraction: {exc}",
-            fallback_action="skip evidence, log degradation",
+        logs.append(
+            DegradationLogger.log_event(
+                agent_name=agent_name,
+                scenario=f"unexpected error during case extraction: {exc}",
+                fallback_action="skip evidence, log degradation",
+            )
         )
         return {
-            "schedule_log": [deg],
+            "schedule_log": logs,
             "token_spent": state.token_spent + tokens,
         }
 
     evidence_records = _build_records(cases, lens, direction, agent_name)
+    # Keep the front-end reveal paced and avoid overshooting the target.
+    evidence_records = evidence_records[:3]
 
-    log_entry = ScheduleLogEntry(
-        author=agent_name,
-        decision="search_complete",
-        reason=(
-            f"found {len(evidence_records)} cases "
-            f"({direction.value}) via lens [{lens.id[:8]}]"
-        ),
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="search_complete",
+            reason=(
+                f"found {len(evidence_records)} cases "
+                f"({direction.value}) via lens [{lens.id[:8]}]"
+            ),
+        )
     )
 
     update: dict = {
         "evidence_zone": evidence_records,
-        "schedule_log": [log_entry],
+        "schedule_log": logs,
         "token_spent": state.token_spent + tokens,
     }
 
@@ -493,6 +600,7 @@ def parallel_search_node(state: State) -> dict:
     }
 
     total_new_tokens = 0
+    baseline_tokens = state.token_spent
     for direction, r in results.items():
         # Defensive: skip non-dict results (shouldn't happen but guards against race conditions)
         if not isinstance(r, dict):
@@ -503,7 +611,10 @@ def parallel_search_node(state: State) -> dict:
             if k in merged and isinstance(merged[k], list) and isinstance(v, list):
                 merged[k].extend(v)
             elif k == "token_spent":
-                total_new_tokens += (v if isinstance(v, int) else 0)
+                # Each running node returns its own cumulative token count (starting
+                # from the same baseline). Only count the *increment* it produced.
+                if isinstance(v, int):
+                    total_new_tokens += max(0, v - baseline_tokens)
 
     # Per-direction counts and round increments
     merged["lateral_count"] = state.lateral_count + len(final_lateral)
