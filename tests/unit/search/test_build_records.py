@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unveiling.agents.search import _build_records
+from unveiling.agents.search import _build_records, _reset_global_dedup
 from unveiling.models._enums import (
     EvidenceDomain,
     EvidenceEra,
@@ -11,6 +11,11 @@ from unveiling.models.blackboard import LensRecord
 
 def _lens() -> LensRecord:
     return LensRecord(author="t", name="lens", rationale="r")
+
+
+def setup_function():
+    """Reset global dedup before each test so cases don't leak across tests."""
+    _reset_global_dedup()
 
 
 def test_build_records_coerces_string_era_and_domain():
