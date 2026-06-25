@@ -55,6 +55,10 @@
       narrationExploration: '跨领域与跨时期并行搜索 — 找结构相似的类比案例',
       narrationConvergence: '正在跨案例归纳共性 · 找矛盾 · 写结论',
       narrationFoundCase: '刚刚找到 [{dir}] {name}{more}',
+      narrationQueryGeneration: '正在生成搜索关键词…',
+      narrationQueryValidation: '正在校验搜索方向…',
+      narrationSearchRunning: '正在搜索跨领域、跨时期案例…',
+      narrationExtractionStarted: '正在整理搜索到的案例…',
       narrationConclusionReady: '结论已写入，准备呈现……',
       narrationComplete: '分析完成',
       narrationStartFailed: '启动分析失败：',
@@ -189,6 +193,10 @@
       narrationExploration: 'Parallel search across domains & eras — finding structurally similar cases',
       narrationConvergence: 'Synthesizing across cases · finding tension · writing conclusions',
       narrationFoundCase: 'Just found [{dir}] {name}{more}',
+      narrationQueryGeneration: 'Generating search queries…',
+      narrationQueryValidation: 'Validating search directions…',
+      narrationSearchRunning: 'Searching across domains and eras…',
+      narrationExtractionStarted: 'Extracting cases from search results…',
       narrationConclusionReady: 'Conclusions written, preparing to present…',
       narrationComplete: 'Analysis complete',
       narrationStartFailed: 'Failed to start analysis: ',
@@ -500,11 +508,6 @@
 
     refreshEraDomainLabels();
 
-    // Update CSS pseudo-element labels via custom properties
-    var casesList = document.querySelector('.cases__list');
-    if (casesList) {
-      casesList.style.setProperty('--cases-empty', '"' + t('casesEmpty') + '"');
-    }
     var transitionEl = document.querySelector('.analysis__transition');
     if (transitionEl) {
       transitionEl.style.setProperty('--transition-label', '"' + t('transitionLabel') + '"');
@@ -520,8 +523,8 @@
     }
 
     // Update dynamic counters / meta text that may have been rendered in another language
-    if (dom.casesCounter) {
-      setText(dom.casesCounter, t('casesCounter', {count: state.evidence.length}));
+    if (dom.scatterCounter) {
+      setText(dom.scatterCounter, t('casesCounter', {count: state.evidence.length}));
     }
     if (dom.machineMeta) {
       updateMachineMeta();
@@ -597,6 +600,14 @@
     degradationCount: 0,
     conclusion: null,
     result: null,
+    scatterFrameRendered: false,
+    scatterDotIds: {},
+    hasScrolledToScatter: false,
+    caseRevealIndex: 0,
+    scatterStage: 'idle',
+    scatterLegendRevealed: false,
+    scatterDotQueue: [],
+    scatterDotTimer: null,
   };
 
   // ============================ DOM refs =============================
@@ -625,10 +636,6 @@
       lensEntities: document.getElementById('lens-entities'),
       lensRelations: document.getElementById('lens-relations'),
 
-      casesSection: document.getElementById('cases'),
-      casesList: document.getElementById('cases-list'),
-      casesCounter: document.getElementById('cases-counter'),
-
       scatterSection: document.getElementById('scatter'),
       scatterQuadrants: document.getElementById('scatter-quadrants'),
       scatterGrid: document.getElementById('scatter-grid'),
@@ -638,6 +645,7 @@
       scatterCards: document.getElementById('scatter-cards'),
       scatterLegend: document.getElementById('scatter-legend'),
       scatterChart: document.getElementById('scatter-chart'),
+      scatterCounter: document.getElementById('scatter-counter'),
 
       machineView: document.getElementById('machine-view'),
       machineToggle: document.getElementById('machine-view-toggle'),
@@ -744,6 +752,72 @@
   function formatTokens(n) {
     if (n >= 10000) return (n / 1000).toFixed(1) + 'k';
     return String(n);
+  }
+
+  // Type an HTML element's text content character by character.
+  function typewriteHtml(el, text, speedMs) {
+    if (!el) return;
+    speedMs = speedMs || 18;
+    if (prefersReducedMotion()) {
+      setText(el, text);
+      return;
+    }
+    var full = text == null ? '' : String(text);
+    el.textContent = '';
+    el.classList.add('is-typing');
+    var i = 0;
+    function tick() {
+      if (i >= full.length) {
+        el.classList.remove('is-typing');
+        return;
+      }
+      el.textContent += full.charAt(i);
+      i += 1;
+      setTimeout(tick, speedMs);
+    }
+    tick();
+  }
+
+  // Prepare an SVG <text> element for typewriter reveal by wrapping each
+  // character in a <tspan> that can be shown one at a time.
+  function prepareTypewriteSvgText(textEl) {
+    if (!textEl) return;
+    textEl.style.opacity = '0';
+    var full = textEl.textContent || '';
+    textEl.textContent = '';
+    var chars = full.split('');
+    chars.forEach(function (ch) {
+      var tspan = createSvgEl('tspan', { class: 'scatter-typewrite-char' }, ch);
+      textEl.appendChild(tspan);
+    });
+  }
+
+  // Reveal the prepared characters of an SVG <text> element sequentially.
+  function runTypewriteSvgText(textEl, speedMs, onDone) {
+    if (!textEl) {
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    textEl.style.opacity = '1';
+    speedMs = speedMs || 35;
+    if (prefersReducedMotion()) {
+      var spans = textEl.querySelectorAll('.scatter-typewrite-char');
+      spans.forEach(function (s) { s.classList.add('is-visible'); });
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    var spans = Array.from(textEl.querySelectorAll('.scatter-typewrite-char'));
+    var i = 0;
+    function tick() {
+      if (i >= spans.length) {
+        if (typeof onDone === 'function') onDone();
+        return;
+      }
+      spans[i].classList.add('is-visible');
+      i += 1;
+      setTimeout(tick, speedMs);
+    }
+    tick();
   }
 
   function pct(num, denom) {
@@ -889,21 +963,30 @@
     state.degradationCount = 0;
     state.conclusion = null;
     state.result = null;
+    state.scatterFrameRendered = false;
+    state.scatterDotIds = {};
+    state.hasScrolledToScatter = false;
+    state.caseRevealIndex = 0;
+    state.scatterStage = 'idle';
+    state.scatterLegendRevealed = false;
+    state.scatterDotQueue = [];
+    if (state.scatterDotTimer) {
+      clearTimeout(state.scatterDotTimer);
+      state.scatterDotTimer = null;
+    }
 
     setNarration(t('narrationInit'));
     hide(dom.lensReveal);
-    hide(dom.casesSection);
     hide(dom.scatterSection);
     clear(dom.lensEntities);
     clear(dom.lensRelations);
-    clear(dom.casesList);
     clear(dom.scatterQuadrants);
     clear(dom.scatterGrid);
     clear(dom.scatterAxisLabels);
     clear(dom.scatterDots);
     clear(dom.scatterCards);
     if (dom.scheduleLogList) clear(dom.scheduleLogList);
-    setText(dom.casesCounter, t('casesCounter', {count: 0}));
+    setText(dom.scatterCounter, t('casesCounter', {count: 0}));
     if (dom.machineMeta) setText(dom.machineMeta, '0 ' + t('logEntries') + ' · 0 ' + t('tokensUnit'));
     setPhase('inception');
 
@@ -913,9 +996,8 @@
     hide(dom.conclusions);
     hide(dom.recap);
     hide(dom.analysisFoot);
-    dom.casesSection.classList.remove('is-complete');
     dom.lensReveal.classList.remove('is-complete');
-    if (dom.scatterSection) dom.scatterSection.classList.remove('is-complete');
+    if (dom.scatterSection) dom.scatterSection.classList.remove('is-complete', 'is-streaming');
 
     CHAPTERS.forEach(function (chap) {
       var el = document.getElementById('chapter-' + chap.key);
@@ -1003,7 +1085,8 @@
   function onPhase(ev) {
     setPhase(ev.phase);
     if (ev.phase === 'exploration') {
-      show(dom.casesSection);
+      show(dom.scatterSection);
+      if (dom.scatterSection) dom.scatterSection.classList.add('is-streaming');
       setNarration(t('narrationExploration'));
     } else if (ev.phase === 'convergence') {
       setNarration(t('narrationConvergence'));
@@ -1028,7 +1111,14 @@
     state.lateral.rounds = ev.lateral_rounds != null ? ev.lateral_rounds : state.lateral.rounds;
     state.vertical.rounds = ev.vertical_rounds != null ? ev.vertical_rounds : state.vertical.rounds;
 
-    appendCases(items);
+    items.forEach(function (e) {
+      // Reveal the textual card immediately so users see cases as soon as they arrive.
+      appendScatterCardImmediate(e);
+      // Queue only the dot animation (may wait for scatter frame stage).
+      addScatterDot(e, !prefersReducedMotion(), false);
+    });
+
+    setText(dom.scatterCounter, t('casesCounter', {count: state.evidence.length}));
 
     if (items.length) {
       var first = items[0];
@@ -1042,12 +1132,58 @@
     }
   }
 
+  // Append a scatter card immediately without waiting for the dot animation queue.
+  function appendScatterCardImmediate(e) {
+    if (!dom.scatterCards) return;
+    if (!e || !e.id) return;
+    var selector = '.scatter-card[data-case-id="' + e.id + '"]';
+    var existingCard = dom.scatterCards.querySelector(selector);
+    if (existingCard) {
+      existingCard.classList.remove('scatter-card--pending');
+      existingCard.classList.add('is-revealed');
+      if (existingCard.__typewriteBody) {
+        typewriteHtml(existingCard.__typewriteBody, e.content || '', 18);
+      }
+      return;
+    }
+    var card = buildScatterCard(e, { typewrite: true });
+    card.style.animationDelay = '0ms';
+    dom.scatterCards.appendChild(card);
+    if (card.__typewriteBody) {
+      typewriteHtml(card.__typewriteBody, e.content || '', 18);
+    }
+    state.caseRevealIndex += 1;
+  }
+
   function onSchedule(ev) {
     if (!ev.entry) return;
     state.schedule.push(ev.entry);
     if (ev.entry.is_degradation) state.degradationCount += 1;
     appendScheduleLog(ev.entry);
     updateMachineMeta();
+
+    // Surface non-degradation search progress in the narration line so users
+    // see live status without opening the machine-view drawer.
+    if (
+      state.phase === 'exploration' &&
+      !ev.entry.is_degradation &&
+      /^search_(lateral|vertical)$/.test(ev.entry.author || '')
+    ) {
+      var progressText = null;
+      switch (ev.entry.decision) {
+        case 'query_generation_started':
+          progressText = t('narrationQueryGeneration'); break;
+        case 'query_validation_started':
+          progressText = t('narrationQueryValidation'); break;
+        case 'search_running':
+          progressText = t('narrationSearchRunning'); break;
+        case 'extraction_started':
+          progressText = t('narrationExtractionStarted'); break;
+      }
+      if (progressText) {
+        setNarration(progressText);
+      }
+    }
   }
 
   function onConclusion(ev) {
@@ -1118,42 +1254,17 @@
     ]);
   }
 
-  function appendCases(items) {
-    items.forEach(function (e, i) {
-      var card = buildCaseRow(e);
-      card.style.animationDelay = (i * 70) + 'ms';
-      dom.casesList.appendChild(card);
+  function appendScatterCards(items, opts) {
+    opts = opts || {};
+    items.forEach(function (e) {
+      var card = buildScatterCard(e, { typewrite: opts.typewrite !== false });
+      card.classList.add('scatter-card--pending');
+      dom.scatterCards.appendChild(card);
+      if (card.__typewriteBody) {
+        typewriteHtml(card.__typewriteBody, e.content || '', 18);
+      }
     });
-    setText(dom.casesCounter, t('casesCounter', {count: state.evidence.length}));
-  }
-
-  function buildCaseRow(e) {
-    var direction = e.search_direction;
-    var layer = e.layer;
-    var conf = e.confidence;
-    var isUnexpected = !!e.is_unexpected;
-    var dirChip = el('span', {
-      class: 'case__chip case__chip--dir case__chip--' + direction,
-    }, DIRECTION_LABEL[direction] || direction);
-    var layerMark = el('span', {
-      class: 'case__layer',
-      title: t('layerTip', {layer: LAYER_LABEL[layer] || layer}),
-    }, LAYER_MARKER[layer] || '■□□');
-    var confChip = el('span', {
-      class: 'case__chip case__chip--conf case__chip--conf-' + conf,
-    }, CONFIDENCE_LABEL[conf] || conf);
-    var meta = el('div', { class: 'case__meta' }, [dirChip, layerMark, confChip]);
-    if (isUnexpected) {
-      meta.appendChild(el('span', {
-        class: 'case__chip case__chip--unexpected',
-        title: t('caseUnexpectedTitle'),
-      }, t('caseUnexpected')));
-    }
-    return el('li', { class: 'case' + (isUnexpected ? ' case--unexpected' : '') }, [
-      meta,
-      el('div', { class: 'case__name' }, e.case_name || t('caseUnnamed')),
-      el('div', { class: 'case__body' }, e.content || ''),
-    ]);
+    setText(dom.scatterCounter, t('casesCounter', {count: state.evidence.length}));
   }
 
   function appendScheduleLog(entry) {
@@ -1186,12 +1297,24 @@
     setNarration(t('narrationComplete'));
 
     // 3. Process elements get "completed" visual treatment
-    dom.casesSection.classList.add('is-complete');
+    if (dom.scatterSection) dom.scatterSection.classList.add('is-complete');
     dom.lensReveal.classList.add('is-complete');
 
     // 3.5 Render scatter plot (if enough cases with coordinates).
-    // Fresh results get the staged hand-drawn reveal; restore renders instantly.
-    renderScatter(result.evidence || [], { animate: true });
+    // If the frame was already drawn while streaming, just add any missing
+    // dots and reveal the paired detail cards. Otherwise draw the full plot.
+    var finalEvidence = result.evidence || [];
+    if (!state.scatterFrameRendered) {
+      renderScatter(finalEvidence, { animate: true });
+    } else {
+      finalEvidence.forEach(function (e) {
+        addScatterDot(e, !prefersReducedMotion(), true);
+      });
+    }
+
+    // The chart/legend are revealed as soon as the frame starts rendering;
+    // keep the guard here in case the frame was already rendered earlier.
+    if (dom.scatterSection) dom.scatterSection.classList.remove('is-streaming');
 
     // 4. Show transition marker
     show(dom.analysisTransition);
@@ -1212,11 +1335,8 @@
     renderResultMeta(result);
     show(dom.analysisFoot);
 
-    // 9. Smooth scroll to conclusions (only if near bottom)
-    var nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 400;
-    if (nearBottom && dom.analysisTransition) {
-      dom.analysisTransition.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // Note: no automatic scroll here. The only auto-scroll is the one-time
+    // scroll to the scatter section when axes start drawing.
   }
 
   // ======================== Result sub-renderers ========================
@@ -1407,6 +1527,19 @@
     return { originX: originX, originY: originY, minX: minX, maxX: maxX, minY: minY, maxY: maxY };
   }
 
+  // Fixed scale used while streaming evidence so each new dot lands at a
+  // stable position instead of shifting as the data range grows.
+  function getFixedScatterScale() {
+    return {
+      originX: DOMAIN_POSITION[SCATTER.originDomain],
+      originY: ERA_YEAR[SCATTER.originEra],
+      minX: 0,
+      maxX: 1.35,
+      minY: 0,
+      maxY: 1,
+    };
+  }
+
   function dataToSvg(scale, x, y) {
     var plotW = SCATTER.viewW - SCATTER.padL - SCATTER.padR;
     var plotH = SCATTER.viewH - SCATTER.padT - SCATTER.padB;
@@ -1474,37 +1607,29 @@
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  function renderScatter(evidence, opts) {
+  function renderScatterFrame(animate) {
     if (!dom.scatterSection || !dom.scatterDots || !dom.scatterCards) return;
-    // Staged hand-drawn reveal only when explicitly requested (fresh result),
-    // and never under reduced-motion. Restore paths render instantly.
-    var animate = !!(opts && opts.animate) && !prefersReducedMotion();
+    animate = !!animate && !prefersReducedMotion();
+
     clear(dom.scatterQuadrants);
     clear(dom.scatterGrid);
     clear(dom.scatterAxisLabels);
     clear(dom.scatterDots);
-    clear(dom.scatterCards);
 
-    var plotCases = evidence.filter(function (e) {
-      return (e.era || e.distance != null) && e.era !== 'future';
-    });
-
-    if (plotCases.length < 2) {
-      hide(dom.scatterSection);
-      show(dom.casesSection);
-      return;
-    }
-
-    plotCases.forEach(function (e) {
-      if (!e.era) e.era = e.search_direction === 'vertical' ? 'industrial' : 'contemporary';
-      if (e.distance == null) e.distance = e.search_direction === 'lateral' ? 0.5 : 0.7;
-    });
+    state.scatterFrameRendered = true;
+    state.scatterDotIds = {};
 
     show(dom.scatterSection);
-    hide(dom.casesSection);
-    if (dom.scatterLegend) show(dom.scatterLegend);
+    if (dom.scatterSection) dom.scatterSection.classList.remove('is-streaming');
+    state.scatterStage = 'axes';
 
-    var scale = computeScatterScale(plotCases);
+    var axisLabels = [];
+    var quadrantLabels = [];
+    var originLabels = [];
+    var originGroups = [];
+    var quadrantEls = [];
+
+    var scale = getFixedScatterScale();
     var origin = dataToSvg(scale, scale.originX, scale.originY);
     var divider = dataToSvg(scale, SCATTER.domainDivider, scale.originY);
     var left = SCATTER.padL;
@@ -1522,28 +1647,37 @@
     ];
     qRects.forEach(function (r, i) {
       if (r.w <= 0 || r.h <= 0) return;
-      dom.scatterQuadrants.appendChild(createSvgEl('rect', {
+      var qRect = createSvgEl('rect', {
         x: r.x, y: r.y, width: r.w, height: r.h,
         class: 'scatter__quadrant scatter__quadrant--' + ['tl', 'tr', 'bl', 'br'][i],
         fill: qColors[i]
-      }));
+      });
+      if (animate) qRect.style.opacity = '0';
+      quadrantEls.push(qRect);
+      dom.scatterQuadrants.appendChild(qRect);
     });
 
     // Grid lines
     var gridLines = [];
-    // vertical grid lines
     for (var gx = left; gx <= right; gx += (right - left) / 5) {
       var vline = createSvgEl('line', {
         x1: gx, y1: top, x2: gx, y2: bottom, class: 'scatter__grid-line'
       });
+      if (animate) {
+        vline.style.strokeDasharray = '2000';
+        vline.style.strokeDashoffset = '2000';
+      }
       gridLines.push(vline);
       dom.scatterGrid.appendChild(vline);
     }
-    // horizontal grid lines
     for (var gy = top; gy <= bottom; gy += (bottom - top) / 4) {
       var hline = createSvgEl('line', {
         x1: left, y1: gy, x2: right, y2: gy, class: 'scatter__grid-line'
       });
+      if (animate) {
+        hline.style.strokeDasharray = '2000';
+        hline.style.strokeDashoffset = '2000';
+      }
       gridLines.push(hline);
       dom.scatterGrid.appendChild(hline);
     }
@@ -1555,6 +1689,12 @@
     var axisY = createSvgEl('line', {
       x1: divider.x, y1: top, x2: divider.x, y2: bottom, class: 'scatter__axis-line scatter__axis-line--y'
     });
+    if (animate) {
+      axisX.style.strokeDasharray = '2000';
+      axisX.style.strokeDashoffset = '2000';
+      axisY.style.strokeDasharray = '2000';
+      axisY.style.strokeDashoffset = '2000';
+    }
     dom.scatterGrid.appendChild(axisX);
     dom.scatterGrid.appendChild(axisY);
 
@@ -1567,28 +1707,29 @@
     var originPillY = origin.y - originPillH / 2;
 
     var originGroup = createSvgEl('g', { class: 'scatter__origin' });
+    if (animate) originGroup.style.opacity = '0';
     originGroup.appendChild(createSvgEl('circle', {
       cx: origin.x, cy: origin.y, r: 5, class: 'scatter__origin-dot'
     }));
-    // Callout line from dot to vertical label
     originGroup.appendChild(createSvgEl('line', {
       x1: origin.x - 6, y1: origin.y, x2: originPillX + originPillW + 6, y2: origin.y,
       class: 'scatter__origin-callout'
     }));
-    // Vertical background pill for label
     originGroup.appendChild(createSvgEl('rect', {
       x: originPillX, y: originPillY,
       width: originPillW, height: originPillH, rx: 9, ry: 9,
       class: 'scatter__origin-pill'
     }));
-    // Rotated text inside vertical pill
     var originLabelCX = originPillX + originPillW / 2;
-    originGroup.appendChild(createSvgEl('text', {
+    var originLabel = createSvgEl('text', {
       x: originLabelCX, y: origin.y + 4,
       'text-anchor': 'middle',
       transform: 'rotate(-90, ' + originLabelCX + ', ' + origin.y + ')',
       class: 'scatter__label scatter__label--origin'
-    }, originLabelText));
+    }, originLabelText);
+    originGroup.appendChild(originLabel);
+    originLabels.push(originLabel);
+    originGroups.push(originGroup);
     dom.scatterAxisLabels.appendChild(originGroup);
 
     // Now marker (the user's question sits at the present, top-left)
@@ -1601,39 +1742,46 @@
     var nowPillY = nowPos.y - 30;
 
     var nowGroup = createSvgEl('g', { class: 'scatter__origin scatter__origin--now' });
+    if (animate) nowGroup.style.opacity = '0';
     nowGroup.appendChild(createSvgEl('circle', {
       cx: nowPos.x, cy: nowPos.y, r: 5, class: 'scatter__origin-dot'
     }));
-    // Vertical callout line from dot to label
     nowGroup.appendChild(createSvgEl('line', {
       x1: nowPos.x, y1: nowPos.y - 6, x2: nowPos.x, y2: nowPos.y - 12,
       class: 'scatter__origin-callout'
     }));
-    // Background pill for label
     nowGroup.appendChild(createSvgEl('rect', {
       x: nowPillX, y: nowPillY,
       width: nowPillW, height: nowPillH, rx: 9, ry: 9,
       class: 'scatter__origin-pill scatter__origin-pill--now'
     }));
-    nowGroup.appendChild(createSvgEl('text', {
+    var nowLabel = createSvgEl('text', {
       x: nowPos.x, y: nowPos.y - 17, 'text-anchor': 'middle',
       class: 'scatter__label scatter__label--origin'
-    }, nowLabelText));
+    }, nowLabelText);
+    nowGroup.appendChild(nowLabel);
+    originLabels.push(nowLabel);
+    originGroups.push(nowGroup);
     dom.scatterAxisLabels.appendChild(nowGroup);
 
     // Axis end labels
-    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+    var domainNearLabel = createSvgEl('text', {
       x: left + 4, y: top - 8, class: 'scatter__label scatter__label--axis'
-    }, t('scatterAxisDomainNear')));
-    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+    }, t('scatterAxisDomainNear'));
+    var domainFarLabel = createSvgEl('text', {
       x: right - 4, y: top - 8, 'text-anchor': 'end', class: 'scatter__label scatter__label--axis'
-    }, t('scatterAxisDomainFar')));
-    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+    }, t('scatterAxisDomainFar'));
+    var timeNowLabel = createSvgEl('text', {
       x: divider.x - 8, y: top + 16, 'text-anchor': 'end', class: 'scatter__label scatter__label--axis'
-    }, t('scatterAxisTimeNow')));
-    dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+    }, t('scatterAxisTimeNow'));
+    var timeAncientLabel = createSvgEl('text', {
       x: divider.x - 8, y: bottom - 12, 'text-anchor': 'end', class: 'scatter__label scatter__label--axis'
-    }, t('scatterAxisTimeAncient')));
+    }, t('scatterAxisTimeAncient'));
+    axisLabels.push(domainNearLabel, domainFarLabel, timeNowLabel, timeAncientLabel);
+    dom.scatterAxisLabels.appendChild(domainNearLabel);
+    dom.scatterAxisLabels.appendChild(domainFarLabel);
+    dom.scatterAxisLabels.appendChild(timeNowLabel);
+    dom.scatterAxisLabels.appendChild(timeAncientLabel);
 
     // Quadrant corner labels (centered in each quadrant)
     var qLabels = [
@@ -1643,102 +1791,286 @@
       { x: (divider.x + right) / 2, y: (origin.y + bottom) / 2, key: 'scatterQuadrantBR' }
     ];
     qLabels.forEach(function (ql) {
-      dom.scatterAxisLabels.appendChild(createSvgEl('text', {
+      var qLabel = createSvgEl('text', {
         x: ql.x, y: ql.y, 'text-anchor': 'middle',
         class: 'scatter__label scatter__label--quadrant'
-      }, t(ql.key)));
+      }, t(ql.key));
+      if (animate) qLabel.style.opacity = '0';
+      quadrantLabels.push(qLabel);
+      dom.scatterAxisLabels.appendChild(qLabel);
     });
 
-    // First pass: create dots and initial labels (sorted by y for stable vertical spacing)
-    var rawItems = plotCases.map(function (e, i) {
-      var xData = domainToX(e.domain, e.distance, e.case_name);
-      var yData = eraToY(e.era, e.distance, e.case_name);
-      var pos = dataToSvg(scale, xData, yData);
-      return { e: e, i: i, x: pos.x, y: pos.y, xData: xData, yData: yData };
-    });
-    rawItems.sort(function (a, b) { return a.y - b.y; });
-
-    var items = rawItems.map(function (item, sortedIdx) {
-      var e = item.e;
-      var pos = { x: item.x, y: item.y };
-      var isUnexpected = !!e.is_unexpected;
-      var dotClass = 'scatter__dot' +
-        (isUnexpected ? ' scatter__dot--unexpected' : ' scatter__dot--' + e.search_direction);
-
-      var g = createSvgEl('g', { class: 'scatter__dot-group', tabindex: '0', role: 'button' });
-      var shape = createDotShape(pos.x, pos.y, e.layer, dotClass);
-      g.appendChild(shape);
-
-      g.setAttribute('aria-label', e.case_name + '：' + (e.distance_reason || ''));
-
-      g.addEventListener('mouseenter', function (evt) {
-        showScatterTooltip(e, evt);
-      });
-      g.addEventListener('mouseleave', function () {
-        hide(dom.scatterTooltip);
-      });
-      g.addEventListener('focus', function (evt) {
-        showScatterTooltip(e, evt);
-      });
-      g.addEventListener('blur', function () {
-        hide(dom.scatterTooltip);
-      });
-
-      dom.scatterDots.appendChild(g);
-
-      // Detail card (paired with the dot above — they reveal as one beat)
-      var card = buildScatterCard(e);
-      dom.scatterCards.appendChild(card);
-
-      return {
-        g: g,
-        dot: shape,
-        card: card,
-        x: pos.x,
-        y: pos.y
-      };
-    });
+    // Prepare axis labels for typewriter reveal.
+    axisLabels.forEach(prepareTypewriteSvgText);
 
     if (animate) {
-      runScatterReveal(gridLines, axisX, axisY, items);
+      runStagedScatterReveal([axisX, axisY], axisLabels, gridLines, quadrantLabels, originLabels, quadrantEls, originGroups);
+    } else {
+      // Reduced motion / instant render: reveal the full frame and legend
+      // immediately so queued dots can land right away.
+      axisLabels.forEach(function (lbl) {
+        var spans = lbl.querySelectorAll('.scatter-typewrite-char');
+        spans.forEach(function (s) { s.classList.add('is-visible'); });
+      });
+      quadrantEls.forEach(function (q) { q.setAttribute('opacity', '0.55'); });
+      originGroups.forEach(function (g) { g.style.opacity = '1'; });
+      revealScatterLegendAndFlush();
     }
   }
 
-  // Staged hand-drawn reveal: sketch the frame, then drop in each dot
-  // together with its paired card. Driven by inline animation-delay so the
-  // dot landing on the chart and its descriptive card are one synced beat.
-  function runScatterReveal(gridLines, axisX, axisY, items) {
-    // --- Frame: brush-stroke line drawing via stroke-dashoffset ---
-    // Axes lead, slightly out of sync for an organic hand feel; grid follows.
-    setupLineDraw(axisX, 0, 520);
-    setupLineDraw(axisY, 90, 560);
-    gridLines.forEach(function (ln, i) {
-      // small jitter so strokes don't all snap in lockstep
-      var jitter = (i % 3) * 40;
-      setupLineDraw(ln, 220 + i * 55 + jitter, 460);
-    });
+  // Add a single evidence dot to the already-drawn scatter frame.
+  // If the frame animation hasn't reached the dot stage yet, the item is queued
+  // and rendered when the legend reveal finishes.
+  function addScatterDot(e, animate, addCard) {
+    if (!dom.scatterSection || !dom.scatterDots) return null;
+    if (!e || !e.id || state.scatterDotIds[e.id]) return null;
+    if (e.era === 'future') return null;
+    if (!e.era && e.distance == null) return null;
 
-    // Axis / quadrant labels fade in as their region is drawn.
-    if (dom.scatterAxisLabels) {
-      var labelGroups = dom.scatterAxisLabels.childNodes;
-      for (var li = 0; li < labelGroups.length; li++) {
-        var node = labelGroups[li];
-        if (node.nodeType !== 1) continue;
-        node.classList.add('scatter-anim-label');
-        node.style.animationDelay = (300 + li * 90) + 'ms';
-      }
+    if (!state.scatterFrameRendered) {
+      renderScatterFrame(animate);
     }
 
-    // --- Cases: each dot + its card revealed synchronously, staggered ---
-    var frameDoneMs = 950; // frame finishes drawing (~0.95s) before cases land
-    var stepMs = 220;
-    items.forEach(function (it, idx) {
-      var delay = (frameDoneMs + idx * stepMs) + 'ms';
-      it.g.classList.add('scatter-anim-dot');
-      it.g.style.animationDelay = delay;
-      it.card.classList.add('scatter-anim-card');
-      it.card.style.animationDelay = delay;
+    // Queue until the legend has been revealed and the dot stage begins.
+    if (state.scatterStage !== 'dots' && state.scatterStage !== 'complete') {
+      state.scatterDotQueue.push({ e: e, animate: animate, addCard: addCard });
+      return null;
+    }
+
+    state.scatterDotIds[e.id] = true;
+
+    if (!e.era) e.era = e.search_direction === 'vertical' ? 'industrial' : 'contemporary';
+    if (e.distance == null) e.distance = e.search_direction === 'lateral' ? 0.5 : 0.7;
+
+    var scale = getFixedScatterScale();
+    var xData = domainToX(e.domain, e.distance, e.case_name);
+    var yData = eraToY(e.era, e.distance, e.case_name);
+    var pos = dataToSvg(scale, xData, yData);
+
+    var isUnexpected = !!e.is_unexpected;
+    var dotClass = 'scatter__dot' +
+      (isUnexpected ? ' scatter__dot--unexpected' : ' scatter__dot--' + e.search_direction);
+
+    var g = createSvgEl('g', { class: 'scatter__dot-group', tabindex: '0', role: 'button' });
+    var shape = createDotShape(pos.x, pos.y, e.layer, dotClass);
+    g.appendChild(shape);
+
+    g.setAttribute('aria-label', e.case_name + '：' + (e.distance_reason || ''));
+
+    g.addEventListener('mouseenter', function (evt) {
+      showScatterTooltip(e, evt);
     });
+    g.addEventListener('mouseleave', function () {
+      hide(dom.scatterTooltip);
+    });
+    g.addEventListener('focus', function (evt) {
+      showScatterTooltip(e, evt);
+    });
+    g.addEventListener('blur', function () {
+      hide(dom.scatterTooltip);
+    });
+
+    dom.scatterDots.appendChild(g);
+
+    if (animate) {
+      runScatterDotReveal(g);
+    }
+
+    if (addCard && dom.scatterCards) {
+      var selector = '.scatter-card[data-case-id="' + e.id + '"]';
+      var existingCard = dom.scatterCards.querySelector(selector);
+      if (existingCard) {
+        existingCard.classList.remove('scatter-card--pending');
+        existingCard.classList.add('is-revealed');
+        if (existingCard.__typewriteBody) {
+          typewriteHtml(existingCard.__typewriteBody, e.content || '', 18);
+        }
+      } else {
+        var card = buildScatterCard(e, { typewrite: true });
+        card.style.animationDelay = '0ms';
+        dom.scatterCards.appendChild(card);
+        if (card.__typewriteBody) {
+          typewriteHtml(card.__typewriteBody, e.content || '', 18);
+        }
+      }
+      state.caseRevealIndex += 1;
+    }
+
+    return g;
+  }
+
+  // Build the paired detail cards below the scatter plot. Rendered incrementally
+  // as evidence streams in, and reconciled at the end to avoid duplicates.
+  function renderScatterCards(evidence) {
+    if (!dom.scatterCards) return;
+    var plotCases = (evidence || []).filter(function (e) {
+      return (e.era || e.distance != null) && e.era !== 'future';
+    });
+
+    var existingIds = {};
+    dom.scatterCards.querySelectorAll('.scatter-card').forEach(function (card) {
+      var cid = card.getAttribute('data-case-id');
+      if (cid) existingIds[cid] = true;
+    });
+
+    plotCases.forEach(function (e) {
+      if (!e.era) e.era = e.search_direction === 'vertical' ? 'industrial' : 'contemporary';
+      if (e.distance == null) e.distance = e.search_direction === 'lateral' ? 0.5 : 0.7;
+      if (e.id && existingIds[e.id]) return;
+      dom.scatterCards.appendChild(buildScatterCard(e));
+    });
+  }
+
+  function renderScatter(evidence, opts) {
+    if (!dom.scatterSection || !dom.scatterDots || !dom.scatterCards) return;
+    var animate = !!(opts && opts.animate) && !prefersReducedMotion();
+    var plotCases = (evidence || []).filter(function (e) {
+      return (e.era || e.distance != null) && e.era !== 'future';
+    });
+
+    if (plotCases.length < 1) {
+      if (!state.scatterFrameRendered) {
+        hide(dom.scatterSection);
+      }
+      return;
+    }
+
+    if (!state.scatterFrameRendered) {
+      renderScatterFrame(animate);
+    }
+
+    plotCases.forEach(function (e) {
+      addScatterDot(e, animate, true);
+    });
+  }
+
+  // Staged hand-drawn reveal for the empty scatter frame.
+  // Order: axes -> axis labels -> grid/quadrant labels -> legend -> dots + cards.
+  function runStagedScatterReveal(axisLines, axisLabels, gridLines, quadrantLabels, originLabels, quadrantEls, originGroups) {
+    if (prefersReducedMotion()) {
+      axisLabels.forEach(function (lbl) {
+        var spans = lbl.querySelectorAll('.scatter-typewrite-char');
+        spans.forEach(function (s) { s.classList.add('is-visible'); });
+      });
+      if (quadrantEls) quadrantEls.forEach(function (q) { q.setAttribute('opacity', '0.55'); });
+      if (originGroups) originGroups.forEach(function (g) { g.style.opacity = '1'; });
+      revealScatterLegendAndFlush();
+      return;
+    }
+
+    // One-time auto-scroll to the scatter section when axes start drawing.
+    if (!state.hasScrolledToScatter && dom.scatterSection) {
+      state.hasScrolledToScatter = true;
+      dom.scatterSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    var axisX = axisLines[0];
+    var axisY = axisLines[1];
+    var xLabels = [axisLabels[0], axisLabels[1]];
+    var yLabels = [axisLabels[2], axisLabels[3]];
+
+    // Stage 1: draw horizontal axis, then type its labels.
+    setupLineDraw(axisX, 0, 520);
+    onAnimationEnd(axisX, function () {
+      state.scatterStage = 'labels';
+      typewriteSvgLabels(xLabels, 30, function () {
+        // Stage 2: draw vertical axis, then type its labels.
+        setupLineDraw(axisY, 0, 520);
+        onAnimationEnd(axisY, function () {
+          typewriteSvgLabels(yLabels, 30, function () {
+            // Stage 3: sketch grid lines and fade in quadrant backgrounds/origin labels.
+            if (quadrantEls) {
+              quadrantEls.forEach(function (q, i) {
+                q.style.transition = 'opacity 520ms ease ' + (i * 80) + 'ms';
+                q.style.opacity = '0.55';
+              });
+            }
+            gridLines.forEach(function (ln, i) {
+              var jitter = (i % 3) * 40;
+              setupLineDraw(ln, 220 + i * 55 + jitter, 460);
+            });
+            quadrantLabels.forEach(function (lbl, i) {
+              lbl.classList.add('scatter-anim-label');
+              lbl.style.animationDelay = (i * 90) + 'ms';
+            });
+            originLabels.forEach(function (lbl, i) {
+              lbl.classList.add('scatter-anim-label');
+              lbl.style.animationDelay = (300 + i * 90) + 'ms';
+            });
+            if (originGroups) {
+              originGroups.forEach(function (g, i) {
+                g.style.transition = 'opacity 420ms ease ' + (260 + i * 120) + 'ms';
+                g.style.opacity = '1';
+              });
+            }
+            // Stage 4: reveal the legend, then start plotting dots.
+            setTimeout(revealScatterLegendAndFlush, 520);
+          });
+        });
+      });
+    });
+  }
+
+  function revealScatterLegendAndFlush() {
+    if (state.scatterLegendRevealed) return;
+    state.scatterLegendRevealed = true;
+    state.scatterStage = 'dots';
+
+    if (dom.scatterLegend) {
+      show(dom.scatterLegend);
+      dom.scatterLegend.classList.add('is-revealed');
+    }
+
+    flushScatterDotQueue();
+  }
+
+  function flushScatterDotQueue() {
+    if (state.scatterDotTimer) return;
+    function processNext() {
+      if (!state.scatterDotQueue.length) {
+        state.scatterDotTimer = null;
+        state.scatterStage = 'complete';
+        return;
+      }
+      var item = state.scatterDotQueue.shift();
+      addScatterDot(item.e, item.animate, item.addCard);
+      state.scatterDotTimer = setTimeout(processNext, 150);
+    }
+    processNext();
+  }
+
+  function onAnimationEnd(el, callback) {
+    if (!el) {
+      if (typeof callback === 'function') callback();
+      return;
+    }
+    function handler() {
+      el.removeEventListener('animationend', handler);
+      if (typeof callback === 'function') callback();
+    }
+    el.addEventListener('animationend', handler);
+  }
+
+  function typewriteSvgLabels(labels, speed, callback) {
+    if (!labels || !labels.length) {
+      if (typeof callback === 'function') callback();
+      return;
+    }
+    var doneCount = 0;
+    labels.forEach(function (lbl) {
+      runTypewriteSvgText(lbl, speed, function () {
+        doneCount += 1;
+        if (doneCount === labels.length && typeof callback === 'function') {
+          callback();
+        }
+      });
+    });
+  }
+
+  // Small entrance animation for a single dot as it lands on the chart.
+  function runScatterDotReveal(dotGroup) {
+    dotGroup.classList.add('scatter-anim-dot');
+    dotGroup.style.animationDelay = '0ms';
   }
 
   // Prime an SVG line for a stroke-dashoffset "drawing" animation.
@@ -1861,7 +2193,8 @@
     };
   }
 
-  function buildScatterCard(e) {
+  function buildScatterCard(e, opts) {
+    opts = opts || {};
     var direction = e.search_direction;
     var layer = e.layer;
     var conf = e.confidence;
@@ -1890,12 +2223,22 @@
       distText = eraText + (eraText && domainText ? ' · ' : '') + domainText +
         (domainText || eraText ? ' · ' : '') + t('scatterDistance') + ' ' + Math.round(e.distance * 100) + '%';
     }
-    return el('div', { class: 'scatter-card scatter-card--' + (isUnexpected ? 'unexpected' : direction) }, [
+    var bodyText = e.content || '';
+    var bodyEl = el('div', {
+      class: 'scatter-card__body',
+      'data-full-text': opts.typewrite ? bodyText : ''
+    }, opts.typewrite ? '' : bodyText);
+    var card = el('div', {
+      class: 'scatter-card scatter-card--' + (isUnexpected ? 'unexpected' : direction),
+      'data-case-id': e.id || ''
+    }, [
       meta,
       el('div', { class: 'scatter-card__name' }, e.case_name || t('caseUnnamed')),
-      el('div', { class: 'scatter-card__body' }, e.content || ''),
+      bodyEl,
       distText ? el('div', { class: 'scatter-card__distance' }, distText) : null,
     ]);
+    card.__typewriteBody = opts.typewrite ? bodyEl : null;
+    return card;
   }
 
   // ============================== Demo ===============================
@@ -1904,7 +2247,7 @@
     '中文': {
       question: 'AI 时代人们的 AI 焦虑',
       language: '中文',
-      lateral_count: 7,
+      lateral_count: 3,
       vertical_count: 5,
       lateral_rounds: 2,
       vertical_rounds: 2,
@@ -1930,10 +2273,6 @@
         { id: '6', case_name: '电脑普及 1980s', content: '"会用电脑"成为新的识字能力。许多原本以人脑为唯一载体的认知任务被外包。', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'technology', distance: 0.35, distance_reason: '同一技术领域，但发生在20世纪末，接近当代但非当前AI浪潮' },
         { id: '7', case_name: '石油行业抵制电动车', content: '既有生产力的承载者抵制新生产力，不只是经济利益问题，更是"我们决定能源未来"的权力领地被剥夺。', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'economy', distance: 0.50, distance_reason: '同一当代时期，但发生在能源经济领域而非信息技术' },
         { id: '8', case_name: '工业革命的女工抗议', content: '机器并未完全取代女工，而是把劳动重组到工厂体制下。抗议焦点是工作节奏与身体节奏被剥离了协商权。', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'industrial', domain: 'social', distance: 0.60, distance_reason: '工业革命时期的社会抗议，时代久远但主题相关' },
-        { id: '9', case_name: '医生面对 AI 诊断', content: '医生焦虑的不是"AI 比我准"，而是临床判断权从个人专业被重新分配到"AI + 医保 + 监管"的三方系统。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'medicine', distance: 0.30, distance_reason: '同一AI时代，发生在医疗领域，与用户问题高度相似' },
-        { id: '10', case_name: '艺术家面对生成式 AI', content: '焦虑来自"风格作为劳动结果"被消解 — 风格的独占性被算法的可复用性瓦解。', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'art', distance: 0.35, distance_reason: '同一AI时代，发生在艺术领域，与用户问题高度相似' },
-        { id: '11', case_name: '律师面对法律检索 AI', content: '一部分初级案件的"思考"被外包，但责任仍归律师承担。义务领地未变，能力领地被压缩。', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'law', distance: 0.40, distance_reason: '同一AI时代，发生在法律领域，与用户问题相似' },
-        { id: '12', case_name: '汽车取代马车 1900s', content: '马车夫并未消失，转岗到出租车司机。但今天 AI 的差异在于：替代不是水平迁移，而是垂直挤压判断密度。', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true, era: 'industrial', domain: 'technology', distance: 0.70, distance_reason: '交通技术革命，但发生在20世纪初，与AI的信息技术本质差异较大' },
       ],
       conclusion: {
         core_finding: 'AI 焦虑的结构性根源不是"AI 会取代我做什么"，而是"AI 让我对「我是谁」的判定权被重新分配"。这种重分配把意义、专业身份、责任归属拆解到了一个由人、模型、机构共同构成的混合系统里。',
@@ -1953,14 +2292,14 @@
       },
       schedule_log: [
         { author: 'inception', decision: 'inception_complete', reason: "abstracted to pattern '新生产力对主体意义领地的渗透', 3 entities, 1 relationships", is_degradation: false },
-        { author: 'search_lateral', decision: 'search_complete', reason: 'found 4 cases (lateral) via lens', is_degradation: false },
-        { author: 'search_vertical', decision: 'search_complete', reason: 'found 3 cases (vertical) via lens', is_degradation: false },
+        { author: 'search_lateral', decision: 'search_complete', reason: 'found 3 cases (lateral) via lens', is_degradation: false },
+        { author: 'search_vertical', decision: 'search_complete', reason: 'found 5 cases (vertical) via lens', is_degradation: false },
       ],
     },
     'English': {
       question: 'AI anxiety in the age of AI',
       language: 'English',
-      lateral_count: 7,
+      lateral_count: 3,
       vertical_count: 5,
       lateral_rounds: 2,
       vertical_rounds: 2,
@@ -1986,10 +2325,6 @@
         { id: '6', case_name: 'PC adoption 1980s', content: '"Knowing how to use a computer" became a new kind of literacy. Many cognitive tasks previously carried only by the human brain were outsourced.', search_direction: 'vertical', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'technology', distance: 0.35, distance_reason: 'Same technology domain, but late 20th century, close but not the current AI wave' },
         { id: '7', case_name: 'Oil industry resisting electric vehicles', content: 'Incumbent carriers of productive forces resist new ones not only for economic reasons, but because their power territory over "we decide the energy future" is being stripped away.', search_direction: 'lateral', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'economy', distance: 0.50, distance_reason: 'Same contemporary era, but in energy economy rather than information technology' },
         { id: '8', case_name: 'Female workers\' protests in the Industrial Revolution', content: 'Machines did not fully replace female workers; they reorganized labor under the factory system. The focus of protest was the loss of negotiating power over work rhythm and bodily rhythm.', search_direction: 'vertical', layer: 'mechanism', confidence: 'medium', is_unexpected: false, era: 'industrial', domain: 'social', distance: 0.60, distance_reason: 'Industrial-era social protest, distant in time but thematically related' },
-        { id: '9', case_name: 'Doctors facing AI diagnosis', content: 'Doctors are not anxious that "AI is more accurate than me," but that clinical judgment is being redistributed from individual expertise to a tripartite system of "AI + insurance + regulation."', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'medicine', distance: 0.30, distance_reason: 'Same AI era in medicine, highly similar to the user\'s problem' },
-        { id: '10', case_name: 'Artists facing generative AI', content: 'Anxiety comes from "style as labor outcome" being dissolved — the exclusivity of style is undermined by the algorithm\'s reproducibility.', search_direction: 'lateral', layer: 'structure', confidence: 'strong', is_unexpected: false, era: 'contemporary', domain: 'art', distance: 0.35, distance_reason: 'Same AI era in art, highly similar to the user\'s problem' },
-        { id: '11', case_name: 'Lawyers facing legal-research AI', content: 'Part of the "thinking" in routine cases is outsourced, but responsibility still rests with the lawyer. The obligation territory remains unchanged while the capability territory is compressed.', search_direction: 'lateral', layer: 'phenomenon', confidence: 'medium', is_unexpected: false, era: 'contemporary', domain: 'law', distance: 0.40, distance_reason: 'Same AI era in law, similar to the user\'s problem' },
-        { id: '12', case_name: 'Cars replacing horse-drawn carriages 1900s', content: 'Coach drivers did not disappear; they became taxi drivers. But the difference with AI today is that substitution is not horizontal migration but vertical compression of judgment density.', search_direction: 'vertical', layer: 'mechanism', confidence: 'weak', is_unexpected: true, era: 'industrial', domain: 'technology', distance: 0.70, distance_reason: 'Transportation technology revolution in early 20th century, quite different from AI\'s information-technology essence' },
       ],
       conclusion: {
         core_finding: 'The structural root of AI anxiety is not "what will AI replace me in doing," but "AI is redistributing my authority to decide who I am." This redistribution dismantles meaning, professional identity, and accountability into a hybrid system of humans, models, and institutions.',
@@ -2009,8 +2344,8 @@
       },
       schedule_log: [
         { author: 'inception', decision: 'inception_complete', reason: "abstracted to pattern 'Penetration of new productive forces into the subject\'s territory of meaning', 3 entities, 1 relationships", is_degradation: false },
-        { author: 'search_lateral', decision: 'search_complete', reason: 'found 4 cases (lateral) via lens', is_degradation: false },
-        { author: 'search_vertical', decision: 'search_complete', reason: 'found 3 cases (vertical) via lens', is_degradation: false },
+        { author: 'search_lateral', decision: 'search_complete', reason: 'found 3 cases (lateral) via lens', is_degradation: false },
+        { author: 'search_vertical', decision: 'search_complete', reason: 'found 5 cases (vertical) via lens', is_degradation: false },
       ],
     }
   };
@@ -2032,9 +2367,10 @@
     state.lateral = { count: demo.lateral_count || 0, rounds: demo.lateral_rounds || 0, done: true };
     state.vertical = { count: demo.vertical_count || 0, rounds: demo.vertical_rounds || 0, done: true };
     state.evidence = demo.evidence || [];
-    clear(dom.casesList);
-    appendCases(demo.evidence || []);
-    show(dom.casesSection);
+    state.caseRevealIndex = 0;
+    clear(dom.scatterCards);
+    appendScatterCards(demo.evidence || [], { typewrite: false });
+    show(dom.scatterSection);
 
     // Schedule log
     state.schedule = demo.schedule_log || [];
@@ -2075,7 +2411,6 @@
     var ENABLE_MAP = {
       'lens-reveal': ['lens-reveal'],
       'scatter': ['scatter'],
-      'cases': ['cases'],
       'conclusions': [
         'chapter-core_finding',
         'chapter-temporal_trajectory',
