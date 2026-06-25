@@ -31,6 +31,11 @@ from flask import Flask, Response, jsonify, render_template, request
 
 load_dotenv()
 
+try:
+    import gevent
+except Exception:
+    gevent = None
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 _PROMPT_LAB_DIR = project_root / "prompts"
@@ -535,23 +540,30 @@ def _run_analysis(task_id: str, question: str, mode: str, language: str) -> None
                         seen_lens.add(lid)
                         _emit(q, {"kind": "lens", "lens": _serialize_lens(lens), "node": node})
 
-                # New evidence (batch per chunk)
-                new_evidence = []
+                # New schedule entries (emit before evidence so progress logs
+                # describing the search steps appear before the cases they produced).
+                for le in update.get("schedule_log", []) or []:
+                    lid = getattr(le, "id", "")
+                    if lid and lid not in seen_logs:
+                        seen_logs.add(lid)
+                        _emit(q, {"kind": "schedule",
+                                  "entry": _serialize_log(le), "node": node})
+
+                # Stream new evidence one record at a time so the UI can
+                # reveal cases progressively instead of dumping a whole batch.
                 for ev in update.get("evidence_zone", []) or []:
                     eid = getattr(ev, "id", "")
                     if eid and eid not in seen_evidence:
                         seen_evidence.add(eid)
-                        new_evidence.append(ev)
-                if new_evidence:
-                    _emit(q, {
-                        "kind": "evidence_batch",
-                        "evidence": [_serialize_evidence(e) for e in new_evidence],
-                        "lateral_count": running.get("lateral_count", 0),
-                        "vertical_count": running.get("vertical_count", 0),
-                        "lateral_rounds": running.get("lateral_rounds", 0),
-                        "vertical_rounds": running.get("vertical_rounds", 0),
-                        "node": node,
-                    })
+                        _emit(q, {
+                            "kind": "evidence_batch",
+                            "evidence": [_serialize_evidence(ev)],
+                            "lateral_count": running.get("lateral_count", 0),
+                            "vertical_count": running.get("vertical_count", 0),
+                            "lateral_rounds": running.get("lateral_rounds", 0),
+                            "vertical_rounds": running.get("vertical_rounds", 0),
+                            "node": node,
+                        })
 
                 # New conclusions
                 for c in update.get("conclusion_zone", []) or []:
@@ -560,14 +572,6 @@ def _run_analysis(task_id: str, question: str, mode: str, language: str) -> None
                         seen_conclusion.add(cid)
                         _emit(q, {"kind": "conclusion",
                                   "conclusion": _serialize_conclusion(c), "node": node})
-
-                # New schedule entries
-                for le in update.get("schedule_log", []) or []:
-                    lid = getattr(le, "id", "")
-                    if lid and lid not in seen_logs:
-                        seen_logs.add(lid)
-                        _emit(q, {"kind": "schedule",
-                                  "entry": _serialize_log(le), "node": node})
 
                 # Phase change
                 if "phase" in update:
@@ -673,6 +677,11 @@ def api_progress(task_id: str):
                 break
             payload = json.dumps(event, ensure_ascii=False)
             yield f"data: {payload}\n\n"
+            # Force gevent to flush the buffered chunk to the client.
+            # Space out evidence events so cases appear one-by-one instead of
+            # flooding the browser in a single burst.
+            if gevent is not None:
+                gevent.sleep(0)
 
     return Response(
         stream(),
