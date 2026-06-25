@@ -438,13 +438,16 @@ def _build_records(
 ) -> list[EvidenceRecord]:
     records: list[EvidenceRecord] = []
     for item in cases:
+        case_name = str(item.get("case_name", "")).strip()
+        if not case_name or _is_global_duplicate(case_name):
+            continue
         try:
             records.append(
                 EvidenceRecord(
                     author=author,
                     source_lens_id=lens.id,
                     search_direction=direction,
-                    case_name=item.get("case_name", "")[:100],
+                    case_name=case_name[:100],
                     layer=_coerce_enum(EvidenceLayer, item.get("layer"), EvidenceLayer.phenomenon),
                     confidence=_coerce_enum(
                         EvidenceConfidence, item.get("confidence"), EvidenceConfidence.medium
@@ -638,6 +641,11 @@ def parallel_search_node(state: State) -> dict:
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     from unveiling.orchestrator.rules import direction_done
+
+    # Reset global dedup at the very first search round so a new analysis
+    # doesn't carry over case names from a previous run.
+    if state.lateral_rounds == 0 and state.vertical_rounds == 0:
+        _reset_global_dedup()
 
     lateral_done = direction_done(state.lateral_count, state.lateral_rounds)
     vertical_done = direction_done(state.vertical_count, state.vertical_rounds)
