@@ -252,6 +252,111 @@ def _run_search_queries(queries: list[str], lang: str = "") -> list[dict]:
     return all_results
 
 
+def _extract_cases_single(
+    client: LLMClient,
+    lens: LensRecord,
+    direction: Literal["lateral", "vertical"],
+    result: dict,
+    existing_case_names: list[str],
+) -> tuple[list[dict], int]:
+    """Extract zero or one case from a single search result."""
+    result_text = f"[{result.get('title', '')}]\n{result.get('snippet', '')}"
+    existing_text = ", ".join(existing_case_names) if existing_case_names else "(none)"
+
+    prompt = load_lab_prompt("case_extraction_single").format(
+        entities_text=_format_entities(lens.entities),
+        relations_text=_format_relations(lens.relationships),
+        direction=direction,
+        result_text=result_text,
+        existing_cases=existing_text,
+    )
+    content, tokens = client.chat(
+        [{"role": "user", "content": prompt}],
+        json_mode=True,
+        temperature=0.3,
+    )
+    data = json.loads(content)
+    case = data.get("case")
+    if isinstance(case, dict) and case.get("case_name"):
+        return [case], tokens
+    return [], tokens
+
+
+def _extract_cases_parallel(
+    client: LLMClient,
+    lens: LensRecord,
+    direction: Literal["lateral", "vertical"],
+    results: list[dict],
+    existing_case_names: list[str],
+    min_workers: int = 2,
+    max_workers: int = 4,
+) -> tuple[list[dict], int]:
+    """Run extraction in parallel over mini-batches of search results.
+
+    Each task gets 1-3 results so the LLM has enough context without
+    being overwhelmed. We collect all cases, then dedupe by case_name.
+    """
+    total_tokens = 0
+    all_cases: list[dict] = []
+    seen_names: set[str] = set(n.lower() for n in existing_case_names)
+
+    # Build mini-batches (1-3 results each)
+    batch_size = max(1, min(3, len(results) // max_workers))
+    batches: list[list[dict]] = []
+    for i in range(0, len(results), batch_size):
+        batches.append(results[i : i + batch_size])
+
+    def _run_batch(batch: list[dict]) -> tuple[list[dict], int]:
+        return _extract_cases_batch(client, lens, direction, batch, existing_case_names)
+
+    workers = max(min_workers, min(max_workers, len(batches)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_run_batch, b): b for b in batches}
+        for future in as_completed(futures):
+            try:
+                cases, tokens = future.result()
+                total_tokens += tokens
+                for c in cases:
+                    name = str(c.get("case_name", "")).strip().lower()
+                    if name and name not in seen_names:
+                        seen_names.add(name)
+                        all_cases.append(c)
+            except Exception:
+                pass
+
+    return all_cases, total_tokens
+
+
+def _extract_cases_batch(
+    client: LLMClient,
+    lens: LensRecord,
+    direction: Literal["lateral", "vertical"],
+    results: list[dict],
+    existing_case_names: list[str],
+) -> tuple[list[dict], int]:
+    """Extract cases from a small batch of search results (1-3 items)."""
+    results_text = "\n\n".join(
+        f"[{i + 1}] {r.get('title', '')}\n{r.get('snippet', '')}"
+        for i, r in enumerate(results)
+    )
+    existing_text = ", ".join(existing_case_names) if existing_case_names else "(none)"
+
+    prompt = load_lab_prompt("case_extraction").format(
+        entities_text=_format_entities(lens.entities),
+        relations_text=_format_relations(lens.relationships),
+        direction=direction,
+        results_text=results_text,
+        existing_cases=existing_text,
+    )
+    content, tokens = client.chat(
+        [{"role": "user", "content": prompt}],
+        json_mode=True,
+        temperature=0.3,
+    )
+    data = json.loads(content)
+    return data.get("cases", []), tokens
+
+
 def _extract_cases(
     client: LLMClient,
     lens: LensRecord,
@@ -259,6 +364,7 @@ def _extract_cases(
     results: list[dict],
     existing_case_names: list[str],
 ) -> tuple[list[dict], int]:
+    """Legacy monolithic extraction — kept for backward compatibility."""
     results_text = "\n\n".join(
         f"[{i + 1}] {r.get('title', '')}\n{r.get('snippet', '')}"
         for i, r in enumerate(results[:20])
@@ -451,7 +557,7 @@ def _search_node(
     cases: list[dict] = []
     existing_case_names = _get_existing_case_names(state)
     try:
-        cases, tokens = _extract_cases(
+        cases, tokens = _extract_cases_parallel(
             client, lens, direction_key, all_results, existing_case_names,
         )
     except (LLMJSONError, json.JSONDecodeError) as exc:
@@ -480,8 +586,8 @@ def _search_node(
         }
 
     evidence_records = _build_records(cases, lens, direction, agent_name)
-    # Keep the front-end reveal paced and avoid overshooting the target.
-    evidence_records = evidence_records[:3]
+    # Relaxed cap: allow more high-quality cases per round.
+    evidence_records = evidence_records[:6]
 
     logs.append(
         ScheduleLogEntry(

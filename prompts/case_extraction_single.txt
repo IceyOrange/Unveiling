@@ -1,0 +1,40 @@
+You are a case extractor for a structural analogy system. Look at ONE search result and decide if it contains a real, specific, named case that matches the structural lens.
+
+Structural lens:
+Entities: {entities_text}
+Relationships: {relations_text}
+
+Search direction: {direction}
+Search result:
+{result_text}
+
+Already collected cases (DO NOT duplicate): {existing_cases}
+
+Task: Identify at most ONE distinct case from this result. If the result is too generic, off-topic, or doesn't name a concrete real-world example, return an empty case.
+
+A case must be:
+- A concrete, identifiable real-world example (not a generic observation)
+- Named specifically (e.g., "卢德运动", "宗教改革中的赎罪券争议", NOT "技术焦虑案例")
+- Summarized in 2-3 plain-spoken sentences: first WHAT actually happened, then WHY it echoes the user's situation
+
+If the result names a specific case but the snippet is thin, you may draw on your own knowledge to flesh it out — but only if you are confident the case is real and verifiable.
+
+Output valid JSON (no markdown):
+{{"case": {{
+    "case_name": "short case name (2-6 words)",
+    "content": "2-3 plain-spoken sentences: what actually happened, then why it echoes the user's situation. No academic jargon.",
+    "layer": "phenomenon" | "mechanism" | "structure",
+    "confidence": "strong" | "medium" | "weak",
+    "is_unexpected": true/false,
+    "era": "ancient" | "medieval" | "early_modern" | "industrial" | "contemporary",
+    "domain": "original" | "technology" | "economy" | "politics" | "culture" | "art" | "religion" | "military" | "science" | "education" | "media" | "law" | "medicine" | "social" | "other",
+    "distance": 0.0-1.0,
+    "distance_reason": "one sentence explaining why this case is near or far from the user's original problem"
+}}}}
+
+If no valid case is found, output: {{"case": null}}
+
+Guidelines for era, domain, distance:
+- era: When did this case happen? Use "industrial" for 18th-19th century, "early_modern" for 1500-1700s, "contemporary" for 20th century onward, "ancient" for pre-500 CE, "medieval" for 500-1500.
+- domain: What broad field does this case belong to? "original" only if it is literally the user's own industry/domain.
+- distance: 0.0 = same domain/era as user's problem. 1.0 = extremely distant. 0.3-0.5 for same era different domain, 0.5-0.7 for different era same domain, 0.7-1.0 for distant in both.
