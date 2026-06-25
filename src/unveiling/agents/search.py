@@ -182,7 +182,8 @@ def _generate_queries(
         data = json.loads(content)
         queries = data.get("queries", [])
         if isinstance(queries, list):
-            return [str(q) for q in queries[:4]]
+            raw = [str(q).strip() for q in queries if q]
+            return _lightweight_validate_queries(raw, direction)
     except (LLMJSONError, json.JSONDecodeError, Exception):
         pass
 
@@ -194,31 +195,32 @@ def _generate_queries(
     return [f"{r} {h}" for r, h in zip(roles, hints)]
 
 
+def _lightweight_validate_queries(queries: list[str], direction: Literal["lateral", "vertical"]) -> list[str]:
+    """Code-level dedupe + basic sanity checks. No extra LLM call."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for q in queries:
+        if not q or len(q) < 5:
+            continue
+        lower = q.lower()
+        if lower in seen:
+            continue
+        seen.add(lower)
+        out.append(q)
+    return out[:4]
+
+
 def _validate_queries(
     client: LLMClient,
     queries: list[str],
     direction: Literal["lateral", "vertical"],
     existing_cases_text: str,
 ) -> list[str]:
-    """LLM pre-search validation: catch duplicates and direction mismatches."""
-    queries_text = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(queries))
-    prompt = load_lab_prompt("validate_queries").format(
-        direction=direction,
-        existing_cases_text=existing_cases_text,
-        queries_text=queries_text,
-    )
-    try:
-        content, _ = client.chat(
-            [{"role": "user", "content": prompt}],
-            json_mode=True,
-            temperature=0.3,
-        )
-        data = json.loads(content)
-        validated = data.get("queries", [])
-        if isinstance(validated, list) and len(validated) >= len(queries):
-            return [str(q) for q in validated[:len(queries)]]
-    except (LLMJSONError, json.JSONDecodeError, Exception):
-        pass
+    """DEPRECATED: validation is now merged into query generation prompts.
+
+    Kept for backward compatibility with prompt-lab UI and any external
+    callers; it simply returns the input queries unchanged.
+    """
     return queries
 
 
@@ -403,17 +405,6 @@ def _search_node(
         )
     )
     queries = _generate_queries(client, lens, direction_key, existing_cases_text)
-
-    # Pre-search validation: catch duplicates and direction mismatches
-    if queries:
-        logs.append(
-            ScheduleLogEntry(
-                author=agent_name,
-                decision="query_validation_started",
-                reason=f"validating {len(queries)} {direction_key} queries",
-            )
-        )
-        queries = _validate_queries(client, queries, direction_key, existing_cases_text)
 
     if not queries:
         logs.append(

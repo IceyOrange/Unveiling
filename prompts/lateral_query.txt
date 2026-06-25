@@ -32,4 +32,12 @@ SEARCH PRINCIPLES:
 
 5. Generate 3-4 DISTINCT abstract queries that approach the same pattern from different angles (e.g. one framed around authority/status, one around skill obsolescence, one around institutional response). Varied phrasings surface a wider, richer pool of cases for the extractor.
 
+VALIDATION RULES (apply before outputting):
+- DIRECTION = "lateral": queries must target CONTEMPORARY cross-domain cases. Include signals like "contemporary", "across different domains", or "various fields".
+- Each query must be an ABSTRACT PATTERN DESCRIPTION. Reject any that name a specific case, event, person, technology, institution, or era.
+- Do NOT duplicate queries already collected:
+{existing_cases_text}
+  If a query would likely find the same case as one already listed, rephrase it to a fresh angle.
+- Ensure all output queries are distinct from each other and from existing cases.
+
 Output valid JSON only: {{"queries": ["q1", "q2", "q3"]}}
