@@ -290,11 +290,14 @@ def _extract_cases_parallel(
     existing_case_names: list[str],
     min_workers: int = 2,
     max_workers: int = 4,
+    early_stop_at: int = 4,
 ) -> tuple[list[dict], int]:
     """Run extraction in parallel over mini-batches of search results.
 
     Each task gets 1-3 results so the LLM has enough context without
     being overwhelmed. We collect all cases, then dedupe by case_name.
+    Once ``early_stop_at`` distinct cases are found, remaining futures
+    are cancelled to save tokens and time.
     """
     total_tokens = 0
     all_cases: list[dict] = []
@@ -313,6 +316,13 @@ def _extract_cases_parallel(
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(_run_batch, b): b for b in batches}
         for future in as_completed(futures):
+            # Early termination: if we already have enough distinct cases,
+            # cancel the remaining pending futures to save tokens/time.
+            if len(all_cases) >= early_stop_at:
+                for f in futures:
+                    if not f.done():
+                        f.cancel()
+                break
             try:
                 cases, tokens = future.result()
                 total_tokens += tokens
