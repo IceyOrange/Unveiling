@@ -12,8 +12,11 @@ restart required.
 from __future__ import annotations
 
 import json
+import os
 import queue
 import re
+import socket
+import ssl
 import sys
 import threading
 import time
@@ -777,6 +780,177 @@ def api_serper_search():
             all_results.append({"title": "Search error", "snippet": str(exc), "link": ""})
 
     return jsonify({"results": all_results})
+
+
+# ---------------------------------------------------------------------------
+# Diagnostics
+# ---------------------------------------------------------------------------
+
+
+def _diag_connectivity(host: str, port: int = 443, timeout: int = 5) -> dict:
+    """Resolve DNS and measure TCP+TLS handshake time for a host."""
+    result: dict = {"host": host, "port": port}
+    try:
+        addr_info = socket.getaddrinfo(host, port)[0]
+        result["ip"] = addr_info[4][0]
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = f"DNS failed: {type(exc).__name__}: {exc}"
+        return result
+
+    start = time.time()
+    try:
+        ctx = ssl.create_default_context()
+        with socket.create_connection((host, port), timeout=timeout) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as ssock:
+                result["tls_cipher"] = ssock.cipher()[0]
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = f"Connect failed: {type(exc).__name__}: {exc}"
+    finally:
+        result["elapsed_ms"] = int((time.time() - start) * 1000)
+    return result
+
+
+def _diag_env() -> dict:
+    return {
+        "openai_api_base": os.environ.get("OPENAI_API_BASE", "NOT SET"),
+        "openai_model_name": os.environ.get("OPENAI_MODEL_NAME", "NOT SET"),
+        "search_engine": os.environ.get("SEARCH_ENGINE", "NOT SET (auto)"),
+        "serper_api_key_set": bool(os.environ.get("SERPER_API_KEY")),
+        "exa_api_key_set": bool(os.environ.get("EXA_API_KEY")),
+        "openai_api_key_set": bool(os.environ.get("OPENAI_API_KEY")),
+    }
+
+
+def _diag_serper() -> dict:
+    api_key = os.environ.get("SERPER_API_KEY", "")
+    if not api_key:
+        return {"skipped": True, "reason": "SERPER_API_KEY not set"}
+
+    import requests  # local import to avoid startup cost
+
+    start = time.time()
+    try:
+        resp = requests.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
+            json={"q": "卢德运动", "num": 5},
+            timeout=15,
+        )
+        elapsed_ms = int((time.time() - start) * 1000)
+        data = resp.json()
+        organic = data.get("organic", [])
+        return {
+            "status": resp.status_code,
+            "elapsed_ms": elapsed_ms,
+            "result_count": len(organic),
+            "first_title": organic[0].get("title", "")[:80] if organic else None,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "error": f"{type(exc).__name__}: {exc}",
+            "elapsed_ms": int((time.time() - start) * 1000),
+        }
+
+
+def _diag_exa() -> dict:
+    api_key = os.environ.get("EXA_API_KEY", "")
+    if not api_key:
+        return {"skipped": True, "reason": "EXA_API_KEY not set"}
+
+    try:
+        from exa_py import Exa
+
+        exa = Exa(api_key)
+        start = time.time()
+        resp = exa.search("test query", type="auto", num_results=3, contents={"highlights": True})
+        return {
+            "elapsed_ms": int((time.time() - start) * 1000),
+            "result_count": len(resp.results),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+
+def _diag_llm() -> dict:
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    base_url = os.environ.get("OPENAI_API_BASE", "")
+    model = os.environ.get("OPENAI_MODEL_NAME", "")
+    if not api_key or not base_url or not model:
+        return {"skipped": True, "reason": "LLM env vars not fully set"}
+
+    try:
+        import openai
+
+        client = openai.OpenAI(api_key=api_key, base_url=base_url, timeout=60.0)
+        start = time.time()
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": "Say hi"}],
+            temperature=0.3,
+        )
+        elapsed_ms = int((time.time() - start) * 1000)
+        return {
+            "model": model,
+            "base_url": base_url,
+            "elapsed_ms": elapsed_ms,
+            "reply": resp.choices[0].message.content[:120] if resp.choices else None,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+
+def _diag_unveiling_search() -> dict:
+    from unveiling.search.engine import search
+
+    results: dict = {}
+    for engine_name in ["exa", "serper"]:
+        os.environ["SEARCH_ENGINE"] = engine_name
+        start = time.time()
+        try:
+            items = search("卢德运动", num=3, lang="中文")
+            results[engine_name] = {
+                "elapsed_ms": int((time.time() - start) * 1000),
+                "result_count": len(items),
+                "first_title": items[0].get("title", "")[:80] if items else None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            results[engine_name] = {
+                "elapsed_ms": int((time.time() - start) * 1000),
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+    return results
+
+
+@app.route("/diag")
+def api_diag():
+    """Server-side diagnostic endpoint.
+
+    GET /diag       -> connectivity + env info (no API cost)
+    GET /diag?live=1 -> also run live API calls against Serper/Exa/LLM/search
+    """
+    live = request.args.get("live", "0") == "1"
+    started_at = time.time()
+
+    payload = {
+        "timestamp": int(started_at * 1000),
+        "live": live,
+        "env": _diag_env(),
+        "connectivity": {
+            "serper": _diag_connectivity("google.serper.dev"),
+            "siliconflow": _diag_connectivity("api.siliconflow.cn"),
+        },
+    }
+
+    if live:
+        payload["api"] = {
+            "serper": _diag_serper(),
+            "exa": _diag_exa(),
+            "llm": _diag_llm(),
+            "unveiling_search": _diag_unveiling_search(),
+        }
+
+    payload["total_elapsed_ms"] = int((time.time() - started_at) * 1000)
+    return jsonify(payload)
 
 
 if __name__ == "__main__":
