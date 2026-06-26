@@ -33,8 +33,19 @@ def inception_node(state: State) -> dict:
       - phase: Phase.exploration
       - token_spent: updated total
     """
+    import time
+
+    node_start = time.time()
     question = state.user_question
     total_tokens = 0
+
+    logs: list[ScheduleLogEntry] = [
+        ScheduleLogEntry(
+            author="inception",
+            decision="node_started",
+            reason=f"started at {node_start:.3f}",
+        )
+    ]
 
     # --- Call LLM for structural abstraction ---
     # Prompts are reloaded from prompts/ on every call so edits made via the
@@ -129,9 +140,19 @@ def inception_node(state: State) -> dict:
         ),
     )
 
+    elapsed_ms = int((time.time() - node_start) * 1000)
+    logs.append(log)
+    logs.append(
+        ScheduleLogEntry(
+            author="inception",
+            decision="node_finished",
+            reason=f"elapsed {elapsed_ms}ms",
+        )
+    )
+
     return {
         "hypothesis_zone": [lens],
-        "schedule_log": [log],
+        "schedule_log": logs,
         "token_spent": state.token_spent + total_tokens,
         "phase": Phase.exploration,
     }

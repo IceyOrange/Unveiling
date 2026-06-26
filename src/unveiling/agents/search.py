@@ -498,6 +498,9 @@ def _search_node(
     agent_name: str,
     direction: SearchDirection,
 ) -> dict:
+    import time
+
+    node_start = time.time()
     lens = _latest_lens(state)
     if lens is None:
         return {
@@ -514,7 +517,13 @@ def _search_node(
 
     client = LLMClient(language=state.output_language)
     existing_cases_text = _format_existing_cases(state)
-    logs: list[ScheduleLogEntry] = []
+    logs: list[ScheduleLogEntry] = [
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="node_started",
+            reason=f"started at {node_start:.3f}",
+        )
+    ]
 
     logs.append(
         ScheduleLogEntry(
@@ -523,7 +532,16 @@ def _search_node(
             reason=f"deriving {direction_key} queries from lens [{lens.id[:8]}]",
         )
     )
+    qgen_start = time.time()
     queries = _generate_queries(client, lens, direction_key, existing_cases_text)
+    qgen_elapsed_ms = int((time.time() - qgen_start) * 1000)
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="query_generation_finished",
+            reason=f"generated {len(queries)} queries in {qgen_elapsed_ms}ms",
+        )
+    )
 
     if not queries:
         logs.append(
@@ -544,7 +562,16 @@ def _search_node(
             reason=f"running {len(queries)} {direction_key} queries",
         )
     )
+    search_start = time.time()
     all_results = _run_search_queries(queries, lang=state.output_language)
+    search_elapsed_ms = int((time.time() - search_start) * 1000)
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="search_finished",
+            reason=f"returned {len(all_results)} results in {search_elapsed_ms}ms",
+        )
+    )
 
     if not all_results:
         logs.append(
@@ -569,6 +596,7 @@ def _search_node(
     tokens = 0
     cases: list[dict] = []
     existing_case_names = _get_existing_case_names(state)
+    extraction_start = time.time()
     try:
         cases, tokens = _extract_cases_parallel(
             client, lens, direction_key, all_results, existing_case_names,
@@ -598,6 +626,15 @@ def _search_node(
             "token_spent": state.token_spent + tokens,
         }
 
+    extraction_elapsed_ms = int((time.time() - extraction_start) * 1000)
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="extraction_finished",
+            reason=f"extracted {len(cases)} cases in {extraction_elapsed_ms}ms",
+        )
+    )
+
     evidence_records = _build_records(cases, lens, direction, agent_name)
     # Relaxed cap: allow more high-quality cases per round.
     evidence_records = evidence_records[:6]
@@ -610,6 +647,15 @@ def _search_node(
                 f"found {len(evidence_records)} cases "
                 f"({direction.value}) via lens [{lens.id[:8]}]"
             ),
+        )
+    )
+
+    elapsed_ms = int((time.time() - node_start) * 1000)
+    logs.append(
+        ScheduleLogEntry(
+            author=agent_name,
+            decision="node_finished",
+            reason=f"elapsed {elapsed_ms}ms",
         )
     )
 

@@ -114,8 +114,19 @@ def convergence_node(state: State) -> dict:
     For MVP, steps 1-4 are combined into one comprehensive LLM call that
     receives all evidence and produces the final ConclusionRecord.
     """
+    import time
+
+    node_start = time.time()
     committed_evidence = [
         e for e in state.evidence_zone if e.status == "committed"
+    ]
+
+    logs: list[ScheduleLogEntry] = [
+        ScheduleLogEntry(
+            author="convergence",
+            decision="node_started",
+            reason=f"started at {node_start:.3f}",
+        )
     ]
 
     prompt = load_lab_prompt("convergence_synthesize").format(
@@ -184,10 +195,20 @@ def convergence_node(state: State) -> dict:
             f"via single-pass LLM call."
         ),
     )
+    logs.append(log)
+
+    elapsed_ms = int((time.time() - node_start) * 1000)
+    logs.append(
+        ScheduleLogEntry(
+            author="convergence",
+            decision="node_finished",
+            reason=f"elapsed {elapsed_ms}ms",
+        )
+    )
 
     return {
         "conclusion_zone": [conclusion],
-        "schedule_log": [log],
+        "schedule_log": logs,
         "token_spent": state.token_spent + tokens,
         "phase": Phase.convergence,
     }
