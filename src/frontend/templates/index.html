@@ -217,14 +217,16 @@
       </div>
     </nav>
 
-    <!-- The user's question, returned to them in serif. -->
-    <h2 class="analysis__question" id="analysis-question"></h2>
+    <!-- The user's question + live status share one headline row. -->
+    <div class="analysis__headline">
+      <h2 class="analysis__question" id="analysis-question"></h2>
 
-    <!-- 现在 line: a single live sentence describing the current action. -->
-    <div class="now" id="now-line" aria-live="polite">
-      <span class="now__label" aria-hidden="true">现在</span>
-      <span class="now__arrow" aria-hidden="true">→</span>
-      <span class="now__text" id="narration-text">正在准备分析……</span>
+      <!-- 现在 line: a single live sentence describing the current action. -->
+      <div class="now" id="now-line" aria-live="polite">
+        <span class="now__label" aria-hidden="true">现在</span>
+        <span class="now__arrow" aria-hidden="true">→</span>
+        <span class="now__text" id="narration-text">正在准备分析……</span>
+      </div>
     </div>
 
     <!-- Lens reveal: shows after Phase 1 identifies the structural pattern. -->
@@ -249,7 +251,10 @@
     <!-- Scatter plot: analogical distance map (time x space) -->
     <section class="scatter" id="scatter" hidden>
       <header class="scatter__head">
-        <span class="scatter__title" id="scatter-title">找到的类比</span>
+        <div class="scatter__head-left">
+          <span class="scatter__title" id="scatter-title">找到的类比</span>
+          <span class="scatter__counter" id="scatter-counter">0 条</span>
+        </div>
         <span class="scatter__subtitle" id="scatter-subtitle">横轴 = 领域 · 纵轴 = 时间 · 原点 = 你的问题</span>
       </header>
       <div class="scatter__chart-wrap">
@@ -310,15 +315,6 @@
       </div>
       <!-- Case detail cards below chart -->
       <div class="scatter__cards" id="scatter-cards"></div>
-    </section>
-
-    <!-- Recent cases: chronological feed of evidence as it lands. -->
-    <section class="cases" id="cases" hidden>
-      <header class="cases__head">
-        <span class="cases__title">找到的类比</span>
-        <span class="cases__counter" id="cases-counter">0 条</span>
-      </header>
-      <ol class="cases__list" id="cases-list" aria-live="polite"></ol>
     </section>
 
     <!-- ====== Below: conclusion zone, revealed after analysis completes ====== -->
