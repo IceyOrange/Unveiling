@@ -141,7 +141,7 @@ def _fallback(state: State, question: str, exc: Exception) -> dict:
     """Degradation path: log failure and return a minimal placeholder lens."""
     logger = DegradationLogger()
     log = logger.log_event(
-        role="inception",
+        agent_name="inception",
         scenario=f"LLM failure during inception: {exc}",
         fallback_action="placeholder_lens_with_raw_question",
     )

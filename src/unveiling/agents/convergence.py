@@ -136,7 +136,7 @@ def convergence_node(state: State) -> dict:
         # Catch broad Exception to cover transient OpenAI errors that escape
         # tenacity retry (e.g. all retries exhausted).
         degradation = DegradationLogger.log_event(
-            role="convergence",
+            agent_name="convergence",
             scenario=f"LLM call failed during convergence: {exc}",
             fallback_action="fallback_to_minimal_conclusion",
         )
@@ -154,7 +154,7 @@ def convergence_node(state: State) -> dict:
     missing = [k for k in required_keys if not data.get(k)]
     if missing:
         degradation = DegradationLogger.log_event(
-            role="convergence",
+            agent_name="convergence",
             scenario=f"LLM output missing required keys: {missing}",
             fallback_action="fallback_to_minimal_conclusion",
         )
