@@ -17,3 +17,7 @@ services:
         sync: false
       - key: SERPER_API_KEY
         sync: false
+      - key: EXA_API_KEY
+        sync: false
+      - key: SEARCH_ENGINE
+        value: "exa"
