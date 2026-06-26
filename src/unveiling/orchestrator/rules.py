@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from unveiling.models.state import State
 
-TARGET_EXAMPLES = 10           # ideal target per direction
-MIN_EXAMPLES = 3               # minimum viable per direction
-MAX_ROUNDS_PER_DIRECTION = 3   # safety limit per direction
+TARGET_EXAMPLES = 5           # ideal target per direction
+MIN_EXAMPLES = 3              # minimum viable per direction
+MAX_ROUNDS_PER_DIRECTION = 3  # safety limit per direction
 
 
 def direction_done(count: int, rounds: int) -> bool:

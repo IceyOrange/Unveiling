@@ -4,6 +4,7 @@ import json
 import os
 from typing import Optional
 
+import httpx
 import openai
 from openai import OpenAI
 from tenacity import (
@@ -42,6 +43,7 @@ class LLMClient:
         self.client = OpenAI(
             api_key=os.environ.get("OPENAI_API_KEY", ""),
             base_url=os.environ.get("OPENAI_API_BASE", "https://api.deepseek.com"),
+            timeout=httpx.Timeout(90.0, connect=5.0),
         )
         self.model = model or os.environ.get("OPENAI_MODEL_NAME", "deepseek-v4-flash")
         self.language = language
