@@ -14,7 +14,7 @@ from unveiling.search.engine import search
 def test_default_uses_exa_first(mock_exa, mock_serper):
     mock_exa.return_value = [{"title": "exa", "link": "u", "snippet": "s"}]
 
-    with patch.dict("os.environ", {}, clear=False):
+    with patch.dict("os.environ", {}, clear=True):
         results = search("query")
 
     assert results == [{"title": "exa", "link": "u", "snippet": "s"}]
@@ -31,7 +31,7 @@ def test_default_falls_back_to_serper_on_exa_error(
     mock_exa.side_effect = Exception("exa down")
     mock_serper.return_value = [{"title": "serper", "link": "u", "snippet": "s"}]
 
-    with patch.dict("os.environ", {}, clear=False):
+    with patch.dict("os.environ", {}, clear=True):
         results = search("query")
 
     assert results == [{"title": "serper", "link": "u", "snippet": "s"}]
@@ -50,7 +50,7 @@ def test_default_falls_back_to_llm_on_all_errors(
     mock_serper.side_effect = Exception("serper down")
     mock_llm.return_value = [{"title": "llm", "link": "u", "snippet": "s"}]
 
-    with patch.dict("os.environ", {}, clear=False):
+    with patch.dict("os.environ", {}, clear=True):
         results = search("query")
 
     assert results == [{"title": "llm", "link": "u", "snippet": "s"}]
