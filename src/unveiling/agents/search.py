@@ -292,49 +292,67 @@ def _extract_cases_parallel(
     max_workers: int = 4,
     early_stop_at: int = 4,
 ) -> tuple[list[dict], int]:
-    """Run extraction in parallel over mini-batches of search results.
+    """Extract cases from all search results in a single LLM call.
 
-    Each task gets 1-3 results so the LLM has enough context without
-    being overwhelmed. We collect all cases, then dedupe by case_name.
-    Once ``early_stop_at`` distinct cases are found, remaining futures
-    are cancelled to save tokens and time.
+    Instead of spawning many parallel mini-batch calls (which was the
+    primary bottleneck — 330s lateral / 493s vertical), we consolidate
+    the top search results into one prompt and ask the LLM to return
+    up to ``early_stop_at`` high-quality cases in a single shot.
+
+    The ``min_workers`` and ``max_workers`` parameters are kept for
+    backward compatibility but are no longer used.
     """
+    # Cap results to avoid overflowing the context window
+    MAX_RESULTS = 18
+    capped_results = results[:MAX_RESULTS]
+
     total_tokens = 0
     all_cases: list[dict] = []
     seen_names: set[str] = set(n.lower() for n in existing_case_names)
 
-    # Build mini-batches (1-3 results each)
-    batch_size = max(1, min(3, len(results) // max_workers))
-    batches: list[list[dict]] = []
-    for i in range(0, len(results), batch_size):
-        batches.append(results[i : i + batch_size])
+    # Reuse the existing batch prompt logic for the single consolidated call
+    results_text = "\n\n".join(
+        f"[{i + 1}] {r.get('title', '')}\n{r.get('snippet', '')}"
+        for i, r in enumerate(capped_results)
+    )
+    existing_text = ", ".join(existing_case_names) if existing_case_names else "(none)"
 
-    def _run_batch(batch: list[dict]) -> tuple[list[dict], int]:
-        return _extract_cases_batch(client, lens, direction, batch, existing_case_names)
+    # Load the prompt and add an instruction to respect the early_stop limit
+    prompt_template = load_lab_prompt("case_extraction")
+    prompt = prompt_template.format(
+        entities_text=_format_entities(lens.entities),
+        relations_text=_format_relations(lens.relationships),
+        direction=direction,
+        results_text=results_text,
+        existing_cases=existing_text,
+    )
 
-    workers = max(min_workers, min(max_workers, len(batches)))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(_run_batch, b): b for b in batches}
-        for future in as_completed(futures):
-            # Early termination: if we already have enough distinct cases,
-            # cancel the remaining pending futures to save tokens/time.
-            if len(all_cases) >= early_stop_at:
-                for f in futures:
-                    if not f.done():
-                        f.cancel()
-                break
-            try:
-                cases, tokens = future.result()
-                total_tokens += tokens
-                for c in cases:
-                    name = str(c.get("case_name", "")).strip().lower()
-                    if name and name not in seen_names:
-                        seen_names.add(name)
-                        all_cases.append(c)
-            except Exception:
-                pass
+    # Append a concise instruction so the LLM knows how many cases to aim for
+    prompt += (
+        f"\n\nIMPORTANT: Return at most {early_stop_at} distinct, "
+        f"high-quality cases. Do not pad the list with weak or generic entries."
+    )
 
-    return all_cases, total_tokens
+    content, tokens = client.chat(
+        [{"role": "user", "content": prompt}],
+        json_mode=True,
+        temperature=0.3,
+    )
+    total_tokens += tokens
+
+    data = json.loads(content)
+    cases = data.get("cases", [])
+    if not isinstance(cases, list):
+        cases = []
+
+    for c in cases:
+        name = str(c.get("case_name", "")).strip().lower()
+        if name and name not in seen_names:
+            seen_names.add(name)
+            all_cases.append(c)
+
+    # Hard cap: never return more than early_stop_at cases
+    return all_cases[:early_stop_at], total_tokens
 
 
 def _extract_cases_batch(
