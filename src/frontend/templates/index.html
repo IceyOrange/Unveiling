@@ -185,37 +185,38 @@
 
   <article class="analysis">
 
+    <!-- Utility mast: brand, compact phase stepper, and status share one row. -->
     <header class="analysis__mast">
       <span class="analysis__brand">UNVEILING</span>
+
+      <nav class="phases" id="phase-indicator" aria-label="分析阶段">
+        <div class="phases__step" data-phase="inception" aria-label="抽象：提炼问题的骨架">
+          <span class="phases__step-marker" aria-hidden="true">
+            <span class="phases__step-dot"></span>
+          </span>
+          <span class="phases__step-name">抽象</span>
+          <span class="phases__step-desc">提炼问题的骨架</span>
+        </div>
+        <span class="phases__rail" aria-hidden="true"></span>
+        <div class="phases__step" data-phase="exploration" aria-label="搜集：跨领域、跨时期找类比">
+          <span class="phases__step-marker" aria-hidden="true">
+            <span class="phases__step-dot"></span>
+          </span>
+          <span class="phases__step-name">搜集</span>
+          <span class="phases__step-desc">跨领域、跨时期 找类比</span>
+        </div>
+        <span class="phases__rail" aria-hidden="true"></span>
+        <div class="phases__step" data-phase="convergence" aria-label="收拢：归纳并找矛盾">
+          <span class="phases__step-marker" aria-hidden="true">
+            <span class="phases__step-dot"></span>
+          </span>
+          <span class="phases__step-name">收拢</span>
+          <span class="phases__step-desc">归纳 · 找矛盾</span>
+        </div>
+      </nav>
+
       <span class="analysis__edition" id="analysis-edition">一份正在进行的分析</span>
     </header>
-
-    <!-- Phase ribbon: 抽象 → 搜集 → 收拢 -->
-    <nav class="phases" id="phase-indicator" aria-label="分析阶段">
-      <div class="phases__step" data-phase="inception">
-        <span class="phases__step-marker" aria-hidden="true">
-          <span class="phases__step-dot"></span>
-        </span>
-        <span class="phases__step-name">抽象</span>
-        <span class="phases__step-desc">提炼问题的骨架</span>
-      </div>
-      <span class="phases__rail" aria-hidden="true"></span>
-      <div class="phases__step" data-phase="exploration">
-        <span class="phases__step-marker" aria-hidden="true">
-          <span class="phases__step-dot"></span>
-        </span>
-        <span class="phases__step-name">搜集</span>
-        <span class="phases__step-desc">跨领域、跨时期 找类比</span>
-      </div>
-      <span class="phases__rail" aria-hidden="true"></span>
-      <div class="phases__step" data-phase="convergence">
-        <span class="phases__step-marker" aria-hidden="true">
-          <span class="phases__step-dot"></span>
-        </span>
-        <span class="phases__step-name">收拢</span>
-        <span class="phases__step-desc">归纳 · 找矛盾</span>
-      </div>
-    </nav>
 
     <!-- The user's question + live status share one headline row. -->
     <div class="analysis__headline">
@@ -332,7 +333,7 @@
 
     <!-- Conclusions: six chapters, compact inline -->
     <section class="conclusions" id="conclusions" hidden>
-      <section class="conclusion" id="chapter-core_finding" data-key="core_finding">
+      <section class="conclusion conclusion--full" id="chapter-core_finding" data-key="core_finding">
         <header class="conclusion__marker">
           <span class="conclusion__marker-no">§ 1</span>
           <span class="conclusion__marker-name">核心结论</span>
@@ -340,7 +341,7 @@
         <div class="conclusion__prose" id="prose-core_finding"></div>
       </section>
 
-      <section class="conclusion" id="chapter-temporal_trajectory" data-key="temporal_trajectory">
+      <section class="conclusion conclusion--half" id="chapter-temporal_trajectory" data-key="temporal_trajectory">
         <header class="conclusion__marker">
           <span class="conclusion__marker-no">§ 2</span>
           <span class="conclusion__marker-name">这件事的走向</span>
@@ -348,7 +349,7 @@
         <div class="conclusion__prose" id="prose-temporal_trajectory"></div>
       </section>
 
-      <section class="conclusion conclusion--tension" id="chapter-tension" data-key="tension">
+      <section class="conclusion conclusion--half conclusion--tension" id="chapter-tension" data-key="tension">
         <header class="conclusion__marker conclusion__marker--accent">
           <span class="conclusion__marker-no">§ 3</span>
           <span class="conclusion__marker-name">难处在哪</span>
@@ -356,7 +357,7 @@
         <div class="conclusion__prose" id="prose-tension"></div>
       </section>
 
-      <section class="conclusion" id="chapter-boundary_condition" data-key="boundary_condition">
+      <section class="conclusion conclusion--third" id="chapter-boundary_condition" data-key="boundary_condition">
         <header class="conclusion__marker">
           <span class="conclusion__marker-no">§ 4</span>
           <span class="conclusion__marker-name">这话在哪里不成立</span>
@@ -364,7 +365,7 @@
         <div class="conclusion__prose" id="prose-boundary_condition"></div>
       </section>
 
-      <section class="conclusion conclusion--unresolved" id="chapter-unresolved" data-key="unresolved">
+      <section class="conclusion conclusion--third conclusion--unresolved" id="chapter-unresolved" data-key="unresolved">
         <header class="conclusion__marker">
           <span class="conclusion__marker-no">§ 5</span>
           <span class="conclusion__marker-name">还没回答清楚的</span>
@@ -372,7 +373,7 @@
         <div class="conclusion__prose" id="prose-unresolved"></div>
       </section>
 
-      <section class="conclusion conclusion--implication" id="chapter-implication" data-key="implication">
+      <section class="conclusion conclusion--third conclusion--implication" id="chapter-implication" data-key="implication">
         <header class="conclusion__marker">
           <span class="conclusion__marker-no">§ 6</span>
           <span class="conclusion__marker-name">所以你应该</span>
