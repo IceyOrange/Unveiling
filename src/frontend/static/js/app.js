@@ -50,6 +50,15 @@
       phaseConvergence: '收拢',
       phaseConvergenceDesc: '归纳 · 找矛盾',
       nowLabel: '现在',
+      quoteTagDesign: '设计溯源',
+      quoteTagMethod: '方法论',
+      quoteTagPhilosophy: '类比哲思',
+      quoteDesignAmazonia: '背景河流轮廓的 unveil 文本，设计灵感来自「访问亚马逊」。',
+      quoteTiNeDialogue: '类比分析的本质，是不断调用荣格八维中的 Ti 与 Ne 功能。',
+      quoteTiNeAbstractThenSearch: '先用 Ti 把问题抽象成结构，再用 Ne 去远方找相似的骨架。',
+      quoteSharedEssence: '许多事情本质是相通的，只是不同时代、不同领域有不同的表现形式。',
+      quoteStructuralTransfer: '一个好的类比不是相似之处的罗列，而是结构性关系的迁移。',
+      quoteFarLeap: '跨得越远，照得越亮——只要骨架仍然咬合。',
       narrationInit: '正在准备分析……',
       narrationInception: '正在拆解问题 — 提炼核心结构',
       narrationExploration: '跨领域与跨时期并行搜索 — 找结构相似的类比案例',
@@ -188,6 +197,15 @@
       phaseConvergence: 'Convergence',
       phaseConvergenceDesc: 'Synthesize · Find tension',
       nowLabel: 'Now',
+      quoteTagDesign: 'Design provenance',
+      quoteTagMethod: 'Methodology',
+      quoteTagPhilosophy: 'Philosophy',
+      quoteDesignAmazonia: "The river-outline lettering is inspired by Amazonia's typographic landscape.",
+      quoteTiNeDialogue: 'Analogy analysis is essentially Ti and Ne in dialogue.',
+      quoteTiNeAbstractThenSearch: 'Abstract the pattern with Ti, then let Ne search distant skeletons.',
+      quoteSharedEssence: 'Many things share the same essence; only the costumes differ.',
+      quoteStructuralTransfer: 'A good analogy is not a list of resemblances, but a transfer of structure.',
+      quoteFarLeap: 'The farther the leap, the brighter the illumination—if the joints still fit.',
       narrationInit: 'Preparing analysis…',
       narrationInception: 'Deconstructing the question — distilling core structure',
       narrationExploration: 'Parallel search across domains & eras — finding structurally similar cases',
@@ -583,6 +601,15 @@
     { key: 'boundary_condition',  fallback: '这话在哪里不成立' },
     { key: 'unresolved',          fallback: '还没回答清楚的' },
     { key: 'implication',         fallback: '所以你应该' },
+  ];
+
+  var QUOTES = [
+    { tag: 'quoteTagDesign', text: 'quoteDesignAmazonia' },
+    { tag: 'quoteTagMethod', text: 'quoteTiNeDialogue' },
+    { tag: 'quoteTagMethod', text: 'quoteTiNeAbstractThenSearch' },
+    { tag: 'quoteTagPhilosophy', text: 'quoteSharedEssence' },
+    { tag: 'quoteTagPhilosophy', text: 'quoteStructuralTransfer' },
+    { tag: 'quoteTagPhilosophy', text: 'quoteFarLeap' },
   ];
 
   var state = {
