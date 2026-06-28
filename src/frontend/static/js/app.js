@@ -59,6 +59,10 @@
       quoteSharedEssence: '许多事情本质是相通的，只是不同时代、不同领域有不同的表现形式。',
       quoteStructuralTransfer: '一个好的类比不是相似之处的罗列，而是结构性关系的迁移。',
       quoteFarLeap: '跨得越远，照得越亮——只要骨架仍然咬合。',
+      quoteHistoricalMirror: '历史不会重复，但会押韵——倾听结构的回声。',
+      quotePatternRecognition: '模式识别，是在不同的皮肤下看到同一副骨架。',
+      quoteDistanceIlluminates: '距离不是障碍，而是让类比得以成立的先决条件。',
+      quoteQuestionDepth: '一个问得好的问题，本身就是半个答案——它的形状指出了方向。',
       narrationInit: '正在准备分析……',
       narrationInception: '正在拆解问题 — 提炼核心结构',
       narrationExploration: '跨领域与跨时期并行搜索 — 找结构相似的类比案例',
@@ -206,6 +210,10 @@
       quoteSharedEssence: 'Many things share the same essence; only the costumes differ.',
       quoteStructuralTransfer: 'A good analogy is not a list of resemblances, but a transfer of structure.',
       quoteFarLeap: 'The farther the leap, the brighter the illumination—if the joints still fit.',
+      quoteHistoricalMirror: "History doesn't repeat, but it rhymes—listen for the structural echo.",
+      quotePatternRecognition: 'Pattern recognition is seeing the same skeleton beneath different skins.',
+      quoteDistanceIlluminates: 'Distance is not a barrier; it is the very condition that makes analogy possible.',
+      quoteQuestionDepth: 'A well-formed question is already half an answer—its shape points the way.',
       narrationInit: 'Preparing analysis…',
       narrationInception: 'Deconstructing the question — distilling core structure',
       narrationExploration: 'Parallel search across domains & eras — finding structurally similar cases',
@@ -612,6 +620,10 @@
     { tag: 'quoteTagPhilosophy', text: 'quoteSharedEssence' },
     { tag: 'quoteTagPhilosophy', text: 'quoteStructuralTransfer' },
     { tag: 'quoteTagPhilosophy', text: 'quoteFarLeap' },
+    { tag: 'quoteTagPhilosophy', text: 'quoteHistoricalMirror' },
+    { tag: 'quoteTagMethod', text: 'quotePatternRecognition' },
+    { tag: 'quoteTagPhilosophy', text: 'quoteDistanceIlluminates' },
+    { tag: 'quoteTagMethod', text: 'quoteQuestionDepth' },
   ];
 
   var state = {
