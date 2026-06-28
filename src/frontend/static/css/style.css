@@ -576,8 +576,7 @@ em { font-style: normal; }
 
 .analysis__headline,
 .lens-reveal,
-.insight-bridge,
-.conclusions {
+.insight-bridge {
   margin-bottom: var(--space-5);
 }
 
