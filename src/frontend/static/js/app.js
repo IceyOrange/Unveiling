@@ -576,9 +576,6 @@
 
   // ============================== State ==============================
 
-  var TARGET_PER_DIRECTION = 10;
-  var MAX_ROUNDS = 3;
-
   var PHASE_ORDER = ['inception', 'exploration', 'convergence'];
   var PHASE_LABEL = {
     inception: '抽象',
@@ -907,23 +904,6 @@
         }, QUOTE_FADE_DURATION);
       }
     }
-  }
-
-  function animateNumber(el, target, duration) {
-    if (!el) return;
-    duration = duration || 700;
-    var start = parseInt(el.textContent.replace(/\D/g, ''), 10) || 0;
-    if (start === target) { setText(el, target); return; }
-    var startTime = null;
-    function step(timestamp) {
-      if (!startTime) startTime = timestamp;
-      var progress = Math.min((timestamp - startTime) / duration, 1);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      var current = Math.round(start + (target - start) * eased);
-      setText(el, current);
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
   }
 
   function clear(node) {
@@ -2091,28 +2071,6 @@
     return g;
   }
 
-  // Build the paired detail cards below the scatter plot. Rendered incrementally
-  // as evidence streams in, and reconciled at the end to avoid duplicates.
-  function renderScatterCards(evidence) {
-    if (!dom.scatterCards) return;
-    var plotCases = (evidence || []).filter(function (e) {
-      return (e.era || e.distance != null) && e.era !== 'future';
-    });
-
-    var existingIds = {};
-    dom.scatterCards.querySelectorAll('.scatter-card').forEach(function (card) {
-      var cid = card.getAttribute('data-case-id');
-      if (cid) existingIds[cid] = true;
-    });
-
-    plotCases.forEach(function (e) {
-      if (!e.era) e.era = e.search_direction === 'vertical' ? 'industrial' : 'contemporary';
-      if (e.distance == null) e.distance = e.search_direction === 'lateral' ? 0.5 : 0.7;
-      if (e.id && existingIds[e.id]) return;
-      dom.scatterCards.appendChild(buildScatterCard(e));
-    });
-  }
-
   function renderScatter(evidence, opts) {
     if (!dom.scatterSection || !dom.scatterDots || !dom.scatterCards) return;
     var animate = !!(opts && opts.animate) && !prefersReducedMotion();
@@ -2392,14 +2350,14 @@
     var conf = e.confidence;
     var isUnexpected = !!e.is_unexpected;
     var dirChip = el('span', {
-      class: 'case__chip case__chip--dir case__chip--' + direction,
+      class: 'case__chip case__chip--' + direction,
     }, DIRECTION_LABEL[direction] || direction);
     var layerMark = el('span', {
       class: 'case__layer',
       title: t('layerTip', {layer: LAYER_LABEL[layer] || layer}),
     }, LAYER_MARKER[layer] || '■□□');
     var confChip = el('span', {
-      class: 'case__chip case__chip--conf case__chip--conf-' + conf,
+      class: 'case__chip case__chip--conf-' + conf,
     }, CONFIDENCE_LABEL[conf] || conf);
     var meta = el('div', { class: 'scatter-card__meta' }, [dirChip, layerMark, confChip]);
     if (isUnexpected) {

@@ -413,33 +413,6 @@ em { font-style: normal; }
   white-space: nowrap;
 }
 
-.home-form__lang {
-  display: flex;
-  align-items: stretch;
-  min-height: 56px;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--bg-cream);
-}
-.home-form__lang-option {
-  padding: 10px 18px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-secondary);
-  background: transparent;
-  border: 0;
-  border-right: 1px solid var(--border-hairline);
-  cursor: pointer;
-  transition: background-color 180ms ease, color 180ms ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.home-form__lang-option:last-child { border-right: 0; }
-.home-form__lang-option:hover { background: var(--surface-inset); color: var(--ink-primary); }
-.home-form__lang-option.is-selected { background: var(--ink-primary); color: var(--bg-cream); }
-
 .home-form__submit {
   display: inline-flex;
   align-items: center;
@@ -915,8 +888,7 @@ em { font-style: normal; }
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
 }
-.lens-reveal__col-head,
-.lens-map__col-head {
+.lens-reveal__col-head {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -924,8 +896,7 @@ em { font-style: normal; }
   color: var(--ink-tertiary);
   margin-bottom: var(--space-2);
 }
-.lens-reveal__list,
-.lens-map__list {
+.lens-reveal__list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -964,8 +935,6 @@ em { font-style: normal; }
   font-size: 14px;
   font-weight: 400;
 }
-
-/* Cases feed (removed — cases now render inside the scatter section as two-column cards) */
 
 /* Chip/layer styles shared by scatter cards. */
 .case__chip {
@@ -1662,12 +1631,10 @@ em { font-style: normal; }
   .home-form__submit { justify-content: center; }
 
   .insight-bridge { padding: var(--space-4); }
-  .lens-reveal__map,
-  .lens-map { grid-template-columns: 1fr; gap: var(--space-3); }
+  .lens-reveal__map { grid-template-columns: 1fr; gap: var(--space-3); }
   .case-index__cells { grid-template-columns: 1fr; }
   .case-index__rowhead { flex-direction: column; gap: 4px; align-items: flex-start; }
 
-  .case__meta { gap: 6px; }
   .lens-pair { grid-template-columns: 1fr; gap: 2px; }
   .lens-pair__arrow { display: none; }
 
@@ -2273,7 +2240,5 @@ em { font-style: normal; }
   }
   .recap__content { display: flex !important; }
   .recap { border: 0; background: transparent; }
-  .case,
   .case-index__cell { page-break-inside: avoid; }
-  .case--unexpected { background: transparent !important; border-color: var(--border-soft) !important; }
 }
