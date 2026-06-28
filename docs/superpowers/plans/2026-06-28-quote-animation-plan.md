@@ -257,9 +257,8 @@ After the `setNarration` function (around line 700), add:
   var QUOTE_INTERVAL = 8000;
   var QUOTE_FADE_DURATION = 400;
 
-  function prefersReducedMotion() {
-    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }
+  // Note: prefersReducedMotion() is already defined later in this file;
+  // function declarations are hoisted, so it is available here.
 
   function renderQuoteCard(index) {
     var quote = QUOTES[index % QUOTES.length];
@@ -360,7 +359,23 @@ Call `updateQuoteCardVisibility()` in these places:
     updateQuoteCardVisibility();
 ```
 
-4. In the analysis screen render path where the analysis screen becomes active. Find `showScreen('analysis')` or the equivalent in `startAnalysis()` and add `updateQuoteCardVisibility();` after the screen switch.
+4. At the end of `onDone()` (around line 1183), add:
+
+```js
+    updateQuoteCardVisibility();
+```
+
+5. In `applyLanguage()`, after the lens tag update (around line 391), add:
+
+```js
+    renderQuoteCard(state.quoteCardIndex);
+```
+
+6. At the end of `showScreen()` after `window.scrollTo` (around line 834), add:
+
+```js
+    updateQuoteCardVisibility();
+```
 
 - [ ] **Step 6: Manual smoke test**
 
@@ -420,8 +435,9 @@ git commit -m "fix(analysis): quote-card reduced-motion and responsive polish"
 | Bilingual quote content | Task 3 |
 | Fade carousel, 8s interval, pause on hide | Task 4 |
 | Show only when lens hidden and no evidence | Task 4 (`updateQuoteCardVisibility`) |
-| Disappear on lens reveal / evidence / completion | Task 4 (hooks in `onLens`, `onEvidenceBatch`, `onPhase`) |
-| Reduced motion support | Task 2 CSS + Task 4 `prefersReducedMotion` + Task 5 |
+| Disappear on lens reveal / evidence / completion | Task 4 (hooks in `onLens`, `onEvidenceBatch`, `onPhase`, `onDone`) |
+| Re-render quotes on language switch | Task 4 (hook in `applyLanguage`) |
+| Reduced motion support | Task 2 CSS + Task 4 `prefersReducedMotion` reuse + Task 5 |
 | Card opacity ~0.75, light styling | Task 2 |
 
 ### Placeholder scan
