@@ -408,6 +408,8 @@
     var lensTag = document.querySelector('.lens-reveal__tag');
     if (lensTag) lensTag.textContent = t('lensTag');
 
+    renderQuoteCard(state.quoteCardIndex);
+
     var lensColHeads = document.querySelectorAll('.lens-reveal__col-head, .lens-map__col-head');
     if (lensColHeads.length >= 2) {
       lensColHeads[0].textContent = t('lensEntities');
@@ -635,6 +637,9 @@
     scatterLegendRevealed: false,
     scatterDotQueue: [],
     scatterDotTimer: null,
+    quoteCardIndex: 0,
+    quoteCardTimer: null,
+    quoteCardFadeTimer: null,
   };
 
   // ============================ DOM refs =============================
@@ -697,6 +702,10 @@
       analysisFoot: document.getElementById('analysis-foot'),
       resultBack: document.getElementById('result-back'),
       resultMeta: document.getElementById('result-meta'),
+
+      quoteCard: document.getElementById('quote-card'),
+      quoteCardTag: document.getElementById('quote-card-tag'),
+      quoteCardText: document.getElementById('quote-card-text'),
     };
   }
 
@@ -749,6 +758,79 @@
       setText(dom.narrationText, text);
       wrap.classList.remove('is-updating');
     }, 160);
+  }
+
+  var QUOTE_INTERVAL = 8000;
+  var QUOTE_FADE_DURATION = 400;
+
+  // Note: prefersReducedMotion() is already defined later in this file;
+  // function declarations are hoisted, so it is available here.
+
+  function renderQuoteCard(index) {
+    var quote = QUOTES[index % QUOTES.length];
+    if (!quote) return;
+    setText(dom.quoteCardTag, t(quote.tag));
+    setText(dom.quoteCardText, t(quote.text));
+  }
+
+  function startQuoteCarousel() {
+    stopQuoteCarousel();
+    if (!dom.quoteCard || dom.quoteCard.hidden) return;
+    state.quoteCardIndex = 0;
+    renderQuoteCard(state.quoteCardIndex);
+    dom.quoteCard.classList.add('is-visible');
+    if (prefersReducedMotion()) {
+      state.quoteCardTimer = window.setInterval(function () {
+        state.quoteCardIndex = (state.quoteCardIndex + 1) % QUOTES.length;
+        renderQuoteCard(state.quoteCardIndex);
+      }, QUOTE_INTERVAL);
+      return;
+    }
+    state.quoteCardTimer = window.setInterval(function () {
+      if (!dom.quoteCard) return;
+      dom.quoteCard.classList.remove('is-visible');
+      state.quoteCardFadeTimer = window.setTimeout(function () {
+        state.quoteCardIndex = (state.quoteCardIndex + 1) % QUOTES.length;
+        renderQuoteCard(state.quoteCardIndex);
+        if (dom.quoteCard) dom.quoteCard.classList.add('is-visible');
+      }, QUOTE_FADE_DURATION);
+    }, QUOTE_INTERVAL);
+  }
+
+  function stopQuoteCarousel() {
+    if (state.quoteCardTimer) {
+      window.clearInterval(state.quoteCardTimer);
+      state.quoteCardTimer = null;
+    }
+    if (state.quoteCardFadeTimer) {
+      window.clearTimeout(state.quoteCardFadeTimer);
+      state.quoteCardFadeTimer = null;
+    }
+    if (dom.quoteCard) dom.quoteCard.classList.remove('is-visible');
+  }
+
+  function updateQuoteCardVisibility() {
+    var hasContent = (
+      (dom.lensReveal && !dom.lensReveal.hidden) ||
+      (state.evidence && state.evidence.length > 0)
+    );
+    var shouldShow = state.screen === 'analysis' && !hasContent;
+    if (!dom.quoteCard) return;
+    if (shouldShow && dom.quoteCard.hidden) {
+      show(dom.quoteCard);
+      startQuoteCarousel();
+    } else if (!shouldShow && !dom.quoteCard.hidden) {
+      if (prefersReducedMotion()) {
+        stopQuoteCarousel();
+        hide(dom.quoteCard);
+      } else {
+        dom.quoteCard.classList.remove('is-visible');
+        state.quoteCardFadeTimer = window.setTimeout(function () {
+          stopQuoteCarousel();
+          hide(dom.quoteCard);
+        }, QUOTE_FADE_DURATION);
+      }
+    }
   }
 
   function animateNumber(el, target, duration) {
@@ -883,6 +965,7 @@
       s.classList.toggle('is-active', s.dataset.screen === name);
     });
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    updateQuoteCardVisibility();
   }
 
   // ============================== Init ===============================
@@ -1045,6 +1128,8 @@
 
   function startAnalysis(question, language) {
     resetAnalysisState();
+    state.quoteCardIndex = 0;
+    stopQuoteCarousel();
     setText(dom.analysisQuestion, question);
     showScreen('analysis');
 
@@ -1120,6 +1205,7 @@
     } else if (ev.phase === 'inception') {
       setNarration(t('narrationInception'));
     }
+    updateQuoteCardVisibility();
   }
 
   function onLens(ev) {
@@ -1127,6 +1213,7 @@
     renderLens(ev.lens);
     show(dom.lensReveal);
     setNarration(t('lensTag') + ' — ' + (ev.lens.name || t('lensUnnamed')));
+    updateQuoteCardVisibility();
   }
 
   function onEvidenceBatch(ev) {
@@ -1157,6 +1244,7 @@
         more: moreNote
       }));
     }
+    updateQuoteCardVisibility();
   }
 
   // Append a scatter card immediately without waiting for the dot animation queue.
@@ -1232,6 +1320,7 @@
 
   function onDone(ev) {
     state.result = ev.result;
+    updateQuoteCardVisibility();
   }
 
   function onError(ev) {
