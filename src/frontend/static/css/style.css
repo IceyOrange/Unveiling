@@ -792,6 +792,55 @@ em { font-style: normal; }
   transform: translateX(4px);
 }
 
+/* Quote carousel shown during empty waiting states */
+.quote-card {
+  max-width: 640px;
+  margin: 24px auto 0;
+  padding: 16px 20px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 400ms ease, transform 400ms ease;
+  pointer-events: none;
+}
+
+.quote-card.is-visible {
+  opacity: 0.75;
+  transform: translateY(0);
+}
+
+.quote-card__tag {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-tension);
+  margin-bottom: 8px;
+}
+
+.quote-card__text {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-secondary);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .quote-card { margin-top: 32px; }
+  .quote-card__text { font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quote-card {
+    transition: none;
+    opacity: 0.75;
+    transform: none;
+  }
+}
+
 /* Lens reveal — a quiet surfaced card */
 .lens-reveal {
   display: flex;
