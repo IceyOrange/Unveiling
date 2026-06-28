@@ -640,6 +640,7 @@
     quoteCardIndex: 0,
     quoteCardTimer: null,
     quoteCardFadeTimer: null,
+    quoteTypeTimer: null,
   };
 
   // ============================ DOM refs =============================
@@ -760,52 +761,100 @@
     }, 160);
   }
 
-  var QUOTE_INTERVAL = 8000;
+  var QUOTE_TYPE_MIN_DELAY = 80;
+  var QUOTE_TYPE_MAX_DELAY = 220;
+  var QUOTE_HOLD_AFTER_TYPE = 3500;
   var QUOTE_FADE_DURATION = 400;
+  var QUOTE_REDUCED_MOTION_INTERVAL = 8000;
 
   // Note: prefersReducedMotion() is already defined later in this file;
   // function declarations are hoisted, so it is available here.
 
+  function cancelQuoteTypewriter() {
+    if (state.quoteTypeTimer) {
+      window.clearInterval(state.quoteTypeTimer);
+      state.quoteTypeTimer = null;
+    }
+  }
+
+  function typewriteQuote(text, el, callback) {
+    if (!el) { if (callback) callback(); return; }
+    cancelQuoteTypewriter();
+    if (prefersReducedMotion()) {
+      setText(el, text);
+      if (callback) callback();
+      return;
+    }
+    el.textContent = '';
+    var i = 0;
+    function step() {
+      if (i >= text.length) {
+        state.quoteTypeTimer = null;
+        if (callback) callback();
+        return;
+      }
+      el.textContent += text.charAt(i);
+      i += 1;
+      var range = QUOTE_TYPE_MAX_DELAY - QUOTE_TYPE_MIN_DELAY;
+      var delay = QUOTE_TYPE_MIN_DELAY + Math.floor(Math.random() * range);
+      state.quoteTypeTimer = window.setTimeout(step, delay);
+    }
+    state.quoteTypeTimer = window.setTimeout(step, QUOTE_TYPE_MIN_DELAY);
+  }
+
   function renderQuoteCard(index) {
     var quote = QUOTES[index % QUOTES.length];
     if (!quote) return;
+    cancelQuoteTypewriter();
     setText(dom.quoteCardTag, t(quote.tag));
     setText(dom.quoteCardText, t(quote.text));
+  }
+
+  function advanceQuoteCard() {
+    state.quoteCardIndex = (state.quoteCardIndex + 1) % QUOTES.length;
+    renderQuoteCardWithTypewriter();
+  }
+
+  function renderQuoteCardWithTypewriter() {
+    var quote = QUOTES[state.quoteCardIndex % QUOTES.length];
+    if (!quote || !dom.quoteCardText) return;
+    setText(dom.quoteCardTag, t(quote.tag));
+    var text = t(quote.text);
+    dom.quoteCard.classList.add('is-visible');
+    typewriteQuote(text, dom.quoteCardText, function () {
+      if (prefersReducedMotion()) {
+        state.quoteCardTimer = window.setTimeout(advanceQuoteCard, QUOTE_REDUCED_MOTION_INTERVAL);
+      } else {
+        state.quoteCardTimer = window.setTimeout(fadeAndAdvanceQuote, QUOTE_HOLD_AFTER_TYPE);
+      }
+    });
+  }
+
+  function fadeAndAdvanceQuote() {
+    if (!dom.quoteCard) return;
+    dom.quoteCard.classList.remove('is-visible');
+    state.quoteCardFadeTimer = window.setTimeout(function () {
+      advanceQuoteCard();
+    }, QUOTE_FADE_DURATION);
   }
 
   function startQuoteCarousel() {
     stopQuoteCarousel();
     if (!dom.quoteCard || dom.quoteCard.hidden) return;
     state.quoteCardIndex = 0;
-    renderQuoteCard(state.quoteCardIndex);
-    dom.quoteCard.classList.add('is-visible');
-    if (prefersReducedMotion()) {
-      state.quoteCardTimer = window.setInterval(function () {
-        state.quoteCardIndex = (state.quoteCardIndex + 1) % QUOTES.length;
-        renderQuoteCard(state.quoteCardIndex);
-      }, QUOTE_INTERVAL);
-      return;
-    }
-    state.quoteCardTimer = window.setInterval(function () {
-      if (!dom.quoteCard) return;
-      dom.quoteCard.classList.remove('is-visible');
-      state.quoteCardFadeTimer = window.setTimeout(function () {
-        state.quoteCardIndex = (state.quoteCardIndex + 1) % QUOTES.length;
-        renderQuoteCard(state.quoteCardIndex);
-        if (dom.quoteCard) dom.quoteCard.classList.add('is-visible');
-      }, QUOTE_FADE_DURATION);
-    }, QUOTE_INTERVAL);
+    renderQuoteCardWithTypewriter();
   }
 
   function stopQuoteCarousel() {
     if (state.quoteCardTimer) {
-      window.clearInterval(state.quoteCardTimer);
+      window.clearTimeout(state.quoteCardTimer);
       state.quoteCardTimer = null;
     }
     if (state.quoteCardFadeTimer) {
       window.clearTimeout(state.quoteCardFadeTimer);
       state.quoteCardFadeTimer = null;
     }
+    cancelQuoteTypewriter();
     if (dom.quoteCard) dom.quoteCard.classList.remove('is-visible');
   }
 
@@ -820,13 +869,12 @@
       show(dom.quoteCard);
       startQuoteCarousel();
     } else if (!shouldShow && !dom.quoteCard.hidden) {
+      stopQuoteCarousel();
       if (prefersReducedMotion()) {
-        stopQuoteCarousel();
         hide(dom.quoteCard);
       } else {
         dom.quoteCard.classList.remove('is-visible');
         state.quoteCardFadeTimer = window.setTimeout(function () {
-          stopQuoteCarousel();
           hide(dom.quoteCard);
         }, QUOTE_FADE_DURATION);
       }

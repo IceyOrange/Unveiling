@@ -826,6 +826,21 @@ em { font-style: normal; }
   line-height: 1.6;
   color: var(--ink-secondary);
   margin: 0;
+  text-align: left;
+  min-height: 1.6em;
+}
+
+.quote-card__text::after {
+  content: '|';
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--accent-tension);
+  animation: quote-cursor-blink 1s step-end infinite;
+}
+
+@keyframes quote-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 @media (min-width: 768px) {
@@ -838,6 +853,10 @@ em { font-style: normal; }
     transition: none;
     opacity: 0.75;
     transform: none;
+  }
+  .quote-card__text::after {
+    animation: none;
+    opacity: 1;
   }
 }
 
