@@ -707,6 +707,7 @@
       quoteCard: document.getElementById('quote-card'),
       quoteCardTag: document.getElementById('quote-card-tag'),
       quoteCardText: document.getElementById('quote-card-text'),
+      quoteCardMeasure: document.getElementById('quote-card-measure'),
     };
   }
 
@@ -777,6 +778,18 @@
     }
   }
 
+  function setQuoteTextWidth(text) {
+    if (!dom.quoteCardText || !dom.quoteCardMeasure || !dom.quoteCard) return;
+    setText(dom.quoteCardMeasure, text);
+    var measureWidth = dom.quoteCardMeasure.offsetWidth;
+    var cardStyle = window.getComputedStyle(dom.quoteCard);
+    var paddingLeft = parseFloat(cardStyle.paddingLeft) || 0;
+    var paddingRight = parseFloat(cardStyle.paddingRight) || 0;
+    var maxWidth = dom.quoteCard.clientWidth - paddingLeft - paddingRight;
+    var targetWidth = Math.min(measureWidth, maxWidth);
+    dom.quoteCardText.style.width = targetWidth + 'px';
+  }
+
   function typewriteQuote(text, el, callback) {
     if (!el) { if (callback) callback(); return; }
     cancelQuoteTypewriter();
@@ -807,7 +820,9 @@
     if (!quote) return;
     cancelQuoteTypewriter();
     setText(dom.quoteCardTag, t(quote.tag));
-    setText(dom.quoteCardText, t(quote.text));
+    var text = t(quote.text);
+    setText(dom.quoteCardText, text);
+    setQuoteTextWidth(text);
   }
 
   function advanceQuoteCard() {
@@ -820,6 +835,7 @@
     if (!quote || !dom.quoteCardText) return;
     setText(dom.quoteCardTag, t(quote.tag));
     var text = t(quote.text);
+    setQuoteTextWidth(text);
     dom.quoteCard.classList.add('is-visible');
     typewriteQuote(text, dom.quoteCardText, function () {
       if (prefersReducedMotion()) {

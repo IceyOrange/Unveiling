@@ -825,9 +825,16 @@ em { font-style: normal; }
   font-size: 16px;
   line-height: 1.6;
   color: var(--ink-secondary);
-  margin: 0;
+  margin: 0 auto;
   text-align: left;
   min-height: 1.6em;
+}
+
+.quote-card__text--measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .quote-card__text::after {
