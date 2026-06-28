@@ -2,18 +2,21 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a bilingual, fade-animated quote carousel to the analysis waiting state that disappears once real content arrives.
+**Goal:** Add a bilingual, typewriter-animated quote carousel to the analysis waiting state that disappears once real content arrives.
 
-**Architecture:** A small data-driven carousel lives entirely in the frontend. Quotes are defined as i18n keys in `app.js`, rendered into a new `#quote-card` section in `index.html`, styled and animated in `style.css`. Visibility is controlled by existing render/event hooks: show while `lens-reveal` is hidden and no evidence cards exist; hide on lens reveal, first evidence batch, or completion.
+**Architecture:** A small data-driven carousel lives entirely in the frontend. Quotes are defined as i18n keys in `app.js`, rendered into a new `#quote-card` section in `index.html`, styled and animated in `style.css`. Visibility is controlled by existing render/event hooks: show while `lens-reveal` is hidden and no evidence cards exist; hide on lens reveal, first evidence batch, or completion. During Task 5 the user requested a typewriter reveal instead of simple fades; the final implementation types characters at uneven speed, keeps the first character fixed, and expands rightward.
 
 **Tech Stack:** Vanilla ES5 JS, CSS custom properties, Flask/Jinja2 templates.
 
 ## Global Constraints
 
-- Animation style: fade-in / fade-out carousel.
-- Default interval: 8 seconds total per quote (400ms fade in, 6400ms hold, 400ms fade out).
+- Animation style: typewriter reveal with fade transitions between quotes.
+  - Characters appear one at a time at uneven speed (80–220ms random delay per character).
+  - After typing completes, hold for ~3.5s, then fade out over 400ms and swap to the next quote.
+  - The quote text is left-aligned within the centered card so the first character stays fixed and text expands rightward.
+  - A subtle blinking cursor appears after the text.
 - Carousel pauses when the card is hidden.
-- Respect `prefers-reduced-motion`: disable fades and switch instantly.
+- Respect `prefers-reduced-motion`: show full quote instantly and switch without animation.
 - Quote card appears only when `#lens-reveal` is hidden and scatter section has zero evidence cards.
 - Quotes must be bilingual (Chinese + English) via existing i18n object.
 - Commit frequently; each task ends with a working, testable state.
@@ -395,6 +398,8 @@ git commit -m "feat(analysis): wire quote carousel visibility and rotation"
 ---
 
 ### Task 5: Polish and verify reduced motion
+
+**Note:** During this task the user requested a typewriter reveal effect instead of plain fades. The final implementation adjusts the carousel so characters appear one at a time at uneven speed, the text is left-aligned within the centered card to keep the first character fixed, and a blinking cursor is added. Verify these behaviors as part of the polish steps.
 
 **Files:**
 - Modify: `src/frontend/static/css/style.css`, `src/frontend/static/js/app.js`

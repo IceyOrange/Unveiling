@@ -58,14 +58,15 @@ Six quotes organized into three thematic tags. Each quote is stored as an i18n k
 
 ### Animation
 
-- Style: fade-in / fade-out carousel.
-- Default interval: 8 seconds total per quote.
-  - Fade in: 400ms.
-  - Hold: 6400ms.
-  - Fade out: 400ms.
-  - Swap text and fade in next quote.
+- Style: typewriter reveal with fade transitions between quotes.
+  - Each quote text types out one character at a time from left to right.
+  - Typing speed is uneven: random delay between 80ms and 220ms per character.
+  - After typing completes, the quote holds for ~3.5s.
+  - The card then fades out over 400ms, swaps to the next quote, fades back in, and types again.
+- The quote text is left-aligned within the centered card so the first character stays at a fixed horizontal position and the line grows to the right as characters appear.
+- A subtle blinking cursor appears after the text.
 - Carousel pauses when the card is hidden so no background cycling occurs.
-- Respect `prefers-reduced-motion`: disable fades and switch instantly.
+- Respect `prefers-reduced-motion`: show the full quote text instantly and switch quotes without animation.
 
 ### Visibility Logic
 
