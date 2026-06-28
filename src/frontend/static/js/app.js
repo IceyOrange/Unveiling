@@ -418,7 +418,7 @@
 
     renderQuoteCard(state.quoteCardIndex);
 
-    var lensColHeads = document.querySelectorAll('.lens-reveal__col-head, .lens-map__col-head');
+    var lensColHeads = document.querySelectorAll('.lens-reveal__col-head');
     if (lensColHeads.length >= 2) {
       lensColHeads[0].textContent = t('lensEntities');
       lensColHeads[1].textContent = t('lensRelations');
