@@ -565,10 +565,6 @@ em { font-style: normal; }
   margin-bottom: var(--space-5);
 }
 
-.analysis__foot {
-  margin-top: var(--space-7);
-}
-
 /* Mast — one compact utility row */
 
 .analysis__mast {
@@ -1497,7 +1493,6 @@ em { font-style: normal; }
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-top: var(--space-7);
   padding: var(--space-4) 0;
   border-top: 1px solid var(--border-hairline);
   animation: fade-in 400ms ease;
