@@ -119,6 +119,7 @@
       backBtn: '重新开始',
       resultMeta: '跨领域 {lateral} · 跨时期 {vertical} · {tokens} token{degradations}',
       resultMetaFallback: '分析完成',
+      exportHint: '提示：右键页面选择“打印”，或按 Ctrl+P，即可导出为 PDF。',
       insightBridgeLabel: '核心洞察',
       scatterTitle: '找到的类比',
       scatterSubtitle: '横轴 = 领域 · 纵轴 = 时间 · 原点 = 第二次工业革命',
@@ -270,6 +271,7 @@
       backBtn: 'Start Over',
       resultMeta: 'Cross-domain {lateral} · Cross-era {vertical} · {tokens} tokens{degradations}',
       resultMetaFallback: 'Analysis complete',
+      exportHint: 'Tip: right-click and choose Print, or press Ctrl+P, to export as PDF.',
       insightBridgeLabel: 'Core insight',
       scatterTitle: 'Analogies Found',
       scatterSubtitle: 'X = domain · Y = time · origin = Second Industrial Revolution',
@@ -556,6 +558,7 @@
     }
     if (state.result) {
       if (dom.resultMeta) renderResultMeta(state.result);
+      if (dom.exportHint) setText(dom.exportHint, t('exportHint'));
       if (dom.recapMeta) renderRecap(state.result);
       if (dom.scatterSection) renderScatter(state.result.evidence || state.evidence || []);
       if (dom.narrationText) setNarration(t('narrationComplete'));
@@ -705,6 +708,7 @@
       analysisFoot: document.getElementById('analysis-foot'),
       resultBack: document.getElementById('result-back'),
       resultMeta: document.getElementById('result-meta'),
+      exportHint: document.getElementById('analysis-export-hint'),
 
       quoteCard: document.getElementById('quote-card'),
       quoteCardTag: document.getElementById('quote-card-tag'),
@@ -1487,6 +1491,7 @@
 
     // 8. Footer
     renderResultMeta(result);
+    if (dom.exportHint) setText(dom.exportHint, t('exportHint'));
     show(dom.analysisFoot);
 
     // Note: no automatic scroll here. The only auto-scroll is the one-time

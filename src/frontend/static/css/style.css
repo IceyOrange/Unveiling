@@ -1473,6 +1473,7 @@ em { font-style: normal; }
 /* Analysis footer */
 .analysis__foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
@@ -1496,6 +1497,15 @@ em { font-style: normal; }
 }
 .analysis__back:hover { background: var(--surface-inset); color: var(--ink-primary); border-color: var(--ink-secondary); }
 .analysis__meta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-tertiary); text-transform: uppercase; }
+.analysis__export-hint {
+  width: 100%;
+  margin: 0;
+  padding-top: var(--space-2);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-tertiary);
+}
 
 
 /* ============================================================================
