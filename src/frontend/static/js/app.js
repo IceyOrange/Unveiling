@@ -424,9 +424,6 @@
       lensColHeads[1].textContent = t('lensRelations');
     }
 
-    var casesTitle = document.querySelector('.cases__title');
-    if (casesTitle) casesTitle.textContent = t('casesTitle');
-
     // Scatter plot labels
     var scatterTitle = document.getElementById('scatter-title');
     if (scatterTitle) scatterTitle.textContent = t('scatterTitle');
@@ -501,14 +498,14 @@
     if (outlineTitle) outlineTitle.textContent = t('outlineTitle');
     var outlineItems = document.querySelectorAll('.outline__item[data-target]');
     var outlineKeys = ['outlineLens', 'outlineCases'];
-    var chapterKeys = ['CoreFinding', 'Trajectory', 'Tension', 'Boundary', 'Unresolved', 'Implication'];
+    var outlineChapterKeys = ['CoreFinding', 'Trajectory', 'Tension', 'Boundary', 'Unresolved', 'Implication'];
     outlineItems.forEach(function (item, i) {
       var label = item.querySelector('.outline__label');
       if (!label) return;
       var target = item.dataset.target;
       if (target && target.indexOf('chapter-') === 0) {
         var chapIdx = CHAPTERS.findIndex(function (ch) { return 'chapter-' + ch.key === target; });
-        if (chapIdx >= 0) label.textContent = t('chapter' + chapterKeys[chapIdx]);
+        if (chapIdx >= 0) label.textContent = t('chapter' + outlineChapterKeys[chapIdx]);
       } else if (i < 3) {
         label.textContent = t(outlineKeys[i]);
       }
@@ -571,7 +568,6 @@
     var outlineEl = document.getElementById('outline');
     if (outlineEl) outlineEl.setAttribute('aria-label', t('outlineAriaLabel'));
     if (dom.phaseIndicator) dom.phaseIndicator.setAttribute('aria-label', t('phaseAriaLabel'));
-    document.documentElement.lang = state.language === '中文' ? 'zh-CN' : 'en';
   }
 
   // ============================== State ==============================
@@ -635,13 +631,10 @@
     tokens: 0,
     lateral: { count: 0, rounds: 0, done: false },
     vertical: { count: 0, rounds: 0, done: false },
-    degradationCount: 0,
-    conclusion: null,
     result: null,
     scatterFrameRendered: false,
     scatterDotIds: {},
     hasScrolledToScatter: false,
-    caseRevealIndex: 0,
     scatterStage: 'idle',
     scatterLegendRevealed: false,
     scatterDotQueue: [],
@@ -985,11 +978,6 @@
     tick();
   }
 
-  function pct(num, denom) {
-    if (!denom) return 0;
-    return Math.min(100, Math.round((num / denom) * 100));
-  }
-
   // ====================== Screen switching ===========================
 
   function showScreen(name) {
@@ -1126,13 +1114,10 @@
     state.tokens = 0;
     state.lateral = { count: 0, rounds: 0, done: false };
     state.vertical = { count: 0, rounds: 0, done: false };
-    state.degradationCount = 0;
-    state.conclusion = null;
     state.result = null;
     state.scatterFrameRendered = false;
     state.scatterDotIds = {};
     state.hasScrolledToScatter = false;
-    state.caseRevealIndex = 0;
     state.scatterStage = 'idle';
     state.scatterLegendRevealed = false;
     state.scatterDotQueue = [];
@@ -1323,13 +1308,11 @@
     if (card.__typewriteBody) {
       typewriteHtml(card.__typewriteBody, e.content || '', 18);
     }
-    state.caseRevealIndex += 1;
   }
 
   function onSchedule(ev) {
     if (!ev.entry) return;
     state.schedule.push(ev.entry);
-    if (ev.entry.is_degradation) state.degradationCount += 1;
     appendScheduleLog(ev.entry);
     updateMachineMeta();
 
@@ -1358,7 +1341,6 @@
   }
 
   function onConclusion(ev) {
-    state.conclusion = ev.conclusion;
     setNarration(t('narrationConclusionReady'));
   }
 
@@ -2065,7 +2047,6 @@
           typewriteHtml(card.__typewriteBody, e.content || '', 18);
         }
       }
-      state.caseRevealIndex += 1;
     }
 
     return g;
@@ -2517,7 +2498,6 @@
     state.lateral = { count: demo.lateral_count || 0, rounds: demo.lateral_rounds || 0, done: true };
     state.vertical = { count: demo.vertical_count || 0, rounds: demo.vertical_rounds || 0, done: true };
     state.evidence = demo.evidence || [];
-    state.caseRevealIndex = 0;
     clear(dom.scatterCards);
     appendScatterCards(demo.evidence || [], { typewrite: false });
     show(dom.scatterSection);
