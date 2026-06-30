@@ -40,13 +40,30 @@ class LLMClient:
     """
 
     def __init__(self, model: Optional[str] = None, language: str = ""):
+        self.language = language
+        is_english = bool(language and language.lower() == "english")
+
+        if is_english:
+            api_key = os.environ.get("EN_OPENAI_API_KEY", "")
+            base_url = os.environ.get(
+                "EN_OPENAI_API_BASE", "https://models.github.ai/inference"
+            )
+            default_model = "gpt-4o-mini"
+            model_env = "EN_OPENAI_MODEL_NAME"
+        else:
+            api_key = os.environ.get("OPENAI_API_KEY", "")
+            base_url = os.environ.get(
+                "OPENAI_API_BASE", "https://api.deepseek.com"
+            )
+            default_model = "deepseek-v4-flash"
+            model_env = "OPENAI_MODEL_NAME"
+
         self.client = OpenAI(
-            api_key=os.environ.get("OPENAI_API_KEY", ""),
-            base_url=os.environ.get("OPENAI_API_BASE", "https://api.deepseek.com"),
+            api_key=api_key,
+            base_url=base_url,
             timeout=httpx.Timeout(90.0, connect=5.0),
         )
-        self.model = model or os.environ.get("OPENAI_MODEL_NAME", "deepseek-v4-flash")
-        self.language = language
+        self.model = model or os.environ.get(model_env, default_model)
 
     def chat(
         self,

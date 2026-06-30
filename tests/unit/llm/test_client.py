@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch
+import os
+from unittest.mock import ANY, MagicMock, patch
 
 import openai
 import pytest
@@ -247,6 +248,60 @@ def test_chat_language_kwarg_overrides_constructor(mock_openai_cls):
     sent_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
     assert "Write ALL natural-language content in 中文" in sent_messages[0]["content"]
     assert "Write ALL natural-language content in English" not in sent_messages[0]["content"]
+
+
+# ---------------------------------------------------------------------------
+# Provider switching by language
+# ---------------------------------------------------------------------------
+
+@patch("unveiling.llm.client.OpenAI")
+def test_english_uses_en_provider_env_vars(mock_openai_cls):
+    """When output_language is English, use EN_OPENAI_* environment variables."""
+    with patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "cn-key",
+            "OPENAI_API_BASE": "https://api.siliconflow.cn/v1",
+            "OPENAI_MODEL_NAME": "deepseek-model",
+            "EN_OPENAI_API_KEY": "github-key",
+            "EN_OPENAI_API_BASE": "https://models.github.ai/inference",
+            "EN_OPENAI_MODEL_NAME": "gpt-4o-mini",
+        },
+        clear=True,
+    ):
+        client = LLMClient(language="English")
+
+    mock_openai_cls.assert_called_once_with(
+        api_key="github-key",
+        base_url="https://models.github.ai/inference",
+        timeout=ANY,
+    )
+    assert client.model == "gpt-4o-mini"
+
+
+@patch("unveiling.llm.client.OpenAI")
+def test_non_english_uses_default_provider_env_vars(mock_openai_cls):
+    """Non-English languages keep using the default OPENAI_* environment variables."""
+    with patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "cn-key",
+            "OPENAI_API_BASE": "https://api.siliconflow.cn/v1",
+            "OPENAI_MODEL_NAME": "deepseek-model",
+            "EN_OPENAI_API_KEY": "github-key",
+            "EN_OPENAI_API_BASE": "https://models.github.ai/inference",
+            "EN_OPENAI_MODEL_NAME": "gpt-4o-mini",
+        },
+        clear=True,
+    ):
+        client = LLMClient(language="中文")
+
+    mock_openai_cls.assert_called_once_with(
+        api_key="cn-key",
+        base_url="https://api.siliconflow.cn/v1",
+        timeout=ANY,
+    )
+    assert client.model == "deepseek-model"
 
 
 @patch("unveiling.llm.client.OpenAI")
