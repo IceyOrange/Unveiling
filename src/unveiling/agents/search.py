@@ -92,6 +92,19 @@ def _reset_global_dedup() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Extraction prompt-size guard
+# ---------------------------------------------------------------------------
+
+# Some English-language providers (e.g. GitHub Models gpt-4o-mini) reject
+# requests above ~8k tokens. We keep a conservative character budget so a
+# single consolidated extraction call fits even when the lens is large.
+_MAX_EXTRACTION_PROMPT_CHARS = 10000
+_MAX_RESULTS_PER_EXTRACTION = 12
+_MAX_SNIPPET_CHARS = 400
+_MIN_RESULTS_PER_EXTRACTION = 4
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -302,36 +315,62 @@ def _extract_cases_parallel(
     The ``min_workers`` and ``max_workers`` parameters are kept for
     backward compatibility but are no longer used.
     """
-    # Cap results to avoid overflowing the context window
-    MAX_RESULTS = 18
-    capped_results = results[:MAX_RESULTS]
-
     total_tokens = 0
     all_cases: list[dict] = []
     seen_names: set[str] = set(n.lower() for n in existing_case_names)
 
-    # Reuse the existing batch prompt logic for the single consolidated call
-    results_text = "\n\n".join(
-        f"[{i + 1}] {r.get('title', '')}\n{r.get('snippet', '')}"
-        for i, r in enumerate(capped_results)
-    )
+    # Truncate each search result and cap how many we feed into the single
+    # consolidated extraction call. Some providers (e.g. GitHub Models
+    # gpt-4o-mini) have a tight ~8k token request limit, so we keep the
+    # prompt under a safe character budget.
+    truncated_results = [
+        {
+            "title": str(r.get("title", ""))[:100],
+            "snippet": str(r.get("snippet", ""))[:_MAX_SNIPPET_CHARS],
+        }
+        for r in results[:_MAX_RESULTS_PER_EXTRACTION]
+    ]
+
     existing_text = ", ".join(existing_case_names) if existing_case_names else "(none)"
-
-    # Load the prompt and add an instruction to respect the early_stop limit
     prompt_template = load_lab_prompt("case_extraction")
-    prompt = prompt_template.format(
-        entities_text=_format_entities(lens.entities),
-        relations_text=_format_relations(lens.relationships),
-        direction=direction,
-        results_text=results_text,
-        existing_cases=existing_text,
-    )
 
-    # Append a concise instruction so the LLM knows how many cases to aim for
-    prompt += (
-        f"\n\nIMPORTANT: Return at most {early_stop_at} distinct, "
-        f"high-quality cases. Do not pad the list with weak or generic entries."
-    )
+    def _build_extraction_prompt(current_results: list[dict]) -> str:
+        results_text = "\n\n".join(
+            f"[{i + 1}] {r['title']}\n{r['snippet']}"
+            for i, r in enumerate(current_results)
+        )
+        prompt = prompt_template.format(
+            entities_text=_format_entities(lens.entities),
+            relations_text=_format_relations(lens.relationships),
+            direction=direction,
+            results_text=results_text,
+            existing_cases=existing_text,
+        )
+        prompt += (
+            f"\n\nIMPORTANT: Return at most {early_stop_at} distinct, "
+            f"high-quality cases. Do not pad the list with weak or generic entries."
+        )
+        return prompt
+
+    prompt = _build_extraction_prompt(truncated_results)
+
+    # Drop results from the tail if we're still over budget.
+    while (
+        len(prompt) > _MAX_EXTRACTION_PROMPT_CHARS
+        and len(truncated_results) > _MIN_RESULTS_PER_EXTRACTION
+    ):
+        truncated_results = truncated_results[:-1]
+        prompt = _build_extraction_prompt(truncated_results)
+
+    # If the lens itself is very large, shorten all snippets uniformly.
+    snippet_max = _MAX_SNIPPET_CHARS
+    while len(prompt) > _MAX_EXTRACTION_PROMPT_CHARS and snippet_max > 100:
+        snippet_max -= 100
+        truncated_results = [
+            {"title": r["title"], "snippet": r["snippet"][:snippet_max]}
+            for r in truncated_results
+        ]
+        prompt = _build_extraction_prompt(truncated_results)
 
     content, tokens = client.chat(
         [{"role": "user", "content": prompt}],
@@ -363,9 +402,16 @@ def _extract_cases_batch(
     existing_case_names: list[str],
 ) -> tuple[list[dict], int]:
     """Extract cases from a small batch of search results (1-3 items)."""
+    truncated = [
+        {
+            "title": str(r.get("title", ""))[:100],
+            "snippet": str(r.get("snippet", ""))[:_MAX_SNIPPET_CHARS],
+        }
+        for r in results
+    ]
     results_text = "\n\n".join(
-        f"[{i + 1}] {r.get('title', '')}\n{r.get('snippet', '')}"
-        for i, r in enumerate(results)
+        f"[{i + 1}] {r['title']}\n{r['snippet']}"
+        for i, r in enumerate(truncated)
     )
     existing_text = ", ".join(existing_case_names) if existing_case_names else "(none)"
 
@@ -393,9 +439,16 @@ def _extract_cases(
     existing_case_names: list[str],
 ) -> tuple[list[dict], int]:
     """Legacy monolithic extraction — kept for backward compatibility."""
+    truncated = [
+        {
+            "title": str(r.get("title", ""))[:100],
+            "snippet": str(r.get("snippet", ""))[:_MAX_SNIPPET_CHARS],
+        }
+        for r in results[:_MAX_RESULTS_PER_EXTRACTION]
+    ]
     results_text = "\n\n".join(
-        f"[{i + 1}] {r.get('title', '')}\n{r.get('snippet', '')}"
-        for i, r in enumerate(results[:20])
+        f"[{i + 1}] {r['title']}\n{r['snippet']}"
+        for i, r in enumerate(truncated)
     )
 
     existing_text = (

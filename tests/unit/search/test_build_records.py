@@ -1,12 +1,23 @@
 from __future__ import annotations
 
-from unveiling.agents.search import _build_records, _reset_global_dedup
+import json
+
+from unveiling.agents.search import (
+    _build_records,
+    _extract_cases_parallel,
+    _MAX_EXTRACTION_PROMPT_CHARS,
+    _reset_global_dedup,
+)
 from unveiling.models._enums import (
     EvidenceDomain,
     EvidenceEra,
     SearchDirection,
 )
-from unveiling.models.blackboard import LensRecord
+from unveiling.models.blackboard import (
+    AbstractedEntity,
+    AbstractedRelation,
+    LensRecord,
+)
 
 
 def _lens() -> LensRecord:
@@ -85,3 +96,37 @@ def test_build_records_handles_missing_metadata():
     assert records[0].era == EvidenceEra.contemporary  # lateral fallback
     assert records[0].domain is None
     assert records[0].distance == 0.5  # lateral fallback
+
+
+def test_extract_cases_parallel_truncates_prompt_to_fit_budget(monkeypatch):
+    """English provider (gpt-4o-mini on GitHub Models) rejects >8k-token requests.
+
+    Regression: _extract_cases_parallel sent 18 full search snippets (~46k chars),
+    causing a 413 tokens_limit_reached error, zero evidence, and a hidden scatter
+    chart (no coordinate axes).
+    """
+
+    class FakeClient:
+        def chat(self, messages, **kwargs):
+            self.captured_prompt = messages[0]["content"]
+            return json.dumps({"cases": []}), 0
+
+    lens = LensRecord(author="t", name="lens", rationale="r")
+    lens.entities = [AbstractedEntity(surface="AI", structural_role="new method")]
+    lens.relationships = [
+        AbstractedRelation(surface="AI replaces jobs", structural="replacement threat")
+    ]
+
+    # 20 enormous snippets would previously blow past the provider limit.
+    big_results = [
+        {"title": f"Result {i}", "snippet": "word " * 3000}
+        for i in range(20)
+    ]
+
+    client = FakeClient()
+    _extract_cases_parallel(client, lens, "lateral", big_results, [])
+
+    assert len(client.captured_prompt) <= _MAX_EXTRACTION_PROMPT_CHARS
+    # We should still keep at least the minimum number of results.
+    assert "[1]" in client.captured_prompt
+    assert "[4]" in client.captured_prompt
