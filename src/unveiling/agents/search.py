@@ -460,6 +460,18 @@ def _build_records(
         if not case_name or _is_global_duplicate(case_name):
             continue
         try:
+            era = _coerce_enum(EvidenceEra, item.get("era"))
+            if era is None:
+                era = (
+                    EvidenceEra.industrial
+                    if direction == SearchDirection.vertical
+                    else EvidenceEra.contemporary
+                )
+
+            distance = _coerce_distance(item.get("distance"))
+            if distance is None:
+                distance = 0.7 if direction == SearchDirection.vertical else 0.5
+
             records.append(
                 EvidenceRecord(
                     author=author,
@@ -473,9 +485,9 @@ def _build_records(
                     is_unexpected=bool(item.get("is_unexpected", False)),
                     content=item.get("content", ""),
                     references=[lens.id],
-                    era=_coerce_enum(EvidenceEra, item.get("era")),
+                    era=era,
                     domain=_coerce_enum(EvidenceDomain, item.get("domain")),
-                    distance=_coerce_distance(item.get("distance")),
+                    distance=distance,
                     distance_reason=item.get("distance_reason") or None,
                 )
             )

@@ -47,7 +47,7 @@ def test_build_records_coerces_string_era_and_domain():
 
 
 def test_build_records_handles_invalid_metadata_without_dropping_record():
-    """A bad era/domain/distance should null that field, not drop the case."""
+    """A bad era/domain/distance should fall back to sensible defaults, not drop the case."""
     cases = [
         {
             "case_name": "案例",
@@ -64,9 +64,9 @@ def test_build_records_handles_invalid_metadata_without_dropping_record():
 
     assert len(records) == 1
     rec = records[0]
-    assert rec.era is None
+    assert rec.era == EvidenceEra.industrial  # vertical fallback
     assert rec.domain is None
-    assert rec.distance is None
+    assert rec.distance == 0.7  # vertical fallback
 
 
 def test_build_records_handles_missing_metadata():
@@ -82,5 +82,6 @@ def test_build_records_handles_missing_metadata():
     records = _build_records(cases, _lens(), SearchDirection.lateral, "search_lateral")
 
     assert len(records) == 1
-    assert records[0].era is None
+    assert records[0].era == EvidenceEra.contemporary  # lateral fallback
     assert records[0].domain is None
+    assert records[0].distance == 0.5  # lateral fallback
